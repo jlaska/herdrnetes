@@ -5,13 +5,14 @@
 # ///
 """EXP-001 helpers for Herdr CLI JSON (v0.9.5 `herdr api snapshot` shape).
 
-  compare.py pane-id <workspace-label> <tab-index> <pane-index>   < snapshot
-  compare.py field <dotted.path>                                   < any result
-  compare.py panes                                                 < snapshot
-  compare.py procs                                                 < process-info
-  compare.py diff <evidence-dir-before> <evidence-dir-after>
-  compare.py session <session.json>      # layout + agent refs, ids redacted
+compare.py pane-id <workspace-label> <tab-index> <pane-index>   < snapshot
+compare.py field <dotted.path>                                   < any result
+compare.py panes                                                 < snapshot
+compare.py procs                                                 < process-info
+compare.py diff <evidence-dir-before> <evidence-dir-after>
+compare.py session <session.json>      # layout + agent refs, ids redacted
 """
+
 import json
 import sys
 from pathlib import Path
@@ -34,9 +35,16 @@ def ordered_panes(snap):
     layouts = {l["tab_id"]: l for l in snap["layouts"]}
     panes = {p["pane_id"]: p for p in snap["panes"]}
     for ws in sorted(snap["workspaces"], key=lambda w: w["number"]):
-        for ti, tab in enumerate(sorted(tabs_by_ws.get(ws["workspace_id"], []), key=lambda t: t["number"])):
-            order = [p["pane_id"] for p in sorted(layouts[tab["tab_id"]]["panes"],
-                                                  key=lambda p: (p["rect"]["y"], p["rect"]["x"]))]
+        for ti, tab in enumerate(
+            sorted(tabs_by_ws.get(ws["workspace_id"], []), key=lambda t: t["number"])
+        ):
+            order = [
+                p["pane_id"]
+                for p in sorted(
+                    layouts[tab["tab_id"]]["panes"],
+                    key=lambda p: (p["rect"]["y"], p["rect"]["x"]),
+                )
+            ]
             for pi, pid in enumerate(order):
                 yield ws["label"], tab["label"], ti, pi, panes[pid]
 
@@ -86,7 +94,9 @@ def diff(before, after):
     b, a = Path(before), Path(after)
     tb, ta = load_tsv(b / "panes.tsv"), load_tsv(a / "panes.tsv")
     pb, pa = parse_probes(b / "pane-probes.txt"), parse_probes(a / "pane-probes.txt")
-    print("| pane | cwd before → after | label | foreground before → after | MARK on screen after |")
+    print(
+        "| pane | cwd before → after | label | foreground before → after | MARK on screen after |"
+    )
     print("| --- | --- | --- | --- | --- |")
     for key in sorted(set(tb) | set(ta)):
         rb, ra = tb.get(key), ta.get(key)
@@ -96,18 +106,33 @@ def diff(before, after):
         if not rb:
             print(f"| {key} | (new) → {ra['cwd']} | | | |")
             continue
+
         def fg(probes, row):
             lines = probes.get(row["pane_id"], [])
             return next((l[4:] for l in lines if l.startswith("fg: ")), "?")
+
         def mark(probes, row):
-            return "yes" if any("MARK-" in l for l in probes.get(row["pane_id"], [])) else "no"
+            return (
+                "yes"
+                if any("MARK-" in l for l in probes.get(row["pane_id"], []))
+                else "no"
+            )
+
         cwd = rb["cwd"] if rb["cwd"] == ra["cwd"] else f"{rb['cwd']} → **{ra['cwd']}**"
-        lab = rb["label"] if rb["label"] == ra["label"] else f"{rb['label']} → **{ra['label']}**"
-        print(f"| {key} | {cwd} | {lab} | {fg(pb, rb)} → {fg(pa, ra)} | {mark(pa, ra)} |")
+        lab = (
+            rb["label"]
+            if rb["label"] == ra["label"]
+            else f"{rb['label']} → **{ra['label']}**"
+        )
+        print(
+            f"| {key} | {cwd} | {lab} | {fg(pb, rb)} → {fg(pa, ra)} | {mark(pa, ra)} |"
+        )
     for name in ("git-status.txt", "history-mark-count.txt"):
         sb = (b / name).read_text().strip() if (b / name).exists() else ""
         sa = (a / name).read_text().strip() if (a / name).exists() else ""
-        print(f"\n{name}: {'unchanged' if sb == sa else 'CHANGED'}\n  before: {sb!r}\n  after:  {sa!r}")
+        print(
+            f"\n{name}: {'unchanged' if sb == sa else 'CHANGED'}\n  before: {sb!r}\n  after:  {sa!r}"
+        )
 
 
 def redact(value):
@@ -131,11 +156,25 @@ def session_summary(path):
                     walk(x, depth + 1)
 
     for ws in s["workspaces"]:
-        print(f"- workspace custom_name={ws.get('custom_name')!r} tabs={len(ws.get('tabs', []))}")
-        for pane in ws.get("panes", {}).values() if isinstance(ws.get("panes"), dict) else ws.get("panes", []):
-            ref = {k: (redact(v) if "id" in k or "path" in k else v)
-                   for k, v in (pane.get("agent_session") or {}).items()} if isinstance(pane, dict) else None
-            print(f"    pane cwd={pane.get('cwd')!r} agent_session={ref} keys={sorted(pane)}")
+        print(
+            f"- workspace custom_name={ws.get('custom_name')!r} tabs={len(ws.get('tabs', []))}"
+        )
+        for pane in (
+            ws.get("panes", {}).values()
+            if isinstance(ws.get("panes"), dict)
+            else ws.get("panes", [])
+        ):
+            ref = (
+                {
+                    k: (redact(v) if "id" in k or "path" in k else v)
+                    for k, v in (pane.get("agent_session") or {}).items()
+                }
+                if isinstance(pane, dict)
+                else None
+            )
+            print(
+                f"    pane cwd={pane.get('cwd')!r} agent_session={ref} keys={sorted(pane)}"
+            )
 
 
 def main():

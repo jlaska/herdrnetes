@@ -2,7 +2,10 @@
 
 **Status:** Executed on a local host (2026-11-15). Layout, process, shell, Claude Code and Herdr version tests
 complete; Codex runtime tests **blocked** (Codex not installed). Proposed for review; no ADR changes made.
-Tracking issue: [#2](https://github.com/jlaska/herdrnetes/issues/2).
+Tracking issue: [#2](https://github.com/jlaska/herdrnetes/issues/2). Outstanding work is dispositioned in
+[§8](#8-disposition-of-outstanding-work): EXP-002 ([#3](https://github.com/jlaska/herdrnetes/issues/3)), agent
+follow-up ([#10](https://github.com/jlaska/herdrnetes/issues/10)), deferred
+([#11](https://github.com/jlaska/herdrnetes/issues/11)).
 
 Evidence types used below: **[observed]** = measured in an isolated test run, **[source]** = read from Herdr
 v0.9.5 source (`herdrdev/herdr@2ecf19a`, tag `v0.9.5`), **[docs]** = Herdr v0.9.5 documentation, **[inference]** =
@@ -32,8 +35,24 @@ our reasoning, not yet tested. Per-run notes: [`experiments/exp-001/RESULTS.md`]
 **Isolation.** Every run used its own `XDG_CONFIG_HOME`/`XDG_STATE_HOME` under `/tmp/hx1/<run>`, with
 `HERDR_SOCKET_PATH`, `HERDR_SESSION`, `HERDR_PANE_ID` and `HERDR_ENV` unset. The harness guards check the resolved
 socket before any stop and identify servers by `/proc/<pid>/environ`. The operator's own Herdr server stayed up
-throughout. Claude Code kept the real `HOME` to reuse the existing login, so test transcripts live under
-`~/.claude/projects/-tmp-hx1-*`.
+throughout.
+
+**Isolation boundary.** Herdr state and sockets, the pane shell (rc file, `HISTFILE`), the server environment
+and the test git repositories (`GIT_CONFIG_GLOBAL=/dev/null`) were isolated. Claude Code was **not**: it
+deliberately kept the operator's real `HOME` to reuse the existing login, integration hook and settings. Side
+effects of the Claude runs (agent5, agent7, v80d, final and earlier attempts), all on the operator's machine and
+none committed:
+
+| Path | Effect |
+| --- | --- |
+| `~/.claude/projects/-tmp-hx1-*/` | Disposable test transcripts (codeword prompts only), one directory per test repo path |
+| `~/.claude.json` | Folder-trust entries for `/tmp/hx1/<run>/repos/beta` (answered "Yes" by `agent-seed.sh`) |
+| `~/.claude/history.jsonl` | Prompt-history lines for the test prompts |
+| `~/.claude/backups/` | Claude's own rotating backups of `~/.claude.json`, which therefore also contain the trust entries |
+| `~/.claude/settings.json`, `~/.claude/hooks/` | Read only (Herdr integration hook v11); not modified |
+
+Tests also used the operator's Claude account and quota. A fully isolated agent `HOME` (with its own login) is
+recommended for #10, which must change installed agent versions.
 
 **Harness correction.** Early runs started Herdr with the controlling session's environment, so
 `CLAUDE_CODE_*` variables (including `CLAUDE_CODE_CHILD_SESSION`) and `SSH_AUTH_SOCK` reached every pane. The
@@ -126,15 +145,23 @@ only session identity and 0.8.0 expects the older v7 state hook. The only `sessi
   tabs, split geometry, labels and cwds came back identically after clean stop, SIGTERM and SIGKILL (once
   saved), and across 0.9.4↔0.9.5 and 0.9.5→0.8.0→0.9.5. Restored panes are new shells in the saved directory.
   → REQ-003, REQ-006.
-- **FIND-002 — No process survives a Herdr server exit.** [observed] Clean stop and SIGTERM send SIGHUP to every
-  pane. SIGKILL closes the PTY masters, which hangs up the shells. Foreground jobs, background servers and exported
-  variables were lost every time. A restored pane is never a restored process. → REQ-006, REQ-009.
+- **FIND-002 — The tested pane processes did not survive a Herdr server exit.** [observed] Clean stop and SIGTERM
+  send SIGHUP to every pane. SIGKILL closes the PTY masters, which hangs up the shells. In every run the tested
+  processes — interactive shells, a foreground job (`sleep`), a background job started with `&`
+  (`python -m http.server`) and the Claude Code agent — were gone, along with exported variables; no process with a
+  cwd under the run directory remained. A restored pane is a new shell, not a restored process. Scope: processes that
+  deliberately detach from the terminal (`setsid`, `nohup`, daemons, `disown` with SIGHUP ignored) were **not**
+  evaluated and may outlive Herdr [inference]. For the MVP, assume normal in-pane agents are interrupted by every
+  pod replacement. → REQ-006, REQ-009.
 - **FIND-003 — Persistence is event-driven with a 5 s debounce; SIGTERM equals graceful stop.** [source + observed]
   There is no periodic save. Layout mutations, agent reports and accepted OSC 7 cwd reports set a dirty flag, and a
   background writer saves 5 s later (`src/app/mod.rs:44`, `src/app/session.rs`). Writes are atomic (temp file,
   `fsync`, rename, directory `fsync`). SIGTERM and SIGINT log `server shutdown initiated reason=SIGTERM` and run the
   same final save as `herdr server stop`. SIGHUP is ignored. SIGKILL skips the final save, so changes within the
-  debounce window are lost (w-split-fast). → REQ-006.
+  debounce window are lost (w-split-fast). Scope: stop-to-exit took 0.2–0.9 s (controller `timeline.log`, including
+  harness overhead) on local disk with idle panes and at most one idle agent. Shutdown time under durable network
+  storage and busy agents was not measured, so this does not show that any particular Kubernetes grace period is
+  sufficient (→ EXP-002). → REQ-006.
 - **FIND-004 — A `cd` alone is persisted before a crash only if the shell emits OSC 7 with an empty or `localhost`
   host.** [observed + source] Herdr 0.9.5 rejects `file://<hostname>/…` (`src/pane/osc.rs:665-678`), the form many
   shell integrations emit. With no accepted OSC 7, nothing marks the session dirty after a `cd`, and SIGKILL restores
@@ -152,7 +179,8 @@ only session identity and 0.8.0 expects the older v7 state hook. The only `sessi
   restart. This contradicts the docs' "after a client attaches" and matches CHANGELOG 0.8.0 (#2064). Resume needs:
   the official hook installed in `~/.claude` (Herdr runs `python3` from the hook), the session ID stored in
   `session.json`, `claude` on the shell's `PATH`, a shell that starts, the same cwd, and Claude's own transcript
-  store [source]. Resume is typed into a fresh shell, so rc files run first [source]. → REQ-003, REQ-006.
+  store [source]. Resume is typed into a fresh shell, so rc files run first [source]. The hook is versioned with
+  Herdr (FIND-009), so its install location and lifecycle matter in a pod (→ EXP-002). → REQ-003, REQ-006.
 - **FIND-008 — Resume rebuilds the command line; original agent flags are lost.** [observed + source] The resumed
   argv was `claude --resume <id>` without `--model haiku`. The UI still showed a Haiku model (unverified whether
   Claude restored it). Flags such as permission modes must come from agent config files or wrappers, not the
@@ -182,18 +210,9 @@ only session identity and 0.8.0 expects the older v7 state hook. The only `sessi
   in `~/.claude.json` [observed/general knowledge], so a new repository path needs a human decision once.
 
 **Surprises:** headless resume works despite the docs (FIND-007); hostname-form OSC 7 is silently ignored
-(FIND-004); SIGKILL did not leave orphan processes (FIND-002); the socket path limit (FIND-006).
+(FIND-004); SIGKILL did not leave orphans of the tested processes (FIND-002); the socket path limit (FIND-006).
 
-**Unresolved questions**
-- Codex resume end-to-end (needs Codex installed plus credentials).
-- Claude CLI version change (resuming a transcript written by an older or newer Claude Code); not run, because it
-  requires changing installed Claude versions.
-- zsh behaviour (history flush on hangup, OSC 7 form); only bash was tested.
-- Resume when the saved cwd no longer exists, e.g. if the PVC is not mounted yet: the docs say the pane keeps an
-  error and its ref, and retries on the next restart. Untested.
-- Two panes with the same Claude session (dedupe: only the first resumes [source]). Untested.
-- Kubernetes-specific signals: pod deletion, node drain, OOM kill (expected to behave like SIGTERM, or SIGKILL after
-  the grace period; to be verified in EXP-002).
+**Unresolved questions** are listed with their disposition in [§8](#8-disposition-of-outstanding-work).
 
 ## 6. Architecture implications (proposals for review)
 
@@ -207,13 +226,18 @@ These are proposals; no accepted ADR is changed.
    absolute path** in every pod revision: Herdr restores literal cwds, and Claude keys transcripts by cwd
    (FIND-001, FIND-007). Keep socket paths under 108 bytes (FIND-006). Deliver `config.toml` as a read-only
    ConfigMap via `HERDR_CONFIG_PATH` (FIND-005). Inject credentials as Secrets rather than baking them in.
-3. **Integrations.** `herdr integration install claude|codex` rewrites files in the agent home. Either run it at
-   image build into a seeded home, or reconcile it at startup. A missing or outdated hook silently disables resume
-   (FIND-007).
-4. **Lifecycle (REQ-006).** SIGTERM gives a complete save (FIND-003), so a normal `terminationGracePeriodSeconds`
-   is enough. Every pod replacement still ends all agent processes and in-flight turns (FIND-002). Readiness should
-   check the Herdr socket. Restore verification needs separate signals: workspace count, and agents reported via
-   `herdr agent list`.
+3. **Integrations (open decision for EXP-002).** `herdr integration install claude|codex` writes versioned hook
+   files and settings into the agent home, and the hook must match the Herdr server version (FIND-007, FIND-009).
+   Hooks baked into the image can be hidden by the persistent agent-home mount, and a missing or outdated hook
+   silently disables resume or status tracking. Options to compare in EXP-002 — idempotent startup reconciliation,
+   seeding a home at image build, or keeping hooks outside the mounted home — judged on preserving user settings
+   and supporting Herdr rollback. Not implemented here.
+4. **Lifecycle (REQ-006).** SIGTERM triggers a complete final save locally (FIND-003), but the time it needs in a
+   pod is unmeasured. Do not assume the default `terminationGracePeriodSeconds` is sufficient; EXP-002 should
+   measure shutdown duration with durable storage and active agents and record what is lost when grace expires
+   (a SIGKILL falls back to the last debounced save). Every pod replacement still ends in-pane agent processes and
+   in-flight turns (FIND-002). A listening socket or a Ready pod is not proof of recovery: verify restored layout
+   (`herdr api snapshot`) and resumed agents (`herdr agent list`, a recall check) separately.
 5. **GitOps upgrades and rollback.** Snapshot `session.json` (and `session-snapshots/`) before every image change.
    Rollback is safe across the tested range, but test a schema version bump explicitly (FIND-009). REQ-009 cannot be
    met by live handoff and needs the separated execution model already deferred in ADR-0001.
@@ -226,10 +250,32 @@ exactly; after a forced stop, state older than ~5 s is restored; agent conversat
 
 ## 7. Follow-up recommendations
 
-- **EXP-002:** Repeat B and C as Kubernetes pod deletion, rollout and OOM/eviction. Verify the PVC layout above, the
-  short socket path, `HERDR_CONFIG_PATH`, headless start as the pod entrypoint, and agent resume without a client.
-- **EXP-002 or a new experiment:** Codex resume, and Claude/Codex CLI version upgrade and rollback against existing
-  transcripts.
-- **EXP-004:** SSH agent socket handling (FIND-011) for commit signing without a local YubiKey.
-- Upstream: report the docs/behaviour mismatch on headless resume, and ask whether OSC 7 with the local hostname
-  should be accepted.
+- **EXP-002 ([#3](https://github.com/jlaska/herdrnetes/issues/3)):** Repeat B and C as Kubernetes pod deletion,
+  rollout, drain and OOM/eviction, with shutdown timing and separate recovery verification. Verify the PVC layout
+  above, the short socket path, `HERDR_CONFIG_PATH`, headless start as the pod entrypoint, agent resume without a
+  client, and decide the hook lifecycle.
+- **Agent follow-up ([#10](https://github.com/jlaska/herdrnetes/issues/10)):** Codex resume, and Claude/Codex CLI
+  version upgrade and rollback against existing conversations.
+- **EXP-004 ([#5](https://github.com/jlaska/herdrnetes/issues/5)):** SSH agent socket handling (FIND-011) for commit
+  signing without a local YubiKey.
+- **Deferred ([#11](https://github.com/jlaska/herdrnetes/issues/11)):** zsh, duplicate session refs, and optional
+  upstream questions (headless-resume docs, hostname-form OSC 7).
+
+## 8. Disposition of outstanding work
+
+| Item | Source | Disposition |
+| --- | --- | --- |
+| Shutdown duration vs grace period with durable storage and busy agents | FIND-003 | EXP-002 [#3](https://github.com/jlaska/herdrnetes/issues/3) |
+| Kubernetes exits: pod deletion, rollout, node drain, OOM kill/eviction | FIND-002, FIND-003 | EXP-002 [#3](https://github.com/jlaska/herdrnetes/issues/3) |
+| Recovery verification separate from readiness | FIND-001, FIND-007 | EXP-002 [#3](https://github.com/jlaska/herdrnetes/issues/3) |
+| Mount layout, stable paths, resume when the saved cwd is missing (PVC not mounted) | FIND-001, FIND-005, FIND-006 | EXP-002 [#3](https://github.com/jlaska/herdrnetes/issues/3) |
+| Versioned hook lifecycle in the image vs the persistent agent home (decision + test) | FIND-007, FIND-009 | EXP-002 [#3](https://github.com/jlaska/herdrnetes/issues/3) |
+| Codex resume end to end | FIND-007 | Follow-up [#10](https://github.com/jlaska/herdrnetes/issues/10) |
+| Claude/Codex CLI upgrade and rollback against existing conversations | FIND-009 | Follow-up [#10](https://github.com/jlaska/herdrnetes/issues/10) |
+| Processes that detach from the terminal (`setsid`, `nohup`, daemons) | FIND-002 | Not tracked; out of MVP scope, which assumes in-pane agents are interrupted |
+| SSH agent socket for signing | FIND-011 | EXP-004 [#5](https://github.com/jlaska/herdrnetes/issues/5) |
+| zsh history flush and OSC 7 form | FIND-004 | Deferred [#11](https://github.com/jlaska/herdrnetes/issues/11) |
+| Two panes with the same Claude session ref (only the first resumes [source]) | FIND-007 | Deferred [#11](https://github.com/jlaska/herdrnetes/issues/11) |
+| Upstream: headless-resume docs mismatch; hostname-form OSC 7 | FIND-004, FIND-007 | Deferred, optional [#11](https://github.com/jlaska/herdrnetes/issues/11) |
+
+None of these changes the trusted single-instance MVP scope or any accepted ADR.

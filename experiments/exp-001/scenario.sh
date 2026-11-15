@@ -15,7 +15,7 @@
 # Herdr binary for each start is HERDR_BIN (default: herdr on PATH).
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
-# shellcheck source=lib.sh
+# shellcheck source=experiments/exp-001/lib.sh source-path=SCRIPTDIR
 source "$HERE/lib.sh"
 
 cmd=$1 run=$2
@@ -157,6 +157,7 @@ restart)
   bash "$0" probe "$run" "after-$mode"
   # Exported shell variables live only in the dead shell process.
   a1=$(pane_id alpha 0 0)
+  # shellcheck disable=SC2016 # expanded by the pane shell
   h pane run "$a1" 'echo "ENVCHECK EXP_VAR=[$EXP_VAR] cwd=$PWD"' >/dev/null
   sleep 1
   h pane read "$a1" --lines 5 --source recent | grep '^ENVCHECK' |

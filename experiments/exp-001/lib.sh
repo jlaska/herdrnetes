@@ -65,7 +65,7 @@ unset PROMPT_COMMAND
 EOF
   # osc7=1: empty URI host (accepted by Herdr 0.9.5, src/pane/osc.rs:665-678).
   # osc7=2: real hostname, as VTE-style shell integrations emit (rejected by Herdr).
-  # shellcheck disable=SC2016
+  # shellcheck disable=SC2016,SC2028 # literal escapes are written into the rc file
   case "$osc7" in
   1) echo 'PROMPT_COMMAND='"'"'printf "\033]7;file://%s\007" "$PWD"'"'" >>"$EXP_ROOT/exp-bashrc" ;;
   2) echo 'PROMPT_COMMAND='"'"'printf "\033]7;file://%s%s\007" "$HOSTNAME" "$PWD"'"'" >>"$EXP_ROOT/exp-bashrc" ;;

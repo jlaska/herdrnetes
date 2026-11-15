@@ -3,7 +3,7 @@
 #   agent-seed.sh <run> [model]
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
-# shellcheck source=lib.sh
+# shellcheck source=experiments/exp-001/lib.sh source-path=SCRIPTDIR
 source "$HERE/lib.sh"
 exp_use "$1"
 model=${2:-haiku}
