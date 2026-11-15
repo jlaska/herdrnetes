@@ -1,0 +1,11 @@
+# Image-owned rc for Herdr panes. User customisation goes in ~/.bashrc.local
+# (persistent home volume), which is sourced last.
+export HISTFILE="$HOME/.bash_history"
+HISTSIZE=10000
+HISTFILESIZE=10000
+shopt -s histappend
+PS1='[\u@herdr \W]\$ '
+# OSC 7 with an empty host: the only form Herdr 0.9.5 accepts, so a bare `cd`
+# is saved within the 5 s debounce and survives a crash (FIND-004).
+PROMPT_COMMAND='history -a; printf "\033]7;file://%s\007" "$PWD"'
+[ -r "$HOME/.bashrc.local" ] && . "$HOME/.bashrc.local"

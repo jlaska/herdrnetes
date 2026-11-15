@@ -1,0 +1,25 @@
+# EXP-002 reference manifests (cluster-agnostic). The GitOps repo copies this
+# base and adds an overlay that pins the image digest; nothing private lives here.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: herdrnetes-exp
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: herdrnetes-exp
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - networkpolicy.yaml
+  - service.yaml
+  - statefulset.yaml
+configMapGenerator:
+  # Hash suffix on: a config change renames the ConfigMap, which changes the
+  # pod template and makes Argo CD roll the pod (scenario F compares this with
+  # an in-place edit + `herdr server reload-config`).
+  - name: herdr-config
+    files:
+      - config.toml=config/config.toml
+images:
+  - name: herdrnetes-herdr
+    newName: ghcr.io/jlaska/herdrnetes-herdr
+    newTag: exp002-h095-c311

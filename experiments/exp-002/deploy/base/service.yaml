@@ -1,0 +1,11 @@
+# Headless governing Service required by the StatefulSet; exposes no ports.
+apiVersion: v1
+kind: Service
+metadata:
+  name: herdr
+  labels:
+    app.kubernetes.io/name: herdr
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: herdr

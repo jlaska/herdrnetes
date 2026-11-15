@@ -1,0 +1,15 @@
+# Image default Herdr config. In the pod, HERDR_CONFIG_PATH points at a
+# read-only ConfigMap with the same content (FIND-005); this copy lets the
+# image run standalone (e.g. local podman tests).
+onboarding = false
+
+[update]
+version_check = false
+manifest_check = false
+
+[terminal]
+default_shell = "/usr/local/bin/pane-shell"
+shell_mode = "non_login"
+
+[experimental]
+pane_history = false
