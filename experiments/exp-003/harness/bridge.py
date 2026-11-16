@@ -11,7 +11,9 @@ Each accepted connection spawns `kubectl exec -i herdr-0 -- herdr remote-client-
 pumps bytes both ways (what `ssh -T host herdr remote-client-bridge` does for `herdr --remote`).
 `remote-client-bridge` STARTS a server if none is listening on the client socket, so before
 listening, and again before every connection, this runs `herdr status server --json` in the
-target and refuses unless running and endpoint_compatible. It never stops or restarts anything.
+target and refuses unless running and endpoint_compatible. The check is not atomic: a server that
+disappears between check and exec would be replaced by a new one. This script never stops or
+restarts anything itself.
 
 Environment (the defaults are the cluster; override all three to test against a local server):
   CTX, NS (herdrnetes-exp), POD (herdr-0)   used only to build the default BRIDGE_EXEC

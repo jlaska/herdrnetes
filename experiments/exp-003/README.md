@@ -35,7 +35,8 @@ and foreground command lines, agent metadata (session references hashed, never p
 
 - `remote-client-bridge` **starts a server** if none is listening. `bridge.py` therefore checks
   `herdr status server --json` (`running` and `endpoint_compatible`) before listening and before every connection.
-  The check is not atomic.
+  The check is not atomic. If the server disappears between the check and the exec, the bridge would start a second,
+  unsupervised server. No second server was started in the observed runs; this is an observation, not a guarantee.
 - Nothing here stops the server, deletes or restarts the pod, or changes the image. `cleanup` closes only the workspace
   labelled `exp003-<run>` and removes `/workspace/exp003/<run>` when it carries this run's marker; it needs `EXP_ACK`.
 - Do not use `herdr --remote` or saved machines against this server (FIND-026). Do not run bare `herdr` in the pod while

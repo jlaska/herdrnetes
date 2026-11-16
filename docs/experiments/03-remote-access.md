@@ -2,8 +2,12 @@
 
 **Status:** Executed 2026-11-16 (run `r1`): discovery, desktop client tests, and an Ovis sidecar deployed with owner
 approval and tested in a browser and mobile emulation. **Not run:** a physical phone (needs the owner and private
-network reach) and an Ovis image change or rollback (it would replace the Herdr pod; FIND-029). Proposed for review; no ADR
-changes made. Tracking issue: [#4](https://github.com/jlaska/herdrnetes/issues/4). Builds on
+network reach) and an Ovis image change or rollback (it would replace the Herdr pod; FIND-029). **Not tested, future
+deployment work:** the native `herdr --remote <target>` workflow against the Kubernetes server, which is the owner's
+intended desktop experience. It needs an SSH-capable private path that does not yet exist
+([#25](https://github.com/jlaska/herdrnetes/issues/25)). Remote attachment was demonstrated only through the tested
+`kubectl exec` paths, which remain test and diagnostic mechanisms. Proposed for review; no ADR changes made.
+Tracking issue: [#4](https://github.com/jlaska/herdrnetes/issues/4). Builds on
 [EXP-002](02-kubernetes-deployment.md) (FIND-013–022).
 
 Determine whether desktop SSH/Herdr clients and mobile tools such as Ovis can attach to one persistent unified Herdr
@@ -61,7 +65,9 @@ isolated 0.9.5 server; none of the Ovis behavior has been run yet.
   stop kills every pane. Non-interactive and background reconnects never install or replace. The remote binary path
   cannot be overridden. Our server reports `restart_needed: false`, but whether the client-side restart policy agrees
   for a server that is not a session leader (`detached_server_daemon: false`) is unverified. **Not used against the
-  EXP-002 server** without review. It also needs an SSH endpoint, which the pod does not have.
+  EXP-002 server** without review. It also needs an SSH endpoint, which the pod does not have. Preventing these
+  branches is a prerequisite of the native-client deployment work in
+  [#25](https://github.com/jlaska/herdrnetes/issues/25).
 - **FIND-027 — Bare `herdr` inside the pod attaches to the running server.** [source, observed locally] It checks
   whether the client socket is listening and attaches if it is. It starts a new server only when nothing is listening
   there. The container environment sets `XDG_CONFIG_HOME`, so `kubectl exec` resolves the same socket. Residual risk:
@@ -94,9 +100,9 @@ isolated 0.9.5 server; none of the Ovis behavior has been run yet.
 | # | Path | Pod/network change | Server-replacement risk | Status |
 | --- | --- | --- | --- | --- |
 | A | `kubectl exec -it herdr-0 -- herdr` (TUI runs in the pod) | None | None while server is up (FIND-027) | **Works** (FIND-031) |
-| B | Local `herdr client` ← local Unix socket ← `kubectl exec -i … herdr remote-client-bridge` | None | None; bridge refuses an incompatible server, never stops one | **Works**, preferred desktop path (FIND-031) |
-| C | `herdr --remote` via an `ssh` shim that calls `kubectl exec` | None | Install/stop prompts (FIND-026) | Rejected for the shared server |
-| D | `sshd` sidecar + native `herdr --remote` / saved machines | Pod restart, new SSH identity, ingress rule | Same prompts | Needs owner approval; deferred |
+| B | Local `herdr client` ← local Unix socket ← `kubectl exec -i … herdr remote-client-bridge` | None | None observed. The bridge never stops a server and checks status before each connection. `remote-client-bridge` itself would start a server if none were listening, so a check-then-use race remains (FIND-027) | **Works** as a tested path (FIND-031) |
+| C | `herdr --remote` via an `ssh` shim that calls `kubectl exec` | None | Install/stop prompts (FIND-026) | Not tested; rejected as a test shortcut |
+| D | Native `herdr --remote` over a private SSH path (Tailscale SSH, SSH gateway, sidecar or TCP ingress) | Depends on design; owner approval | Same prompts (FIND-026) | **Not tested:** the target desktop UX, tracked as deployment work ([#25](https://github.com/jlaska/herdrnetes/issues/25)) |
 | E | Ovis sidecar in Herdr pod, reached via `kubectl port-forward` | Pod restart (done once with approval), new image, new Secret | Ovis has an "Update herdr" API (must be unused) | **Works** (FIND-035–037) |
 | F | Ovis on the workstation over B-style bridges to both sockets | None | Same as B | Terminal only; no chat (transcripts are not local). Optional |
 | G | Web terminal (ttyd-like) running path A | Pod restart or exec'd process | None | Fallback if Ovis is rejected |
@@ -123,7 +129,7 @@ and session hash.
   change.** [observed] Both path A (`kubectl exec -it … herdr`) and path B (local `herdr client` through
   `kubectl exec -i … herdr remote-client-bridge`) showed the server's real workspaces (the two EXP-002 workspaces plus
   `exp003-r1`). Input reached the sentinel pane without changing that pane's shell PID, and the ticker output was live.
-  No second server was started, and on detach neither path left a process in the pod. This is genuine attachment to
+  No second server was started in these runs, and on detach neither path left a process in the pod. This is genuine attachment to
   the one authoritative server, not a separate session. The transport and the authentication are both
   `kubectl exec`, so Kubernetes RBAC is the only gate. (REQ-001, REQ-007)
 - **FIND-032 — Losing a client never affected the server or its panes; reconnecting is manual and fast.** [observed]
@@ -182,7 +188,8 @@ the client or the server; the cause is unknown.
 ## 5. Ovis browser and mobile results (Milestone 4)
 
 **Owner decisions (2026-11-16, [#4](https://github.com/jlaska/herdrnetes/issues/4)):** prototype Ovis as a container in
-the Herdr pod. For the MVP, treat that as meeting REQ-005, recording the upgrade coupling as a limitation.
+the Herdr pod, and accept it for the MVP as an experiment **exception** to REQ-005's separate-pod intent, recording the
+upgrade coupling as a limitation. This approval is not an ADR and does not accept a permanent architecture.
 
 **Deployment:** image `ghcr.io/jlaska/herdrnetes-ovis:exp003-o054-h095@sha256:8e31cc27ca866dc47f9cb0f519abce844db8a75974c5d147b91fdbcff46ef0db`,
 built from the EXP-002 Herdr digest. Ovis v0.5.4 assets are SHA-256 pinned and the release signature is verified.
@@ -233,7 +240,9 @@ unchanged through three Ovis container restarts and every tunnel outage.
   - Revocation means rotating the token, which signs out every browser. That needs a re-seal, a signed commit and an
     Ovis container restart, but not a Herdr restart.
   - A lost phone or browser profile is a lost token.
-  - Paired-device credentials live in Ovis's emptyDir, so a container restart revokes every pairing.
+  - Paired-device credentials are a separate credential, stored in `devices.json` in Ovis's state emptyDir. They
+    survive an Ovis container restart and a token rotation, and are lost only when the pod is replaced. Pairing was not
+    tested. (Corrected: an earlier draft said a container restart revokes pairings.)
   Two `/proc/net` snapshots showed no non-loopback connections; this is point-in-time evidence, not a capture.
   (REQ-007)
 - **FIND-038 — Agents in this image start in Claude Code's auto-permission mode, so no approvals reach any client.**
@@ -260,40 +269,55 @@ unchanged through three Ovis container restarts and every tunnel outage.
 | Concern | Desktop path B | Ovis path E |
 | --- | --- | --- |
 | Identity and authorization | Kubernetes user + RBAC `pods/exec` on `herdr-0` | RBAC `pods/portforward`, then a shared static `OVIS_TOKEN` |
-| What a holder controls | Every pane and agent (FIND-025) | Every pane and agent, plus the transcripts on the read-only home |
+| What a holder controls | **Full trusted Herdr operator:** every pane and agent (FIND-025), plus any command in the Herdr container | **Full trusted Herdr operator, same as B.** Terminal input to every pane means any shell command as uid 1000 in the Herdr container. Also read access to the transcripts. |
 | Network exposure | None beyond the Kubernetes API | None: loopback listener, `kubectl port-forward`, NetworkPolicy unchanged |
 | Transport security | Kubernetes API TLS | Kubernetes API TLS to the pod; plain HTTP on workstation loopback |
 | Credential lifetime and revocation | The kube credential's | Token stored in browser cookie for about a year; revoke by rotation (FIND-037) |
 | Concurrent users | One operator; shared focus and input (FIND-033) | Same; shared input |
-| Claude credential exposure | None added | None: not in the Ovis env; the pod's `CLAUDE_CODE_OAUTH_TOKEN` stays in the Herdr container |
+| Claude and agent credential exposure | **Exposed.** `kubectl exec` runs in the Herdr container, whose environment holds `CLAUDE_CODE_OAUTH_TOKEN` | **Exposed through the panes.** Ovis does not inherit the credential, but a token holder can type commands into a pane to print its environment, read agent files and home-volume secrets, or act as the agent |
 | Residual risks | Undocumented bridge interface | "Update herdr" API with no off switch, contained only by read-only rootfs and no `curl`; a token holder could enable the relay; single-maintainer, fast-moving project; Ovis image must track Herdr |
 
+**Security boundary.** An Ovis token is not a viewing credential. Holding it gives effectively the same privilege as
+a trusted Herdr operator with `pods/exec`, including access to any secret a pane can read. The read-only mounts, the
+separate container environment and the absence of `CLAUDE_CODE_OAUTH_TOKEN` from Ovis limit what the Ovis *process*
+holds. They are **not an authorization boundary** against a user with full PTY control. Protect, rotate and revoke the
+token, and any paired device, as an operator credential.
+
 **Recommendation for MVP review (a proposal, not a decision):**
-- **Desktop:** path B as the primary client, with path A as the fallback. Both are gated by RBAC on `pods/exec`.
+- **Desktop, tested:** paths A and B work and are gated by RBAC on `pods/exec`. They are suitable for tests, diagnosis
+  and operator fallback, but are not the intended everyday workflow. The intended workflow is native
+  `herdr --remote <target>` with no user-visible `kubectl`. It is **not tested** and is a deployment follow-up
+  ([#25](https://github.com/jlaska/herdrnetes/issues/25)): it needs an SSH-capable private path (plain HTTP ingress
+  cannot carry it) and a resolution of FIND-026.
 - **Browser and mobile:** the Ovis sidecar on loopback behind `kubectl port-forward`, with an owner-sealed token.
-- **No public ingress, SSH daemon or relay.**
+- **No public ingress or relay.** No SSH endpoint exists until #25 has an owner-approved design.
 - **Phone reach:** needs a private route to the Kubernetes API, or to a host that holds the port-forward. That network
   choice (VPN or Tailscale) is the owner's and is the next approval gate. If Ovis is ever exposed beyond loopback, it
   needs TLS and per-device pairing in place of the shared token.
 
-**Process note:** during browser automation, a Playwright error message echoed the token into an agent transcript. It
-was never written to a file or the repo. The token should be rotated, and later scripts redact exceptions.
+**Token exposure, urgent operator action:** during browser automation, a Playwright error message echoed the Ovis
+token into an agent transcript. It was never written to a file or the repo. Treat the token as **exposed** and
+rotate it promptly, by the owner-run procedure in
+[`README-ovis.md`](../../experiments/exp-003/README-ovis.md#token-rotation-owner-run). The procedure restarts only the
+Ovis container, never the Herdr pod. Tracked in [#22](https://github.com/jlaska/herdrnetes/issues/22). Later scripts
+redact exceptions.
 
 ## 7. Traceability
 
 | Requirement | Findings | Status |
 | --- | --- | --- |
 | REQ-001 One unified Herdr server | FIND-031, 033, 035 | **Met:** every client attached to the one server |
-| REQ-005 Optional services in independent pods | FIND-028, 029, 036 | **Partly met.** A separate pod is impossible with Herdr 0.9.5 and Ovis 0.5.4. A container in the Herdr pod has an independent process lifecycle; its upgrades replace the Herdr pod. The owner accepts this for the MVP |
-| REQ-007 Remote client and mobile browser access | FIND-023–027, 031–038 | **Met for desktop** (paths A and B) **and for browser plus mobile emulation** (Ovis). A physical phone and private remote reach are untested |
+| REQ-005 Optional services in independent pods | FIND-028, 029, 036 | **Partly met.** REQ-005's intent (separate pods) is unchanged. A separate pod is impossible with Herdr 0.9.5 and Ovis 0.5.4. The Ovis sidecar is an owner-approved **experiment exception**, not an accepted architecture or ADR. Its process lifecycle is independent; its upgrades replace the Herdr pod |
+| REQ-007 Remote client and mobile browser access | FIND-023–027, 031–038 | **Partly met.** Remote attachment to the one server works through the tested `kubectl` paths A and B, and browser plus mobile emulation works through Ovis. **Not tested:** native `herdr --remote` without user-visible `kubectl` ([#25](https://github.com/jlaska/herdrnetes/issues/25)), a physical phone, and private remote reach |
 | REQ-002 Pinned images | FIND-024, 034, 036 | Clients upgrade independently within endpoint generation 1; Ovis must be rebuilt with Herdr |
 
 ## 8. Follow-ups
 
 | Topic | Findings | Issue |
 | --- | --- | --- |
+| Native `herdr --remote` over a private SSH path (deployment) | FIND-023–027 | [#25](https://github.com/jlaska/herdrnetes/issues/25) |
 | Physical phone over an owner-approved private network path | FIND-035, 037 | [#20](https://github.com/jlaska/herdrnetes/issues/20) |
 | Transport for browser services in separate pods (REQ-005) | FIND-028, 029, 036 | [#21](https://github.com/jlaska/herdrnetes/issues/21) |
-| Ovis hardening: token rotation, update API, relay, lockstep builds | FIND-030, 036, 037 | [#22](https://github.com/jlaska/herdrnetes/issues/22) |
+| **Urgent:** rotate the exposed Ovis token; Ovis hardening (update API, relay, lockstep builds) | FIND-030, 036, 037 | [#22](https://github.com/jlaska/herdrnetes/issues/22) |
 | Agent permission-mode baseline, `/tmp` sticky bit | FIND-038 | [#23](https://github.com/jlaska/herdrnetes/issues/23) |
 | Multi-client focus hazard, stall tolerance, harness pane identity | FIND-032, 033 | [#24](https://github.com/jlaska/herdrnetes/issues/24) |

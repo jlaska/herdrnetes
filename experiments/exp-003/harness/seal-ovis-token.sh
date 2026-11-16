@@ -8,7 +8,8 @@
 #
 # plaintext-file defaults to ~/.local/share/exp003/ovis-token (mode 0600). An existing file is
 # not overwritten (it may be the token of a Secret already in the cluster): move it away first.
-# Rotating = new token, new SealedSecret, then restart the Ovis container (or the pod).
+# Rotating = new token, new SealedSecret, signed GitOps commit, then restart only the Ovis
+# container (see README-ovis.md "Token rotation"); replacing the pod would stop every agent.
 set -euo pipefail
 cert=${1:?sealed-secrets public cert} out=${2:?output file}
 plain=${3:-${XDG_DATA_HOME:-$HOME/.local/share}/exp003/ovis-token}
