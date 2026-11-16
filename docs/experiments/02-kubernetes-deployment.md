@@ -278,13 +278,13 @@ the last ~5 s of layout changes. A missing workspace directory leaves affected p
 | Item | Source | Disposition |
 | --- | --- | --- |
 | Codex resume and Codex sandbox under PSA `restricted` | FIND-013 | [#10](https://github.com/jlaska/herdrnetes/issues/10) |
-| Real node drain; shutdown with busy agents and large sessions | FIND-014 | Follow-up issue (needs owner approval for a drain) |
-| Config reload on ConfigMap change | FIND-020 | Follow-up issue |
-| Single-writer guard / force-delete policy | FIND-019 | Follow-up issue |
-| Argo CD webhook for the GitOps repository | FIND-016 | Follow-up issue (GitOps platform, outside this repository) |
+| Real node drain; shutdown with busy agents and large sessions | FIND-014 | [#13](https://github.com/jlaska/herdrnetes/issues/13) (needs owner approval for a drain) |
+| Config reload on ConfigMap change | FIND-020 | [#14](https://github.com/jlaska/herdrnetes/issues/14) |
+| Single-writer guard / force-delete policy | FIND-019 | [#15](https://github.com/jlaska/herdrnetes/issues/15) |
+| Argo CD webhook for the GitOps repository | FIND-016 | [#18](https://github.com/jlaska/herdrnetes/issues/18) (GitOps platform, outside this repository) |
 | Per-pane resource limits / OOM isolation | FIND-018 | EXP-006 [#7](https://github.com/jlaska/herdrnetes/issues/7) |
-| Claude plugin-catalogue fetch, pod egress policy | FIND-022 | Follow-up issue |
-| Restore-state reporting outside readiness | FIND-021 | Follow-up issue |
+| Claude plugin-catalogue fetch, pod egress policy | FIND-022 | [#17](https://github.com/jlaska/herdrnetes/issues/17) |
+| Restore-state reporting outside readiness | FIND-021 | [#16](https://github.com/jlaska/herdrnetes/issues/16) |
 | Remote client attach to the pod | — | EXP-003 [#4](https://github.com/jlaska/herdrnetes/issues/4) |
 
 None of these changes the trusted single-instance MVP scope or any accepted ADR.
