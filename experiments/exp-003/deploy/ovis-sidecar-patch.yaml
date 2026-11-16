@@ -1,0 +1,107 @@
+# JSON6902 patch (not strategic-merge): `add .../containers/-` APPENDS, so "herdr" stays
+# containers[0]. That matters because `kubectl exec herdr-0` / `kubectl logs herdr-0` without -c
+# act on the first container, and the EXP-003 harness uses them. This patch adds container
+# "ovis" and volumes "ovis-state"/"ovis-tmp" and changes nothing else.
+- op: add
+  path: /spec/template/spec/containers/-
+  value:
+    name: ovis
+    image: herdrnetes-ovis
+    imagePullPolicy: IfNotPresent
+    # ENTRYPOINT (tini -> ovis-entrypoint -> ovis-server serve) comes from the image.
+    env:
+      # Network: loopback only. Reached via `kubectl port-forward pod/herdr-0 7317`.
+      - name: HOST
+        value: 127.0.0.1
+      - name: PORT
+        value: "7317"
+      # Required. A missing Secret or key keeps this container from starting (no `optional`),
+      # and the entrypoint also refuses a token shorter than 24 characters.
+      - name: OVIS_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: herdr-ovis-token
+            key: OVIS_TOKEN
+      # Telemetry and update paths off. `serve` has no supervisor, so Ovis self-update is
+      # unmanaged; OVIS_AUTO_UPDATE=0 is belt and braces. There is no knob for the
+      # "Update herdr" action (POST /api/herdr/update): see experiments/exp-003/README-ovis.md.
+      - name: OVIS_TELEMETRY
+        value: "0"
+      - name: DO_NOT_TRACK
+        value: "1"
+      - name: OVIS_AUTO_UPDATE
+        value: "0"
+      # Herdr integration: the home PVC is mounted read-only, the socket is only connected to.
+      - name: HERDR_SOCKET
+        value: /home/herdr/.config/herdr/herdr.sock
+      - name: HERDR_SOCKET_PATH
+        value: /home/herdr/.config/herdr/herdr.sock
+      - name: OVIS_HERDR_BIN
+        value: /usr/local/bin/herdr
+      # Ovis hard-codes $HOME/.config/herdr-web-ui/bridges and aborts at startup if it cannot
+      # create it (EROFS on the read-only home). HOME is therefore a private emptyDir, and the
+      # two agent stores Ovis reads are named explicitly on the read-only home.
+      - name: HOME
+        value: /var/lib/ovis
+      - name: CLAUDE_CONFIG_DIR
+        value: /home/herdr/.claude
+      - name: CODEX_HOME
+        value: /home/herdr/.codex
+      - name: OVIS_STATE_DIR
+        value: /var/lib/ovis/state
+      - name: OVIS_PASTE_DIR
+        value: /var/lib/ovis/paste
+      - name: XDG_STATE_HOME
+        value: /var/lib/ovis/xdg-state
+      - name: XDG_CACHE_HOME
+        value: /var/lib/ovis/xdg-cache
+      - name: TMPDIR
+        value: /tmp
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["ALL"]
+    # Ovis binds 127.0.0.1, so kubelet httpGet/tcpSocket probes (pod IP) cannot reach it; probe
+    # from inside. /api/health answers 200 without a token. Readiness does not mean a terminal attached.
+    startupProbe:
+      exec: &health
+        command:
+          - python3
+          - -c
+          - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7317/api/health', timeout=3).status == 200 else 1)"
+      periodSeconds: 1
+      failureThreshold: 60
+    readinessProbe:
+      exec: *health
+      periodSeconds: 10
+      timeoutSeconds: 5
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi
+    volumeMounts:
+      - name: home
+        mountPath: /home/herdr
+        readOnly: true
+      - name: workspace
+        mountPath: /workspace
+        readOnly: true
+      - name: ovis-state
+        mountPath: /var/lib/ovis
+      - name: ovis-tmp
+        mountPath: /tmp
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: ovis-state
+    emptyDir:
+      sizeLimit: 512Mi
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: ovis-tmp
+    emptyDir:
+      sizeLimit: 512Mi

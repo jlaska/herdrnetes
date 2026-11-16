@@ -1,0 +1,10 @@
+    PID    PPID USER     COMMAND
+      1       0 herdr    /usr/bin/tini -- /usr/local/bin/ovis-entrypoint
+      2       1 herdr    /opt/ovis/ovis-server serve
+     47       2 herdr    /opt/ovis/bin/ovis-pty-sidecar 100 30 /usr/local/bin/herdr terminal attach term_660689cbe11351
+     48      47 herdr    /usr/local/bin/herdr terminal attach term_660689cbe11351
+handshake: HTTP/1.1 101 Switching Protocols
+initial msg types: ['features', 'snapshot']
+after attach types: ['input-ready', 'pty-data']
+saw OVIS_ATTACH_42 in output: True
+output tail: b'[3;1H\x1b[0;39;49m[herdr@herdr\x1b[3;14Hrepo-a]$\x1b[0m\x1b[3;23H\x1b[?25h\x1b[?2026l\x1b[3;23H\x1b[?25h'

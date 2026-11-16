@@ -1,0 +1,10 @@
+touch: cannot touch '/home/herdr/x': Read-only file system
+touch: cannot touch '/workspace/x': Read-only file system
+touch: cannot touch '/opt/ovis/x': Read-only file system
+touch: cannot touch '/x': Read-only file system
+/workspace ro,seclabel,nosuid,nodev,size
+/home/herdr ro,seclabel,nosuid,nodev,siz
+/ ro,context="system_u:object_r:containe
+1000
+CapEff:	0000000000000000
+Seccomp:	2

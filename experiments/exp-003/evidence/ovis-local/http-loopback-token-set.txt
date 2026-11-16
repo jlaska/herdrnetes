@@ -1,0 +1,6 @@
+health noauth       (200, '{"ok":true,"herdr":{"version":"0.9.5","protocol":22,"terminal_attach":true},"auth":{"required":true,"authenticated":false,"reason":"token_required"},"web_ui":{"boot_id":"d16ebc0a-b96c-4843-91d1-eab98778fbd5","revision":null}}')
+session noauth      401
+session badtoken    401
+session token       200
+snapshot keys ['version', 'protocol', 'focused_workspace_id', 'focused_tab_id', 'focused_pane_id', 'workspaces', 'tabs', 'panes', 'layouts', 'agents', 'herdr_lifetime', 'finish_epoch', 'order_epoch', 'read_seq']
+workspaces: ['repo-a'] panes: ['w1:p1']

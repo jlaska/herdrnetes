@@ -1,0 +1,22 @@
+# EXP-003 overlay: adds ONLY an Ovis sidecar container (and its two emptyDir
+# volumes) to the EXP-002 Herdr StatefulSet. The herdr container, volumes
+# claim templates, ConfigMap, Service, NetworkPolicy and namespace are untouched;
+# `deploy/diff-vs-base.sh` proves it. Nothing here is applied to a cluster by
+# this repository; the private GitOps repo copies it after owner approval.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../exp-002/deploy/base
+
+patches:
+  - path: ovis-sidecar-patch.yaml
+    target:
+      kind: StatefulSet
+      name: herdr
+
+# Local-build tag, not yet pushed; the GitOps copy pins the pushed digest.
+images:
+  - name: herdrnetes-ovis
+    newName: ghcr.io/jlaska/herdrnetes-ovis
+    newTag: exp003-o054-h095
