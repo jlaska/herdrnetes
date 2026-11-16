@@ -1,7 +1,7 @@
 # EXP-003: Remote access and mobile clients
 
-**Status:** In progress. Milestone 1 (discovery and compatibility research) is complete. Desktop/SSH attach tests
-(Milestone 3) and Ovis work (Milestone 4) are pending; Ovis needs an owner decision. Proposed for review; no ADR
+**Status:** In progress. Milestone 1 (discovery) and Milestone 3 (desktop client tests, run `r1`) are complete.
+Ovis/mobile work (Milestone 4) awaits an owner decision. Proposed for review; no ADR
 changes made. Tracking issue: [#4](https://github.com/jlaska/herdrnetes/issues/4). Builds on
 [EXP-002](02-kubernetes-deployment.md) (FIND-013–022).
 
@@ -92,8 +92,8 @@ isolated 0.9.5 server; none of the Ovis behavior has been run yet.
 
 | # | Path | Pod/network change | Server-replacement risk | Status |
 | --- | --- | --- | --- | --- |
-| A | `kubectl exec -it herdr-0 -- herdr` (TUI runs in the pod) | None | None while server is up (FIND-027) | To test (M3) |
-| B | Local `herdr client` ← local Unix socket ← `kubectl exec -i … herdr remote-client-bridge` | None | None; bridge refuses an incompatible server, never stops one | To test (M3), preferred desktop path |
+| A | `kubectl exec -it herdr-0 -- herdr` (TUI runs in the pod) | None | None while server is up (FIND-027) | **Works** (FIND-031) |
+| B | Local `herdr client` ← local Unix socket ← `kubectl exec -i … herdr remote-client-bridge` | None | None; bridge refuses an incompatible server, never stops one | **Works**, preferred desktop path (FIND-031) |
 | C | `herdr --remote` via an `ssh` shim that calls `kubectl exec` | None | Install/stop prompts (FIND-026) | Rejected for the shared server |
 | D | `sshd` sidecar + native `herdr --remote` / saved machines | Pod restart, new SSH identity, ingress rule | Same prompts | Needs owner approval; deferred |
 | E | Ovis sidecar in Herdr pod, reached via `kubectl port-forward` | Pod restart, new image, new Secret | Ovis has an "Update herdr" button (must be unused) | Needs owner approval (FIND-028–030) |
@@ -105,18 +105,71 @@ browser service) is the only gate, and it is already narrower than any network e
 kube credential, adds no ingress, and needs no NetworkPolicy change. Remote access from outside the workstation
 (mobile) would then depend on reaching the Kubernetes API privately (VPN/Tailscale), which requires owner approval.
 
-## 4. Planned tests (Milestone 3, no approval needed)
+## 4. Desktop client results (Milestone 3)
 
-These run only client-side and in a new disposable workspace (`exp003-*`) with `sleep`/`cat` sentinel processes. They
-do not use existing panes or the Claude agent. There is no pod deletion, server stop, or image change; EXP-002 already
-measured those.
+Run `r1`, 2026-11-16 17:08–17:28Z. Harness: [`experiments/exp-003/`](../../experiments/exp-003/). Per-test table,
+commands and verbatim client messages: [`RESULTS.md`](../../experiments/exp-003/RESULTS.md). Tests used one disposable
+workspace (`exp003-r1`) with `sleep` and ticker sentinel panes. The pre-existing panes and the Claude agent received no
+input. Clients: Herdr 0.9.5 (workstation), 0.9.4 and 0.8.0 (binaries from the EXP-002 image variants), driven in a
+private tmux server with its prefix disabled.
 
-1. Path A: attach, see existing workspaces, navigate, input to sentinel pane, detach (prefix `q`), reattach.
-2. Path B: same, plus kill the local client, kill the `kubectl` bridge process mid-session, and simulate a network drop
-   (stop the bridge for N seconds). Measure whether reattach is manual or automatic.
-3. Two clients at once (A + B): focus independence, input interleaving, resize ownership, scrollback.
-4. Version skew: Herdr 0.9.4 and 0.8.0 client binaries (from EXP-002 image variants) against the 0.9.5 server.
-5. Idle transport survival over `kubectl exec` (stream idle timeouts).
+**Server continuity:** `identity-diff` was run against the baseline after every step, 17 captures in all. The lead
+agent also ran an independent capture afterwards. Every capture showed the same pod UID, restart count 0, server PID 7
+with an unchanged start time (`13:18:58Z`), the same shell PID in every pre-existing pane, and the same Claude process
+and session hash.
 
-Each test records pod UID, server PID and start time, sentinel and agent PIDs, client version, recovery class (Fully
-restored / Recoverable / Lost), and elapsed time.
+- **FIND-031 — A workstation Herdr client attaches to the existing Kubernetes server with no pod, image or network
+  change.** [observed] Both path A (`kubectl exec -it … herdr`) and path B (local `herdr client` through
+  `kubectl exec -i … herdr remote-client-bridge`) showed the server's real workspaces (the two EXP-002 workspaces plus
+  `exp003-r1`). Input reached the sentinel pane without changing that pane's shell PID, and the ticker output was live.
+  No second server was started, and on detach neither path left a process in the pod. This is genuine attachment to
+  the one authoritative server, not a separate session. The transport and the authentication are both
+  `kubectl exec`, so Kubernetes RBAC is the only gate. (REQ-001, REQ-007)
+- **FIND-032 — Losing a client never affected the server or its panes; reconnecting is manual and fast.** [observed]
+  Server and panes were **fully preserved** after each of these:
+  - clean detach (prefix `q`);
+  - SIGKILL of the local client;
+  - SIGKILL of the `kubectl` transport, which simulates an SSH or network drop;
+  - a 60 s transport stall (SIGSTOP), after which `kubectl` failed with an i/o timeout;
+  - 628 s attached and idle, during which the client stayed live with no stream timeout.
+
+  The client is **Recoverable**: after a lost transport it exits, prints `lost connection to remote Herdr` and the
+  reattach command, and does not reconnect automatically. Rerunning that command took about 0.5 s. A frozen display
+  gives no stall indicator. A killed client leaves the local terminal needing `reset`. The stall tolerance below 60 s
+  was not measured. (REQ-007)
+- **FIND-033 — Clients see separate workspaces but share pane focus, input, size and scroll, so concurrent clients
+  are for one operator, not for collaboration.** [observed]
+  - Each client keeps its own selected workspace, but the server keeps one focused workspace and pane. After client B
+    switched to another workspace, the server's focus moved there while client A still displayed `exp003-r1`.
+    Keystrokes typed in A in that state might go to a pane A is not showing. That was not tested; input was sent only
+    after the snapshot confirmed focus. **Hazard.**
+  - Text typed in either client appeared in both, in order. There is no input ownership.
+  - The layout takes the size of whichever client most recently focused or scrolled, not the one that typed. When
+    one client detaches, the survivor's size applies.
+  - The copy-mode scroll offset is held on the server and shared between clients.
+
+  For agents this means: don't attach a phone and a desktop client to drive different panes at the same time, and
+  don't treat several attached people as isolated users. (REQ-007)
+- **FIND-034 — Client version skew degrades on the client side only.** [observed] A 0.9.4 client attached normally
+  to the 0.9.5 server. A 0.8.0 client, which predates the endpoint handshake (protocol 19, no endpoint generation), was
+  rejected within 0.3 s with `server closed connection`. Nothing was installed or replaced. The pod binary's version and
+  mtime were unchanged, and the server logged nothing. This confirms FIND-024: workstation clients can be upgraded
+  independently, within endpoint generation 1. (REQ-002, REQ-007)
+
+Practical notes: Herdr's default prefix `ctrl+b` collides with tmux, so inside tmux either remap one of them or send
+the prefix twice. The bridge's `kubectl` child sometimes exited with status 1 after a clean detach, with no effect on
+the client or the server; the cause is unknown.
+
+### Lifecycle matrix (client and server continuity)
+
+| Event | Client | Server and pane processes | Measured |
+| --- | --- | --- | --- |
+| Clean detach | Recoverable (rerun) | Fully preserved | detach under 2.5 s |
+| Client SIGKILL | Recoverable (rerun, `reset`) | Fully preserved | bridge cleaned up in 8 ms |
+| Transport killed (SSH/network drop) | Recoverable (printed command) | Fully preserved | reattach about 0.5 s |
+| Transport stalled 60 s | Recoverable after the timeout | Fully preserved | not measured below 60 s |
+| Idle 10 min | Fully preserved | Fully preserved | 628 s |
+| Second client attached and detached | Survivor unaffected | Fully preserved | — |
+| Older client (0.9.4) | Works | Fully preserved | — |
+| Pre-endpoint client (0.8.0) | Lost (unsupported) | Fully preserved | rejected in 0.3 s |
+| Browser refresh, Ovis restart, Ovis image change | Pending Milestone 4 | — | — |

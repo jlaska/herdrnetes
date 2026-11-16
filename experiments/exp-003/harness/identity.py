@@ -11,14 +11,24 @@ identity.py diff <a.json> <b.json>          # UNCHANGED/CHANGED per field; exit 
 
 Fatal (exit 1): pod UID, server PID or start time, a pane shell PID that changed or whose pane
 disappeared. Everything else (restart count, image ID, foreground commands, agents, counts) is
-reported but informational. Agent session references are hashed here and never printed.
+reported but informational. Agent session references are hashed here and never printed, and
+UUIDs in pane command lines (e.g. `claude --resume <id>`) are replaced by their hash.
 """
 
 import hashlib
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+UUID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+
+
+def redact(cmdline):
+    if not cmdline:
+        return cmdline
+    return UUID.sub(lambda m: "<sha256:" + hashlib.sha256(m[0].encode()).hexdigest()[:12] + ">", cmdline)
 
 
 def load(p):
@@ -46,7 +56,7 @@ def build(d):
         info = info or {}
         panes[p["pane_id"]] = {
             "shell_pid": info.get("shell_pid"),
-            "foreground": [x.get("cmdline") for x in info.get("foreground_processes") or []],
+            "foreground": [redact(x.get("cmdline")) for x in info.get("foreground_processes") or []],
         }
     ag = [
         {
