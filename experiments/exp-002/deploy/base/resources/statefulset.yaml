@@ -51,6 +51,15 @@ spec:
               value: /run/herdr/cache
             - name: TMPDIR
               value: /tmp
+            # Owner-generated `claude setup-token`, delivered as a SealedSecret by the
+            # GitOps repo. The entrypoint passes it to the server, so every pane sees it
+            # (FIND-011); acceptable only for this trusted single-user experiment.
+            - name: CLAUDE_CODE_OAUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: herdr-claude-token
+                  key: CLAUDE_CODE_OAUTH_TOKEN
+                  optional: true
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

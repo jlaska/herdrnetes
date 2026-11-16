@@ -53,7 +53,8 @@ probe() {
     [ "$pid" = pane_id ] && continue
     {
       echo "### $pid"
-      h pane process-info --pane "$pid" | uv run --script "$COMPARE" procs
+      # A pane restored without a shell (restore_error) has no process info.
+      h pane process-info --pane "$pid" | uv run --script "$COMPARE" procs || echo "fg: (no process)"
       echo "--- screen (last 15 lines)"
       h pane read "$pid" --lines 15 --source recent 2>&1 | sed 's/[[:space:]]*$//' | grep -v '^$' || true
     } >>"$out/pane-probes.txt"
