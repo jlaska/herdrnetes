@@ -13,6 +13,21 @@ source "$H3/../../exp-002/harness/lib.sh"
 HERE=$H3 # exp-002's lib.sh sets HERE to its own directory
 HERDR_BIN=${HERDR_BIN:-herdr}
 
+# As exp-002's check_target, but the pod may also carry the EXP-003 `ovis` container after
+# `herdr` (containers[0]). pod_facts reads containerStatuses[0], which is `herdr` by name order.
+check_target() {
+  local ns pod
+  ns=$(kubectl --context "$CTX" get namespace "$NS" -o jsonpath='{.metadata.labels.app\.kubernetes\.io/name}') ||
+    die "namespace $NS not found in context $CTX"
+  [ "$ns" = herdrnetes-exp ] || die "namespace $NS is not the herdrnetes-exp experiment namespace"
+  pod=$(k get pod "$POD" -o jsonpath='{.metadata.labels.app\.kubernetes\.io/name}/{.metadata.labels.app\.kubernetes\.io/part-of}/{.metadata.ownerReferences[0].kind}/{.spec.containers[*].name}') ||
+    die "pod $NS/$POD not found"
+  case "$pod" in
+  herdr/herdrnetes-exp/StatefulSet/herdr | "herdr/herdrnetes-exp/StatefulSet/herdr ovis") ;;
+  *) die "pod $NS/$POD is not the experiment Herdr pod ($pod)" ;;
+  esac
+}
+
 # Same run-id rules as exp-002, but the workspace root is /workspace/exp003/<run>.
 run_use() {
   safe_name "$1"
