@@ -1,0 +1,18 @@
+PASS entrypoint refuses empty-token
+PASS entrypoint refuses short-token
+PASS entrypoint refuses non-loopback
+PASS readiness probe command succeeds without a token
+PASS loopback request without/with wrong token is refused when OVIS_TOKEN is set
+PASS token: /api/session lists the real workspace and pane
+PASS /ws without token refused (401)
+PASS terminal attach: typed input echoed back through /ws
+PASS ovis spawned 'herdr terminal attach' (ovis-pty-sidecar parent)
+PASS home, workspace, /opt/ovis and rootfs are read-only for Ovis
+PASS unix socket connect works through the read-only home mount
+PASS no EROFS / read-only errors in Ovis logs
+PASS no sockets to non-pod addresses in the pod network namespace
+PASS Ovis works with --network none (socket + token path needs no network)
+PASS Ovis self-update is unmanaged under 'serve' (managed=false)
+PASS herdr server pid+start time unchanged across Ovis kill/start/restart (2 139196349)
+PASS Ovis serves the same workspace after restart
+PASS CONTROL: without OVIS_TOKEN the API is open (loopback 'local' and pod-IP 'open')

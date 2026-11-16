@@ -1,0 +1,77 @@
+# EXP-003 Ovis sidecar image: the EXP-002 Herdr image plus the Ovis v0.5.4
+# linux-x64 release assets under /opt/ovis.
+#
+# FROM the EXP-002 image by digest so the Herdr binary (0.9.5) and uid 1000 are
+# exactly the ones the Herdr container runs; Ovis spawns `herdr terminal attach`
+# and must match the server. The pod runs Ovis as a separate container with its
+# own command (ovis-server serve); the Herdr entrypoint is not used here.
+#
+# Every Ovis input is pinned by SHA-256, and the signed release manifest is
+# additionally verified (Ed25519, key pinned from Ovis source @ b9d0798,
+# scripts/server-manifest.ts RELEASE_PUBLIC_KEY, same key in install.sh).
+
+ARG HERDR_IMAGE=ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277
+ARG FETCH_IMAGE=docker.io/library/debian:trixie-slim@sha256:7378260c0a098d27ac206225db5e7d92b8c7c84ea7afccc86eeb513756bbd392
+
+FROM ${FETCH_IMAGE} AS fetch
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl openssl \
+ && rm -rf /var/lib/apt/lists/*
+ARG OVIS_VERSION
+ARG OVIS_PUBKEY
+ARG OVIS_MANIFEST_SHA256
+ARG OVIS_SERVER_SHA256
+ARG OVIS_DIST_SHA256
+ARG OVIS_PTY_SHA256
+WORKDIR /dl
+RUN set -eu; \
+    base="https://github.com/devswha/ovis/releases/download/v${OVIS_VERSION}"; \
+    for f in ovis-server.json ovis-server.json.sig ovis-server-linux-x64 ovis-dist.tar.gz ovis-pty-sidecar-linux-x64; do \
+      curl -fsSLo "$f" "$base/$f"; done; \
+    echo "${OVIS_MANIFEST_SHA256}  ovis-server.json"        | sha256sum -c -; \
+    echo "${OVIS_SERVER_SHA256}  ovis-server-linux-x64"     | sha256sum -c -; \
+    echo "${OVIS_DIST_SHA256}  ovis-dist.tar.gz"             | sha256sum -c -; \
+    echo "${OVIS_PTY_SHA256}  ovis-pty-sidecar-linux-x64"    | sha256sum -c -; \
+    # Signature: Ed25519 over the manifest bytes, key = 32 raw bytes in base64 (wrap in an SPKI header; octal escapes because RUN uses dash).
+    { printf '\060\052\060\005\006\003\053\145\160\003\041\000'; echo "${OVIS_PUBKEY}" | base64 -d; } \
+      | openssl pkey -pubin -inform DER -out pub.pem; \
+    base64 -d ovis-server.json.sig >sig.bin; \
+    openssl pkeyutl -verify -pubin -inkey pub.pem -rawin -in ovis-server.json -sigfile sig.bin; \
+    # The hashes above must also be the ones the signed manifest names.
+    grep -q "\"sha256\": \"${OVIS_SERVER_SHA256}\"" ovis-server.json; \
+    grep -q "\"sha256\": \"${OVIS_DIST_SHA256}\"" ovis-server.json; \
+    grep -q "\"sha256\": \"${OVIS_PTY_SHA256}\"" ovis-server.json; \
+    grep -q "\"version\": \"${OVIS_VERSION}\"" ovis-server.json; \
+    # Same layout scripts/server-install.ts produces: ovis-server, dist/, bin/ovis-pty-sidecar(+record).
+    mkdir -p /opt/ovis/dist /opt/ovis/bin; \
+    install -m 0755 ovis-server-linux-x64 /opt/ovis/ovis-server; \
+    tar -tzvf ovis-dist.tar.gz | grep -v '^[-d]' && exit 1; \
+    tar -xzf ovis-dist.tar.gz -C /opt/ovis/dist --no-same-owner; \
+    test -f /opt/ovis/dist/index.html; \
+    install -m 0755 ovis-pty-sidecar-linux-x64 /opt/ovis/bin/ovis-pty-sidecar; \
+    printf '{"sha256":"%s","version":"%s"}\n' "${OVIS_PTY_SHA256}" "${OVIS_VERSION}" >/opt/ovis/bin/ovis-pty-sidecar.json; \
+    cp ovis-server.json ovis-server.json.sig /opt/ovis/; \
+    chown -R root:root /opt/ovis; \
+    find /opt/ovis -type d -exec chmod 0755 {} +; find /opt/ovis -type f ! -perm -u+x -exec chmod 0644 {} +
+
+FROM ${HERDR_IMAGE}
+ARG OVIS_VERSION
+USER root
+COPY --from=fetch /opt/ovis /opt/ovis
+COPY ovis-entrypoint.sh /usr/local/bin/ovis-entrypoint
+RUN chmod 0755 /usr/local/bin/ovis-entrypoint
+RUN { echo "ovis=${OVIS_VERSION}"; \
+      echo "ovis_server_sha256=$(sha256sum /opt/ovis/ovis-server | cut -d' ' -f1)"; \
+      echo "ovis_pty_sidecar_sha256=$(sha256sum /opt/ovis/bin/ovis-pty-sidecar | cut -d' ' -f1)"; \
+      echo "ovis_manifest_sha256=$(sha256sum /opt/ovis/ovis-server.json | cut -d' ' -f1)"; \
+      echo "herdr=$(herdr --version)"; } >/usr/share/herdrnetes/ovis-manifest.txt
+
+LABEL org.opencontainers.image.source="https://github.com/jlaska/herdrnetes" \
+      org.opencontainers.image.description="EXP-003 Ovis sidecar image (not production)" \
+      io.herdrnetes.ovis.version="${OVIS_VERSION}"
+
+USER 1000:1000
+WORKDIR /workspace
+# `ovis-server serve` is the plain web server (no supervisor, so no Ovis self-update). The entrypoint
+# refuses to start without a token. Environment comes from the pod spec.
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/ovis-entrypoint"]

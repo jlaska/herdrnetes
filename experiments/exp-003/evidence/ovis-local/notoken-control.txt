@@ -1,0 +1,9 @@
+(the entrypoint refuses an empty token, so this control bypasses it to show raw Ovis behaviour)
+-- no-token control, dst 127.0.0.1
+health noauth       (200, '{"ok":true,"herdr":{"version":"0.9.5","protocol":22,"terminal_attach":true},"auth":{"required":false,"authenticated":true,"via":"local","role":"drive"},"version":"0.5.4","relay":{"phase":"off","relay":"wss://relay.ovis.sh","app":"https://app.ovis.sh","sessions":0,"blocked":null,"error":null,"error_code":null,"direct":{"on":true,"carriers":[]}},"lan_exposure":{"host":"0.0.0.0"},"security":{"token_configured":false,"pairing_gate":"open","bind_scope":"other","observed_ingress":"direct","public_exposure":"unknown"},"herdr_runtime":{"serving":"herdr","source":"detected","tui":{"installed":true,"run')
+session noauth      200
+session badtoken    200
+-- no-token control, dst 10.0.1.33
+health noauth       (200, '{"ok":true,"herdr":{"version":"0.9.5","protocol":22,"terminal_attach":true},"auth":{"required":false,"authenticated":true,"via":"open","role":"drive"},"version":"0.5.4","relay":{"phase":"off","relay":"wss://relay.ovis.sh","app":"https://app.ovis.sh","sessions":0,"blocked":null,"error":null,"error_code":null,"direct":{"on":true,"carriers":[]}},"lan_exposure":{"host":"0.0.0.0"},"security":{"token_configured":false,"pairing_gate":"open","bind_scope":"other","observed_ingress":"direct","public_exposure":"unknown"},"web_ui":{"boot_id":"00bbba63-0fae-4012-ba73-ec03f2cd0ae1","revision":null}}')
+session noauth      200
+session badtoken    200

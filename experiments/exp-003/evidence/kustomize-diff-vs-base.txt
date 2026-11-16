@@ -1,0 +1,105 @@
+--- /tmp/tmp.RDdZRgsCcD/base.yaml	2026-11-16 13:00:48.537272928 -0500
++++ /tmp/tmp.RDdZRgsCcD/overlay.yaml	2026-11-16 13:00:48.555273304 -0500
+@@ -145,6 +145,88 @@
+           name: run
+         - mountPath: /tmp
+           name: tmp
++      - env:
++        - name: HOST
++          value: 127.0.0.1
++        - name: PORT
++          value: "7317"
++        - name: OVIS_TOKEN
++          valueFrom:
++            secretKeyRef:
++              key: OVIS_TOKEN
++              name: herdr-ovis-token
++        - name: OVIS_TELEMETRY
++          value: "0"
++        - name: DO_NOT_TRACK
++          value: "1"
++        - name: OVIS_AUTO_UPDATE
++          value: "0"
++        - name: HERDR_SOCKET
++          value: /home/herdr/.config/herdr/herdr.sock
++        - name: HERDR_SOCKET_PATH
++          value: /home/herdr/.config/herdr/herdr.sock
++        - name: OVIS_HERDR_BIN
++          value: /usr/local/bin/herdr
++        - name: HOME
++          value: /var/lib/ovis
++        - name: CLAUDE_CONFIG_DIR
++          value: /home/herdr/.claude
++        - name: CODEX_HOME
++          value: /home/herdr/.codex
++        - name: OVIS_STATE_DIR
++          value: /var/lib/ovis/state
++        - name: OVIS_PASTE_DIR
++          value: /var/lib/ovis/paste
++        - name: XDG_STATE_HOME
++          value: /var/lib/ovis/xdg-state
++        - name: XDG_CACHE_HOME
++          value: /var/lib/ovis/xdg-cache
++        - name: TMPDIR
++          value: /tmp
++        image: ghcr.io/jlaska/herdrnetes-ovis:exp003-o054-h095
++        imagePullPolicy: IfNotPresent
++        name: ovis
++        readinessProbe:
++          exec:
++            command:
++            - python3
++            - -c
++            - import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7317/api/health',
++              timeout=3).status == 200 else 1)
++          periodSeconds: 10
++          timeoutSeconds: 5
++        resources:
++          limits:
++            memory: 1Gi
++          requests:
++            cpu: 100m
++            memory: 256Mi
++        securityContext:
++          allowPrivilegeEscalation: false
++          capabilities:
++            drop:
++            - ALL
++          readOnlyRootFilesystem: true
++        startupProbe:
++          exec:
++            command:
++            - python3
++            - -c
++            - import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7317/api/health',
++              timeout=3).status == 200 else 1)
++          failureThreshold: 60
++          periodSeconds: 1
++        volumeMounts:
++        - mountPath: /home/herdr
++          name: home
++          readOnly: true
++        - mountPath: /workspace
++          name: workspace
++          readOnly: true
++        - mountPath: /var/lib/ovis
++          name: ovis-state
++        - mountPath: /tmp
++          name: ovis-tmp
+       enableServiceLinks: false
+       securityContext:
+         fsGroup: 1000
+@@ -167,6 +249,12 @@
+       - emptyDir:
+           sizeLimit: 2Gi
+         name: tmp
++      - emptyDir:
++          sizeLimit: 512Mi
++        name: ovis-state
++      - emptyDir:
++          sizeLimit: 512Mi
++        name: ovis-tmp
+   updateStrategy:
+     type: RollingUpdate
+   volumeClaimTemplates:
+OK: herdr container byte-identical (canonical JSON); only container 'ovis' and volumes ovis-state/ovis-tmp added

@@ -1,0 +1,11 @@
+/var/lib/ovis
+/var/lib/ovis/.config
+/var/lib/ovis/.config/herdr
+/var/lib/ovis/.config/herdr/herdr-client.log
+/var/lib/ovis/.config/herdr-web-ui
+/var/lib/ovis/.config/herdr-web-ui/bridges
+/var/lib/ovis/state
+/var/lib/ovis/state/completions.json
+/var/lib/ovis/state/http-requests.jsonl
+/var/lib/ovis/state/usage-removed.json.guard
+/var/lib/ovis/state/telemetry.json

@@ -1,0 +1,5 @@
+2026-11-16T18:04:44.725Z ovis-entrypoint: start ovis ovis=0.5.4 host=127.0.0.1 port=7317 socket=/home/herdr/.config/herdr/herdr.sock
+Runtime: herdr (herdr's TUI is on this PC)
+PTY host: Rust (/opt/ovis/bin/ovis-pty-sidecar)
+Ovis listening on http://127.0.0.1:7317
+{"time":"2026-11-16T18:04:57.206Z","event":"websocket.failed","episode_id":"0b7302d9-c7f3-4003-8533-c5f35b3c1495","operation":"local","code":"closed","failures":1,"suppressed":0,"since_first_failure_ms":0,"close_code":1006}

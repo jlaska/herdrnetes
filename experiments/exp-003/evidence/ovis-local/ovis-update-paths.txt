@@ -1,0 +1,2 @@
+{"managed": false, "auto_update": false, "available": false, "blocked_reason": "Start with bun run start or the herdr plugin to enable updates."}
+POST /api/updates/install -> 409 b'{"error":{"code":"updates_unmanaged","message":"Start with bun run start or the herdr plugin to enable updates."}}'
