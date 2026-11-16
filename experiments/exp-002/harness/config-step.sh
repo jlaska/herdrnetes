@@ -18,6 +18,7 @@ source "$HERE/lib.sh"
 phase=$1
 run_use "$2"
 value=$3 label=$4
+safe_name "$label"
 : "${GITOPS_DIR:?}" "${GITOPS_CONFIG:?}" "${APP:?}"
 ARGO_NS=${ARGO_NS:-argo-system}
 out="$RUN_DIR/config-$label"
@@ -49,6 +50,7 @@ apply)
   git -C "$GITOPS_DIR" diff --cached --quiet HEAD -- "$GITOPS_CONFIG" && { echo "nothing staged; run prepare" >&2; exit 1; }
   grep -q "^pane_history = $value$" "$GITOPS_DIR/$GITOPS_CONFIG" || { echo "staged value is not $value" >&2; exit 1; }
   catch_up
+  check_target
   pod_facts >"$out/pod-before.json"
   pid_before=$(server_pid)
   kx cat /etc/herdr/config.toml >"$out/config-before.toml"

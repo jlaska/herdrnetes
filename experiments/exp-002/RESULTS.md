@@ -128,7 +128,7 @@ The pod stayed on the same node; Longhorn detached and reattached both volumes.
 | `session restore evaluated outcome=ok workspaces=2` | Herdr log | 22:37:48.701 | |
 | `herdr status server` answers | controller | | **11.0 s** |
 | layout complete (2 workspaces, 5 panes) | controller (`api snapshot`) | | **11.3 s** |
-| `agent changed pane=5 agent=Claude` (resume detected) | Herdr log | 22:37:50.573 | 1.9 s after restore |
+| `agent changed pane=5 agent=Claude` (relaunched Claude detected; not proof of resume) | Herdr log | 22:37:50.573 | 1.9 s after restore |
 | pod Ready | Kubernetes | 22:37:50 | |
 
 **Restored state:**
@@ -143,7 +143,7 @@ The pod stayed on the same node; Longhorn detached and reattached both volumes.
   - The exported `EXP_VAR` (`ENVCHECK EXP_VAR=[]`).
   - The `--model haiku` launch flag (FIND-008).
 
-**Conclusion:** the SIGTERM save takes milliseconds, so the 60 s grace period is not a constraint at this scale. Most of the 11 s is Kubernetes work: pod termination and creation plus Longhorn detach and attach. Herdr itself restored and resumed in under 2 s.
+**Conclusion:** the SIGTERM save takes milliseconds, so the 60 s grace period is not a constraint at this scale. Most of the 11 s is Kubernetes work: pod termination and creation plus Longhorn detach and attach. Herdr itself restored the session and detected the relaunched Claude within 1.9 s. The conversation resume was confirmed by the codeword, not timed.
 
 ## C1 — SIGKILL of Herdr inside the container (container restart, same pod)
 
@@ -155,7 +155,7 @@ The harness ran `kill -KILL <herdr pid>` twice by mistake (22:38:21 and 22:38:43
 | Kill | restartCount | Server answers | Layout restored | Notes |
 | --- | --- | --- | --- | --- |
 | 1st | 0 → 1 | 2.5 s | 2.7 s | |
-| 2nd | 1 → 2 | 14.6 s | 14.8 s | Agent detected at 14.8 s. Kubelet's crash backoff (~10 s, doubling per restart up to 5 min) adds directly to recovery |
+| 2nd | 1 → 2 | 14.6 s | 14.8 s | Agent present in Herdr state at 14.8 s (see C2–C6 note ²). Kubelet's crash backoff (~10 s, doubling per restart up to 5 min) adds directly to recovery |
 
 - **Restored and lost:** the same set as B, both times. The codeword was recalled (YES).
 - **Conclusion:** a repeated in-container crash is slower to recover than a graceful pod replacement, because of the backoff.
@@ -165,7 +165,7 @@ The harness ran `kill -KILL <herdr pid>` twice by mistake (22:38:21 and 22:38:43
 Each disruption ran once. The pod stayed on the same node throughout, and the image digest never changed. Δ times are
 controller-measured from the moment of disruption.
 
-| Run | Disruption | Herdr shutdown and save | Server answers | Layout restored | Agent resumed | Codeword |
+| Run | Disruption | Herdr shutdown and save | Server answers | Layout counts ² | Agent in Herdr state ² | Codeword |
 | --- | --- | --- | --- | --- | --- | --- |
 | C2 | `cd` (OSC 7) → 8 s → SIGKILL | none; last autosave 5 s after the `cd` | 1.6 s | 1.8 s | 1.8 s | YES |
 | C3 | `pane split` → 2.7 s → SIGKILL | none; no save between split and kill | 12.2 s ¹ | 12.4 s | 12.4 s | YES |
@@ -174,6 +174,11 @@ controller-measured from the moment of disruption.
 | C6 | `kubectl delete --grace-period=0 --force` | SIGTERM → saved → exit in 0.20 s | 1.5 s | 1.7 s | 1.7 s | YES |
 
 ¹ This was the 4th container restart in about 3 minutes, so kubelet's crash backoff was in effect (see C1).
+
+² As measured during the run: "layout counts" means at least 2 workspaces and 5 panes. "Agent in Herdr state" means a
+snapshot pane with `agent: "claude"`, which appeared in the same poll as the layout every time. Neither column shows
+identity or a resumed conversation. Identity was re-checked offline (below), and the codeword column is the resume
+evidence.
 
 - **C2 — OSC 7 makes a bare `cd` crash-safe.**
   - The image's bashrc emits `file://$PWD`.
@@ -344,3 +349,46 @@ on the same node. Volumes were already attached there and the image was cached, 
 
 **Not done:** a real node drain or cordon. That affects shared workloads and needs owner approval. G3 exercises the same
 storage path (detach, cross-node attach, pull) without one.
+
+## Recovery identity re-check (offline, 2026-11-16, PR #12 review)
+
+The review found that the run's `layout_restored_s` compared counts only, and that `agent_detected_s` did not show a
+running agent (see note ² under C2–C6). Rather than rerun disruptive scenarios, every saved `after-*` probe was re-checked
+offline against the `baseline-agent` probe with
+[`harness/recovery.py audit`](harness/recovery.py). The command:
+`recovery.py audit $EXP_EVIDENCE/r1 baseline-agent 'alpha/1:build/0=/workspace/exp/r1/beta'`. The override records the
+deliberate C2 `cd`.
+
+For each probe it compares:
+- workspace and tab labels in order;
+- every pane by position, with its label and cwd;
+- the `snapshot.agents` entry at the same pane: same agent and the same session reference (compared, not printed);
+- whether that pane's foreground process (from `pane process-info`) is `claude --resume …`;
+- `restore_error` panes.
+
+| Probe | Herdr | Layout identity | Agent + session ref | `claude --resume` running | `restore_error` panes |
+| --- | --- | --- | --- | --- | --- |
+| after-kill-c1x2 (C1, 2nd kill) | 0.9.5 | match ¹ | match | yes | 0 |
+| after-kill-c2 / -c3, after-grace1, after-oom, after-force (C2–C6) | 0.9.5 | match | match | yes | 0 |
+| after-d1, -d2, -d3 (D) | 0.9.5 | match | match | yes | 0 |
+| after-e1 (E1) / after-e2 (E2) / after-e3 (E3) | 0.9.5 / 0.9.4 / 0.8.0 | match | match | yes | 0 |
+| after-g2-missing (G2, directory renamed) | 0.9.5 | cwds followed the rename ² | match | yes | 0 |
+| after-g2b-missing (G2b, directory absent) | 0.9.5 | match | **missing** | no | **3** |
+| after-g2-restored, after-g2b-restored | 0.9.5 | match | match | yes | 0 |
+| after-g3, after-g4 (G3/G4) | 0.9.5 | match | match | yes | 0 |
+
+¹ Taken before the C2 `cd`, so it matches the baseline without the override. With the override it shows that one cwd
+as expected-but-different.
+² The three beta panes' cwds became `…/beta.hidden`, as recorded under G2.
+
+**Result:** every scenario reported as R in the recovery matrix also restores the same workspaces, tabs, pane labels
+and cwds, and the same Claude session reference, in the same pane. The restored pane is running `claude --resume`. G2b
+is the one recorded **M** case: three panes with `restore_error` and no agent. No published R/M/L classification
+changes.
+
+**Not re-checkable:**
+- B's own probe and the first C1 probe were overwritten by later runs that reused the directory names `after-delete`
+  and `after-kill`. B therefore rests on the Herdr log, the probe diff recorded at the time, and the codeword answer.
+  The harness now takes `disrupt <run> <mode> [label]` and stores each run under its own label.
+- Resume latency was never measured. The "under 2 s" wording is replaced by the 1.9 s log interval up to Herdr
+  detecting the relaunched Claude. The harness now records `agent_process_s`.

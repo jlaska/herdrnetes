@@ -72,10 +72,23 @@ GITOPS_DIR=… GITOPS_CONFIG=…/config.toml APP=… bash $H/config-step.sh prep
 uv run --script experiments/exp-001/compare.py diff $EXP_EVIDENCE/r1/baseline-agent $EXP_EVIDENCE/r1/after-<label>
 ```
 
-Recovery is measured separately from readiness:
+Recovery is measured separately from readiness. The run used these controller-polled signals:
 - `server_answers_s`: `herdr status server` responds.
-- `layout_restored_s`: `herdr api snapshot` shows the baseline 2 workspaces and 5 panes.
-- `agent_detected_s`: `herdr agent list` shows Claude.
+- `layout_restored_s`: `herdr api snapshot` shows **at least** the baseline counts (2 workspaces, 5 panes). Counts only.
+- `agent_detected_s`: a pane in `herdr api snapshot` has `agent: "claude"`. This field agreed with the
+  `snapshot.agents` collection in all 20 saved snapshots (Herdr 0.8.0, 0.9.4, 0.9.5). It was always present in the
+  same poll as the layout, so it reflects Herdr's restored session state, **not** a running or resumed Claude.
+
+In review these were found too weak to support identity or resume claims. Two checks fill the gap:
+- **Probes.** Each `after-*` probe records every pane's label, cwd and foreground process, plus git status and history.
+  Its identity was re-checked offline with `harness/recovery.py audit` (results in
+  [RESULTS.md](../../experiments/exp-002/RESULTS.md#recovery-identity-re-check-offline)).
+- **Codeword.** Only the codeword answer shows the conversation itself resumed. It was asked after each probe and was
+  **not timed**.
+
+The harness now measures `layout_identity_s` (labels, positions, cwds), `agent_metadata_s` (same agent and session
+reference at the same pane), `agent_process_s` (that pane's foreground process is `claude` again) and `restore_errors`
+against a snapshot taken just before each disruption. Those metrics postdate the published run.
 
 Then a probe diffs pane cwds, foreground processes, git status and history against the baseline. Finally the agent is
 asked for a codeword it was given before any disruption. Every GitOps step first backs up the state (a tarball to the
@@ -102,7 +115,9 @@ for the new pod, from created to Ready (or the in-place container restart), on t
 | Herdr shutdown save | 179 ms | none | none | 0.18 s | none | 0.20 s | 0.20–0.22 s | – | none | yes |
 | Server answers | 11.0 s ¹ | 2.5 s / 14.6 s ² | 12.2 s ² | 4.0 s | 3.4 s | 1.5 s | replacement 10–21 s ³ | – | – | replacement 25 s ⁴ |
 
-¹ Measured from `kubectl delete`; Herdr restored and resumed in under 2 s of that.
+¹ Measured from `kubectl delete`. Within that, the Herdr log shows 1.9 s from `session restore evaluated` to
+`agent changed … agent=Claude` (Herdr detecting the relaunched Claude). That the conversation resumed was shown later
+by codeword recall and was not timed.
 ² The second and later crashes within minutes hit kubelet's crash backoff.
 ³ 10 s with the image cached; up to 21 s on first pull of a variant. Plus 10–327 s of Argo CD polling before it (FIND-016).
 ⁴ 17 s Longhorn detach + cross-node attach, 5.5 s image pull, 1 s start.
@@ -125,7 +140,8 @@ for the new pod, from created to Ready (or the in-place container restart), on t
   - → REQ-002, REQ-004.
 - **FIND-014 — Recovery time is dominated by Kubernetes, not Herdr.** [observed]
   - **Herdr's own time:** the SIGTERM save took 0.18–0.22 s on Longhorn in every graceful run, including a 1 s grace
-    period. Restore plus Claude resume took under 2 s.
+    period. From the restore to Herdr detecting the relaunched Claude took 1.9 s (B, Herdr log). Conversation resume was
+    confirmed by codeword recall but not timed, so no resume latency is claimed.
   - **Kubernetes's time:**
     - Pod replacement: 10 s on the same node with a cached image.
     - First image pull: about 12 s.

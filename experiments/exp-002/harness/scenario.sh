@@ -4,18 +4,26 @@
 #   CTX=<context> scenario.sh setup   <run>        # repos + layout in the pod, baseline probe
 #   CTX=<context> scenario.sh agent   <run> [model] # claude in beta/0:1/1, codeword seed
 #   CTX=<context> scenario.sh probe   <run> <label>
-#   CTX=<context> scenario.sh disrupt <run> <mode>  # then measure recovery and probe
+#   CTX=<context> scenario.sh disrupt <run> <mode> [label]  # then measure recovery and probe
 #        modes: delete      kubectl delete pod (SIGTERM, default grace)
-#               grace1      kubectl delete pod --grace-period=1
-#               force       kubectl delete pod --grace-period=0 --force
+#               grace1 *    kubectl delete pod --grace-period=1
+#               force *     kubectl delete pod --grace-period=0 --force (can overlap two
+#                           Herdr writers, FIND-019)
 #               kill        SIGKILL herdr inside the container (container restart, same pod)
-#               oom         allocate past the memory limit from a pane (cgroup OOM)
+#               oom *       allocate past the memory limit from a pane (cgroup OOM kills
+#                           the whole container, FIND-018)
 #               external    no action; wait for a pod replacement done elsewhere
 #                           (Argo CD sync, rollout); the old pod uid is recorded first
+#        * test-only failure injection, not a recovery procedure: needs
+#          EXP_ACK="<mode> <ns>/<pod>" (or typing it at a prompt).
+#        Every mode ends every pane process in the pod; run only against the
+#        experiment pod (check_target enforces its namespace and labels).
 #   CTX=<context> scenario.sh ask     <run>        # codeword recall in the restored agent
 #   CTX=<context> scenario.sh cd-only|split-now <run>
-#   CTX=<context> scenario.sh backup  <run> <label> # tar of Herdr + agent state (local, private)
-#   CTX=<context> scenario.sh cleanup <run>        # remove the run's repos from the workspace PVC
+#   CTX=<context> scenario.sh backup  <run> <label> # tar of Herdr + agent state (local, private);
+#                                                   # exits non-zero unless the archive is complete
+#   CTX=<context> scenario.sh cleanup <run> [--yes] # dry run: list the run's workspace tree;
+#                                                   # --yes (+ EXP_ACK) removes it
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 # shellcheck source=experiments/exp-002/harness/lib.sh source-path=SCRIPTDIR
@@ -24,8 +32,16 @@ source "$HERE/lib.sh"
 cmd=$1
 run_use "$2"
 shift 2
+check_target
 
 g() { kx env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git "$@"; }
+
+MARKER=.exp002-run
+# The run's workspace root must be a real directory carrying this run's marker.
+check_ws_root() {
+  [ "$(kx realpath -e "$WS_ROOT")" = "$WS_ROOT" ] || die "$WS_ROOT is missing or not a plain directory"
+  [ "$(kx cat "$WS_ROOT/$MARKER" 2>/dev/null)" = "$RUN" ] || die "$WS_ROOT has no $MARKER for run $RUN; not removing"
+}
 
 make_repo() {
   local d=$WS_ROOT/$1
@@ -67,42 +83,51 @@ probe() {
   cat "$out/panes.tsv"
 }
 
-# Poll recovery after a replacement, independently of pod readiness.
-# Writes recovery.json with controller wall-clock times (UTC).
+# Poll recovery after a replacement, independently of pod readiness, against
+# the snapshot taken just before the disruption. Identity, not counts:
+#   layout_identity_s  workspace/tab labels, every pane's position, label and cwd
+#   agent_metadata_s   snapshot.agents has the same agent at the same pane with
+#                      the same session reference (restored Herdr state)
+#   agent_process_s    that pane's foreground process is claude again (relaunch)
+# Conversation resume is not timed here; `ask` checks it by codeword recall.
+# Writes recovery.json (controller wall-clock) and recovery-match.json.
 measure_recovery() {
-  local mode=$1 t0=$2 base_ws base_panes want_agent=0
-  local out="$RUN_DIR/after-$mode"
+  local label=$1 t0=$2 ref=$3
+  local out="$RUN_DIR/after-$label" want_agent=0
   mkdir -p "$out"
-  base_ws=$(uv run --no-project python -c 'import json,sys;print(len(json.load(open(sys.argv[1]))["result"]["snapshot"]["workspaces"]))' "$RUN_DIR/baseline/api-snapshot.json" 2>/dev/null || echo 0)
-  base_panes=$(($(wc -l <"$RUN_DIR/baseline/panes.tsv") - 1))
-  [ -s "$RUN_DIR/agent-before.json" ] && want_agent=1
-  local t_ready="" t_layout="" t_agent="" snap ws panes agents
+  [ "$(uv run --no-project python -c 'import json,sys;print(len(json.load(open(sys.argv[1]))["result"]["snapshot"].get("agents",[])))' "$ref")" -gt 0 ] && want_agent=1
+  local t_ready="" t_layout="" t_meta="" t_proc="" layout_ok agent_ok apane _errs
   for _ in $(seq 1 600); do
     if [ -z "$t_ready" ] && h status server >/dev/null 2>&1; then t_ready=$(epoch); fi
     if [ -n "$t_ready" ]; then
-      snap=$(h api snapshot 2>/dev/null || true)
-      read -r ws panes agents < <(uv run --no-project python -c '
-import json,sys
-try:
-  s=json.loads(sys.stdin.read())["result"]["snapshot"]
-  print(len(s["workspaces"]), len(s["panes"]), sum(1 for p in s["panes"] if p.get("agent")=="claude"))
-except Exception: print(0,0,0)' <<<"$snap")
-      if [ -z "$t_layout" ] && [ "$ws" -ge "$base_ws" ] && [ "$panes" -ge "$base_panes" ]; then t_layout=$(epoch); fi
-      if [ "$want_agent" = 1 ] && [ -z "$t_agent" ] && [ "$agents" -ge 1 ]; then t_agent=$(epoch); fi
-      if [ -n "$t_layout" ] && { [ "$want_agent" = 0 ] || [ -n "$t_agent" ]; }; then break; fi
+      h api snapshot >"$out/recovery-snapshot.json" 2>/dev/null || true
+      read -r layout_ok agent_ok apane _errs < <(uv run --script "$RECOVERY" match "$ref" "$out/recovery-snapshot.json")
+      if [ -z "$t_layout" ] && [ "$layout_ok" = 1 ]; then t_layout=$(epoch); fi
+      if [ "$want_agent" = 1 ] && [ -z "$t_meta" ] && [ "$agent_ok" = 1 ]; then t_meta=$(epoch); fi
+      if [ -n "$t_meta" ] && [ -z "$t_proc" ] &&
+        h pane process-info --pane "$apane" 2>/dev/null | uv run --script "$COMPARE" procs | grep -q '^fg: claude'; then
+        t_proc=$(epoch)
+      fi
+      if [ -n "$t_layout" ] && { [ "$want_agent" = 0 ] || [ -n "$t_proc" ]; }; then break; fi
     fi
     sleep 0.5
   done
+  uv run --script "$RECOVERY" report "$ref" "$out/recovery-snapshot.json" >"$out/recovery-match.json"
   uv run --no-project python -c '
 import json,sys
-t0,r,l,a=(float(x) if x else None for x in sys.argv[1:5])
+t0,r,l,m,p=(float(x) if x else None for x in sys.argv[1:6])
 rel=lambda t: round(t-t0,2) if t else None
-print(json.dumps({"disruption_start_epoch":t0,"server_answers_s":rel(r),"layout_restored_s":rel(l),"agent_detected_s":rel(a)},indent=1))' \
-    "$t0" "$t_ready" "$t_layout" "$t_agent" | tee "$out/recovery.json"
+m_ = json.load(open(sys.argv[6]))
+print(json.dumps({"disruption_start_epoch":t0,"server_answers_s":rel(r),"layout_identity_s":rel(l),
+  "agent_metadata_s":rel(m),"agent_process_s":rel(p),"restore_errors":m_["restore_errors"],
+  "unmatched":m_["diffs"],"conversation_resume":"not timed; see ask (codeword)"},indent=1))' \
+    "$t0" "$t_ready" "$t_layout" "$t_meta" "$t_proc" "$out/recovery-match.json" | tee "$out/recovery.json"
 }
 
 case "$cmd" in
 setup)
+  if kx test -e "$WS_ROOT"; then check_ws_root; else kx mkdir -p "$WS_ROOT"; fi
+  kx sh -c "printf '%s\n' '$RUN' >'$WS_ROOT/$MARKER'"
   make_repo alpha
   make_repo beta
   h status server >/dev/null
@@ -160,6 +185,7 @@ agent)
 ask)
   b2=$(pane_id beta 0 1)
   label=${1:-ask}
+  safe_name "$label"
   h agent get "$b2" >"$RUN_DIR/agent-$label.json" 2>&1 || true
   h agent wait "$b2" --until idle --timeout 60000 >/dev/null 2>&1 || true
   h agent prompt "$b2" "What codeword did I ask you to remember earlier? Reply with only the codeword, or NONE." \
@@ -186,15 +212,24 @@ split-now)
   ;;
 
 probe)
+  safe_name "$1"
   probe "$1"
   ;;
 
 disrupt)
-  mode=$1
+  mode=$1 label=${2:-$1}
+  safe_name "$label"
+  case "$mode" in
+  delete | kill | external) ;;
+  grace1 | force | oom) require_ack "$mode" ;;
+  *) echo "unknown mode $mode" >&2; exit 2 ;;
+  esac
   old_uid=$(pod_uid)
   old_restarts=$(k get pod "$POD" -o jsonpath='{.status.containerStatuses[0].restartCount}')
-  pod_facts >"$RUN_DIR/pod-before-$mode.json"
-  log "disrupt mode=$mode pod_uid=$old_uid"
+  pod_facts >"$RUN_DIR/pod-before-$label.json"
+  mkdir -p "$RUN_DIR/before-$label"
+  h api snapshot >"$RUN_DIR/before-$label/api-snapshot.json"
+  log "disrupt mode=$mode label=$label pod_uid=$old_uid"
   t0=$(epoch)
   case "$mode" in
   delete) k delete pod "$POD" --wait=false ;;
@@ -207,7 +242,6 @@ disrupt)
 while True: b.append(bytearray(256*1024*1024))'" >/dev/null
     ;;
   external) log "waiting for an external replacement (old uid $old_uid)" ;;
-  *) echo "unknown mode $mode" >&2; exit 2 ;;
   esac
   # Wait for the server to be gone, then for a replacement to be up.
   case "$mode" in
@@ -232,32 +266,48 @@ while True: b.append(bytearray(256*1024*1024))'" >/dev/null
     done
     ;;
   esac
-  measure_recovery "$mode" "$t0"
+  measure_recovery "$label" "$t0" "$RUN_DIR/before-$label/api-snapshot.json"
   wait_ready || true
   log "pod ready"
-  k get events --sort-by=.lastTimestamp -o custom-columns=TIME:.lastTimestamp,REASON:.reason,OBJ:.involvedObject.name,MSG:.message >"$RUN_DIR/events-$mode.txt" 2>&1 || true
+  k get events --sort-by=.lastTimestamp -o custom-columns=TIME:.lastTimestamp,REASON:.reason,OBJ:.involvedObject.name,MSG:.message >"$RUN_DIR/events-$label.txt" 2>&1 || true
   sleep 3
-  probe "after-$mode"
+  probe "after-$label"
   # Exported shell variables live only in the dead shell process.
   a1=$(pane_id alpha 0 0)
   # shellcheck disable=SC2016 # expanded by the pane shell
   h pane run "$a1" 'echo "ENVCHECK EXP_VAR=[$EXP_VAR] cwd=$PWD"' >/dev/null
   sleep 1
-  h pane read "$a1" --lines 5 --source recent | grep '^ENVCHECK' | tee "$RUN_DIR/after-$mode/envcheck.txt" || true
+  h pane read "$a1" --lines 5 --source recent | grep '^ENVCHECK' | tee "$RUN_DIR/after-$label/envcheck.txt" || true
   ;;
 
 backup)
   label=$1
+  safe_name "$label"
   mkdir -p "$RUN_DIR/backups"
-  # Contains conversation transcripts and credentials: kept local only, mode 600.
-  kx tar -C /home/herdr -czf - .config/herdr .claude .claude.json .codex .bash_history 2>/dev/null >"$RUN_DIR/backups/$label.tgz" || true
-  chmod 600 "$RUN_DIR/backups/$label.tgz"
+  # Contains conversation transcripts and credentials: local only, created under
+  # umask 077, and only moved into place once tar exited 0 and the archive lists
+  # Herdr's session.json. Any failure exits non-zero (gitops-step then aborts).
+  dest="$RUN_DIR/backups/$label.tgz" part="$RUN_DIR/backups/.$label.tgz.part"
+  [ ! -e "$dest" ] || die "backup $dest already exists"
+  trap 'rm -f "$part"' EXIT
+  # shellcheck disable=SC2016 # expanded by the pod shell
+  kx sh -c 'cd /home/herdr && set -- .config/herdr; for p in .claude .claude.json .codex .bash_history; do [ ! -e "$p" ] || set -- "$@" "$p"; done; exec tar -czf - "$@"' >"$part"
+  tar -tzf "$part" | grep -x '.config/herdr/session.json' >/dev/null || die "backup $label is incomplete (no session.json)"
+  mv "$part" "$dest"
+  trap - EXIT
   kx sh -c 'cp -a ~/.config/herdr/session.json ~/.config/herdr/session.json.'"$label"'.bak'
-  log "backup $label ($(du -h "$RUN_DIR/backups/$label.tgz" | cut -f1)) + in-PVC session.json.$label.bak"
+  log "backup $label ($(du -h "$dest" | cut -f1)) + in-PVC session.json.$label.bak"
   ;;
 
 cleanup)
-  kx rm -rf "$WS_ROOT"
+  check_ws_root
+  kx find "$WS_ROOT" -maxdepth 2
+  if [ "${1:-}" != --yes ]; then
+    echo "dry run: the paths above would be removed; rerun with --yes" >&2
+    exit 0
+  fi
+  require_ack "cleanup-$RUN"
+  kx rm -rf -- "$WS_ROOT"
   log "removed $WS_ROOT"
   ;;
 

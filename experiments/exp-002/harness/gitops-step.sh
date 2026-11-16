@@ -21,6 +21,7 @@ source "$HERE/lib.sh"
 phase=$1
 run_use "$2"
 variant=$3 label=$4
+safe_name "$label"
 : "${GITOPS_DIR:?}" "${GITOPS_FILE:?}" "${APP:?}"
 ARGO_NS=${ARGO_NS:-argo-system}
 MARK="# EXP-002 G node relocation"
@@ -74,11 +75,13 @@ apply)
   # (fetch + merge: `pull` refuses a dirty index when pull.rebase is set).
   gx fetch -q origin
   git -C "$GITOPS_DIR" merge -q --ff-only '@{upstream}'
-  bash "$HERE/scenario.sh" backup "$RUN" "before-$label"
+  check_target
+  # A failed or incomplete backup exits non-zero and aborts here, before the commit.
+  bash "$HERE/scenario.sh" backup "$RUN" "before-$label" || die "backup failed; not committing"
   pod_facts >"$out/pod-before.json"
   # Start the recovery measurement before the push; `external` waits for the
   # StatefulSet controller to replace the pod.
-  bash "$HERE/scenario.sh" disrupt "$RUN" external >"$out/disrupt.log" 2>&1 &
+  bash "$HERE/scenario.sh" disrupt "$RUN" external "$label" >"$out/disrupt.log" 2>&1 &
   watcher=$!
   trap 'kill "$watcher" 2>/dev/null || true' ERR
   sleep 2
