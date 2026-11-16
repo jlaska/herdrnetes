@@ -290,13 +290,10 @@ was never written to a file or the repo. The token should be rotated, and later 
 
 ## 8. Follow-ups
 
-- A physical phone test over an owner-approved private network path.
-- A Herdr network transport, or an authenticated socket relay, so that browser services can run in their own pods
-  (REQ-005). This could be raised upstream with Herdr.
-- Ovis token rotation, and Ovis container restart when the Secret changes.
-- Whether to keep Ovis's "Update herdr" API reachable, for example by asking upstream for a switch to disable it.
-- Agent permission-mode baseline (FIND-038); the `/tmp` sticky bit in the image.
-- Measure the transport stall tolerance below 60 s (FIND-032), and where keystrokes go when client and server focus
-  disagree (FIND-033).
-- Harness: identify panes by process start time as well as PID. After the pod replacement, four new shells reused the
-  old PIDs.
+| Topic | Findings | Issue |
+| --- | --- | --- |
+| Physical phone over an owner-approved private network path | FIND-035, 037 | [#20](https://github.com/jlaska/herdrnetes/issues/20) |
+| Transport for browser services in separate pods (REQ-005) | FIND-028, 029, 036 | [#21](https://github.com/jlaska/herdrnetes/issues/21) |
+| Ovis hardening: token rotation, update API, relay, lockstep builds | FIND-030, 036, 037 | [#22](https://github.com/jlaska/herdrnetes/issues/22) |
+| Agent permission-mode baseline, `/tmp` sticky bit | FIND-038 | [#23](https://github.com/jlaska/herdrnetes/issues/23) |
+| Multi-client focus hazard, stall tolerance, harness pane identity | FIND-032, 033 | [#24](https://github.com/jlaska/herdrnetes/issues/24) |
