@@ -296,11 +296,13 @@ token, and any paired device, as an operator credential.
   needs TLS and per-device pairing in place of the shared token.
 
 **Token exposure, urgent operator action:** during browser automation, a Playwright error message echoed the Ovis
-token into an agent transcript. It was never written to a file or the repo. Treat the token as **exposed** and
-rotate it promptly, by the owner-run procedure in
+token into an agent transcript. It was never written to a file or the repo. It was treated as **exposed** and
+rotated on 2026-11-16, by the owner-run procedure in
 [`README-ovis.md`](../../experiments/exp-003/README-ovis.md#token-rotation-owner-run). The procedure restarts only the
-Ovis container, never the Herdr pod. Tracked in [#22](https://github.com/jlaska/herdrnetes/issues/22). Later scripts
-redact exceptions.
+Ovis container, never the Herdr pod. Afterwards the old token got 401 and the new one 200. Before the container
+restart, the running Ovis still accepted only the old token, which confirms that updating a Secret does not change a
+running environment. The Herdr identity diff was unchanged
+([#22](https://github.com/jlaska/herdrnetes/issues/22)). Later scripts redact exceptions.
 
 ## 7. Traceability
 
@@ -318,6 +320,6 @@ redact exceptions.
 | Native `herdr --remote` over a private SSH path (deployment) | FIND-023–027 | [#25](https://github.com/jlaska/herdrnetes/issues/25) |
 | Physical phone over an owner-approved private network path | FIND-035, 037 | [#20](https://github.com/jlaska/herdrnetes/issues/20) |
 | Transport for browser services in separate pods (REQ-005) | FIND-028, 029, 036 | [#21](https://github.com/jlaska/herdrnetes/issues/21) |
-| **Urgent:** rotate the exposed Ovis token; Ovis hardening (update API, relay, lockstep builds) | FIND-030, 036, 037 | [#22](https://github.com/jlaska/herdrnetes/issues/22) |
+| Ovis hardening (token rotated 2026-11-16) (update API, relay, lockstep builds) | FIND-030, 036, 037 | [#22](https://github.com/jlaska/herdrnetes/issues/22) |
 | Agent permission-mode baseline, `/tmp` sticky bit | FIND-038 | [#23](https://github.com/jlaska/herdrnetes/issues/23) |
 | Multi-client focus hazard, stall tolerance, harness pane identity | FIND-032, 033 | [#24](https://github.com/jlaska/herdrnetes/issues/24) |

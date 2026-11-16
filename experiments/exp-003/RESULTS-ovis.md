@@ -73,8 +73,9 @@ Not run: Ovis image change / rollback (replaces the pod, FIND-029); relay, app.o
 
 ## Security notes
 - The Ovis token was exposed once in this agent session's own tool output (a Playwright error log echoed a `fill()` value). It was not committed or saved
-  to any file. Treat it as **exposed** and rotate it promptly, using the owner-run checklist in
-  [`README-ovis.md`](README-ovis.md#token-rotation-owner-run); tracked in #22. All later scripts redact exceptions.
+  to any file. It was treated as **exposed** and rotated on 2026-11-16 using the owner-run checklist in
+  [`README-ovis.md`](README-ovis.md#token-rotation-owner-run). Afterwards the old token got 401 and the new one 200,
+  and Herdr was unchanged (#22). All later scripts redact exceptions.
 - A token holder has full trusted-operator control of every pane, including commands that can read in-pane
   credentials. See the README-ovis security boundary section.
 - Screenshots in the private evidence directory include conversation text and workspace names; keep them out of the repo.

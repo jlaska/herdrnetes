@@ -19,8 +19,9 @@ Access path E of [`docs/experiments/03-remote-access.md`](../../docs/experiments
   experiment **exception**, and its upgrades replace the Herdr pod (FIND-029, FIND-036). Follow-ups:
   [#21](https://github.com/jlaska/herdrnetes/issues/21) (separate-pod transport) and
   [#22](https://github.com/jlaska/herdrnetes/issues/22) (hardening).
-- **Action needed: the deployed token is exposed.** It appeared in an agent transcript, so rotate it promptly
-  (see [Token rotation](#token-rotation-owner-run)).
+- **Token rotated 2026-11-16.** The first token appeared in an agent transcript and was rotated using the procedure in
+  [Token rotation](#token-rotation-owner-run). Afterwards the old token got 401 and the new one 200. The Herdr identity
+  diff was unchanged ([#22](https://github.com/jlaska/herdrnetes/issues/22)).
 
 | Path | Purpose |
 | --- | --- |
@@ -83,8 +84,9 @@ means a lost token.
 
 ## Token rotation (owner-run)
 
-The EXP-003 token was echoed into an agent transcript by a Playwright error. Treat it as **exposed** and rotate it now
-([#22](https://github.com/jlaska/herdrnetes/issues/22)). The procedure:
+The first EXP-003 token was echoed into an agent transcript by a Playwright error. It was treated as exposed and was
+rotated with this procedure on 2026-11-16 ([#22](https://github.com/jlaska/herdrnetes/issues/22)). Use the same
+procedure after any suspected exposure. The procedure:
 
 - uses a fresh token and a new SealedSecret, committed with your signed-commit workflow in the private GitOps
   repository;
