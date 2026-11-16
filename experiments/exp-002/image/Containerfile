@@ -1,0 +1,76 @@
+# EXP-002 trusted Herdr image: Herdr + Claude Code (+ Codex CLI) on Debian slim.
+#
+# Every input is pinned: base images by digest, Herdr and Codex release assets
+# by SHA-256, Claude Code by npm version (npm verifies its registry integrity).
+# Debian packages come from the pinned base image's suite; their exact versions
+# are recorded in /usr/share/herdrnetes/manifest.txt (see build.sh).
+#
+# Build variants (see build.sh): HERDR_VERSION/HERDR_SHA256 and CLAUDE_VERSION
+# change independently so upgrades of one component can be tested alone.
+
+ARG BASE_IMAGE=docker.io/library/debian:trixie-slim@sha256:7378260c0a098d27ac206225db5e7d92b8c7c84ea7afccc86eeb513756bbd392
+ARG NODE_IMAGE=docker.io/library/node:24-trixie-slim@sha256:60587baa7c895cf438d44f691e4ac8248b36c13b26be77332f874bebb3a64201
+
+FROM ${NODE_IMAGE} AS claude
+ARG CLAUDE_VERSION
+RUN test -n "$CLAUDE_VERSION" \
+ && npm install --global --no-audit --no-fund --prefix /opt/claude "@anthropic-ai/claude-code@${CLAUDE_VERSION}" \
+ && /opt/claude/bin/claude --version
+
+FROM ${BASE_IMAGE} AS fetch
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+ARG HERDR_VERSION
+ARG HERDR_SHA256
+ARG CODEX_VERSION
+ARG CODEX_SHA256
+RUN set -eu; \
+    curl -fsSLo /herdr "https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-x86_64"; \
+    echo "${HERDR_SHA256}  /herdr" | sha256sum -c -; \
+    chmod 0755 /herdr; \
+    curl -fsSLo /codex.tgz "https://github.com/openai/codex/releases/download/rust-v${CODEX_VERSION}/codex-x86_64-unknown-linux-musl.tar.gz"; \
+    echo "${CODEX_SHA256}  /codex.tgz" | sha256sum -c -; \
+    mkdir /codex && tar -C /codex -xzf /codex.tgz && mv /codex/codex-x86_64-unknown-linux-musl /codex/codex; \
+    chmod 0755 /codex/codex
+
+FROM ${BASE_IMAGE}
+ARG HERDR_VERSION
+ARG CLAUDE_VERSION
+ARG CODEX_VERSION
+# python3: required by Herdr's integration hooks (FIND-007).
+# tini: PID 1 that reaps orphaned pane descendants and forwards SIGTERM to Herdr only.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      bash ca-certificates git less openssh-client procps python3 tini \
+ && rm -rf /var/lib/apt/lists/*
+COPY --from=fetch /herdr /usr/local/bin/herdr
+COPY --from=fetch /codex/codex /usr/local/bin/codex
+COPY --from=claude /opt/claude /opt/claude
+RUN ln -s /opt/claude/bin/claude /usr/local/bin/claude \
+ && herdr --version && claude --version && codex --version
+
+# Non-root runtime user. HOME is a persistent volume mount in the pod; the
+# image never writes into it at build time (it would be hidden by the mount).
+RUN groupadd -g 1000 herdr && useradd -u 1000 -g 1000 -d /home/herdr -s /bin/bash -M herdr \
+ && mkdir -p /home/herdr /workspace /run/herdr && chown 1000:1000 /home/herdr /workspace /run/herdr
+
+COPY bashrc /etc/herdrnetes/bashrc
+COPY pane-shell /usr/local/bin/pane-shell
+COPY entrypoint.sh /usr/local/bin/herdr-entrypoint
+COPY config.toml /etc/herdrnetes/config.toml
+RUN chmod 0755 /usr/local/bin/pane-shell /usr/local/bin/herdr-entrypoint \
+ && mkdir -p /usr/share/herdrnetes \
+ && { echo "herdr=${HERDR_VERSION}"; echo "claude=${CLAUDE_VERSION}"; echo "codex=${CODEX_VERSION}"; \
+      echo "herdr_sha256=$(sha256sum /usr/local/bin/herdr | cut -d' ' -f1)"; \
+      dpkg-query -W -f='deb ${Package}=${Version}\n'; } >/usr/share/herdrnetes/manifest.txt
+
+LABEL org.opencontainers.image.source="https://github.com/jlaska/herdrnetes" \
+      org.opencontainers.image.description="EXP-002 trusted Herdr experiment image (not production)" \
+      io.herdrnetes.herdr.version="${HERDR_VERSION}" \
+      io.herdrnetes.claude.version="${CLAUDE_VERSION}" \
+      io.herdrnetes.codex.version="${CODEX_VERSION}"
+
+USER 1000:1000
+WORKDIR /workspace
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/herdr-entrypoint"]

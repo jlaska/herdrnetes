@@ -1,0 +1,3 @@
+#!/bin/sh
+# Pane shell for Herdr: deterministic bash without distro profile hooks.
+exec /bin/bash --noprofile --rcfile /etc/herdrnetes/bashrc -i "$@"

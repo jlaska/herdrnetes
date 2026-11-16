@@ -1,0 +1,10 @@
+# No inbound traffic: the only access path is `kubectl exec` (EXP-003 covers
+# remote clients). Egress stays open so agents can reach their APIs and Git.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
