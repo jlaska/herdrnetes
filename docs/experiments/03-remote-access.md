@@ -1,7 +1,8 @@
 # EXP-003: Remote access and mobile clients
 
-**Status:** In progress. Milestone 1 (discovery) and Milestone 3 (desktop client tests, run `r1`) are complete.
-Ovis/mobile work (Milestone 4) awaits an owner decision. Proposed for review; no ADR
+**Status:** Executed 2026-11-16 (run `r1`): discovery, desktop client tests, and an Ovis sidecar deployed with owner
+approval and tested in a browser and mobile emulation. **Not run:** a physical phone (needs the owner and private
+network reach) and an Ovis image change or rollback (it would replace the Herdr pod; FIND-029). Proposed for review; no ADR
 changes made. Tracking issue: [#4](https://github.com/jlaska/herdrnetes/issues/4). Builds on
 [EXP-002](02-kubernetes-deployment.md) (FIND-013–022).
 
@@ -96,7 +97,7 @@ isolated 0.9.5 server; none of the Ovis behavior has been run yet.
 | B | Local `herdr client` ← local Unix socket ← `kubectl exec -i … herdr remote-client-bridge` | None | None; bridge refuses an incompatible server, never stops one | **Works**, preferred desktop path (FIND-031) |
 | C | `herdr --remote` via an `ssh` shim that calls `kubectl exec` | None | Install/stop prompts (FIND-026) | Rejected for the shared server |
 | D | `sshd` sidecar + native `herdr --remote` / saved machines | Pod restart, new SSH identity, ingress rule | Same prompts | Needs owner approval; deferred |
-| E | Ovis sidecar in Herdr pod, reached via `kubectl port-forward` | Pod restart, new image, new Secret | Ovis has an "Update herdr" button (must be unused) | Needs owner approval (FIND-028–030) |
+| E | Ovis sidecar in Herdr pod, reached via `kubectl port-forward` | Pod restart (done once with approval), new image, new Secret | Ovis has an "Update herdr" API (must be unused) | **Works** (FIND-035–037) |
 | F | Ovis on the workstation over B-style bridges to both sockets | None | Same as B | Terminal only; no chat (transcripts are not local). Optional |
 | G | Web terminal (ttyd-like) running path A | Pod restart or exec'd process | None | Fallback if Ovis is rejected |
 
@@ -172,4 +173,130 @@ the client or the server; the cause is unknown.
 | Second client attached and detached | Survivor unaffected | Fully preserved | — |
 | Older client (0.9.4) | Works | Fully preserved | — |
 | Pre-endpoint client (0.8.0) | Lost (unsupported) | Fully preserved | rejected in 0.3 s |
-| Browser refresh, Ovis restart, Ovis image change | Pending Milestone 4 | — | — |
+| Browser refresh (Ovis) | Fully preserved (cookie) | Fully preserved | UI back in 0.76 s |
+| Port-forward lost 35 s (Ovis) | Fully restored after tunnel restart (manual) | Fully preserved | UI reconnects 1–3 s after tunnel |
+| Ovis container restart ×3 | Recoverable: port-forward exits, restart it; cookie valid | Fully preserved, including the w3:p1 agent | ~2 s; 24 s under kubelet backoff |
+| Ovis image change or rollback | Not run | Herdr pod would be replaced (FIND-029) | — |
+| Planned pod replacement to add Ovis | — | Layout, cwds and the Claude conversation restored; processes replaced (ADR-0001) | sync +166 s after push (polling); Ready 35 s after old pod stopped |
+
+## 5. Ovis browser and mobile results (Milestone 4)
+
+**Owner decisions (2026-11-16, [#4](https://github.com/jlaska/herdrnetes/issues/4)):** prototype Ovis as a container in
+the Herdr pod. For the MVP, treat that as meeting REQ-005, recording the upgrade coupling as a limitation.
+
+**Deployment:** image `ghcr.io/jlaska/herdrnetes-ovis:exp003-o054-h095@sha256:8e31cc27ca866dc47f9cb0f519abce844db8a75974c5d147b91fdbcff46ef0db`,
+built from the EXP-002 Herdr digest. Ovis v0.5.4 assets are SHA-256 pinned and the release signature is verified.
+Build, overlay and token sealing are in [`experiments/exp-003/`](../../experiments/exp-003/)
+([`README-ovis.md`](../../experiments/exp-003/README-ovis.md)). Config: home and workspace read-only, private
+`HOME`/state emptyDirs, no Claude credential, `HOST=127.0.0.1`, `OVIS_TOKEN` from an owner-sealed SealedSecret,
+telemetry and auto-update off. Rollout was one owner-signed GitOps commit. Before it: a state backup and an identity
+capture. After it: the restore check in §4. Per-test details:
+[`RESULTS-ovis.md`](../../experiments/exp-003/RESULTS-ovis.md). Clients were Playwright Chromium at 1280×800 and
+iPhone 13 / Pixel 7 emulation, over `kubectl port-forward` only. Prompt and approval tests used a disposable Claude Code
+2.1.311 agent in `exp003-r1`; the EXP-002 agent received no input.
+
+**Server continuity:** identity was captured after every phase, and the lead agent captured it again independently.
+Herdr server PID 7, its start time, the pod UID, Herdr restart count 0, and every pane shell and agent process were
+unchanged through three Ovis container restarts and every tunnel outage.
+
+- **FIND-035 — Ovis in the Herdr pod gives working browser and mobile access to the real server.** [observed]
+  - Ovis listed the server's real 3 workspaces, 7 panes and 2 agents (matching `herdr api snapshot`).
+  - It rendered Claude conversations: the disposable agent's, and the restored EXP-002 conversation, read-only, from
+    transcripts on the read-only home via `CLAUDE_CONFIG_DIR`.
+  - A prompt sent from Ovis got a reply, verified with `herdr pane read`.
+  - It surfaced a Claude permission request as an approval card. The card was answered from the mobile view and the
+    file was created.
+  - Terminal input and output worked.
+  - A desktop and a mobile browser on one pane saw each other's input and output.
+  - Mobile layout: a drawer, one pane at a time, a key bar (Esc, Tab, ^C, Ctrl, arrows and symbols). It is usable in
+    emulation; a real phone and soft keyboard are untested.
+  - The approval only appeared after switching the agent out of the image's default auto-permission mode (FIND-038).
+  (REQ-007)
+- **FIND-036 — Ovis process lifecycle is independent of Herdr; its upgrade lifecycle is not.** [observed]
+  - Restarting the Ovis container took about 2 s, or 24 s under kubelet backoff, and never touched Herdr or an agent.
+  - `kubectl port-forward` exits when the container restarts and must be restarted by hand. The browser then
+    reconnects by itself.
+  - During a 35 s tunnel outage the UI showed "Reconnecting…" and recovered within 1–3 s of the tunnel returning.
+  - It also showed a misleading "herdr unavailable" banner for 6–9 s after recovery. Text typed while disconnected, and
+    once just after recovery, was **not delivered**: it stays a draft, and Ovis never presses Enter on its own. Users
+    must confirm that input landed.
+  - An Ovis image change still replaces the Herdr pod (FIND-029); this was not run. Ovis must be rebuilt in lockstep
+    with every Herdr image, because its `herdr terminal attach` uses the exact-match private protocol (FIND-024).
+  (REQ-005, REQ-007)
+- **FIND-037 — With `OVIS_TOKEN` set, loopback is not trusted. The browser cookie *is* the token.** [source, observed]
+  This corrects FIND-030's loopback caveat. `decideAccess` (`server/access.ts:278` at `b9d0798`) checks the token before
+  the loopback grant. Requests without the token, or with a wrong one, got 401 on `/api/session` and `/ws`, from
+  127.0.0.1 and from the pod IP. `/api/health` is open and shows versions and auth state only. The sign-in sets an
+  HttpOnly, SameSite=Strict `ovis_token` cookie containing the **raw token**, valid for about a year
+  (`server/auth.ts:142-143`). Consequences:
+  - There are no per-browser sessions.
+  - Revocation means rotating the token, which signs out every browser. That needs a re-seal, a signed commit and an
+    Ovis container restart, but not a Herdr restart.
+  - A lost phone or browser profile is a lost token.
+  - Paired-device credentials live in Ovis's emptyDir, so a container restart revokes every pairing.
+  Two `/proc/net` snapshots showed no non-loopback connections; this is point-in-time evidence, not a capture.
+  (REQ-007)
+- **FIND-038 — Agents in this image start in Claude Code's auto-permission mode, so no approvals reach any client.**
+  [observed] The disposable agent raised no permission prompts until it was cycled to manual mode (shift+tab). Remote
+  approval from a phone is only meaningful if the agent's permission mode asks for approval. That mode is set by
+  configuration, not by the access path, so it belongs in the agent configuration baseline. Unrelated, but seen in
+  passing: Claude warns that cross-session messaging is off, because `/tmp` in the pod is mode 2777 with no sticky bit.
+
+### Browser and mobile functionality matrix (Ovis 0.5.4, Herdr 0.9.5)
+
+| Capability | Desktop browser | Mobile emulation | Physical phone |
+| --- | --- | --- | --- |
+| Token sign-in, cookie survives refresh | Works | Works | Untested |
+| Real workspaces, panes and agents | Works | Works | Untested |
+| Claude chat rendering, including restored history | Works | Works | Untested |
+| Send prompt | Works | Works | Untested |
+| Approval card | Works (manual-permission agent) | Works, answered here | Untested |
+| Terminal view and input, special keys | Works | Works (key bar; synthetic keys) | Soft keyboard untested |
+| Two browsers on one pane | Shared input and output | Shared | Untested |
+| Reconnect after tunnel or Ovis loss | Automatic once the tunnel is back; drafts not sent | Same | Untested |
+
+## 6. Security and network analysis
+
+| Concern | Desktop path B | Ovis path E |
+| --- | --- | --- |
+| Identity and authorization | Kubernetes user + RBAC `pods/exec` on `herdr-0` | RBAC `pods/portforward`, then a shared static `OVIS_TOKEN` |
+| What a holder controls | Every pane and agent (FIND-025) | Every pane and agent, plus the transcripts on the read-only home |
+| Network exposure | None beyond the Kubernetes API | None: loopback listener, `kubectl port-forward`, NetworkPolicy unchanged |
+| Transport security | Kubernetes API TLS | Kubernetes API TLS to the pod; plain HTTP on workstation loopback |
+| Credential lifetime and revocation | The kube credential's | Token stored in browser cookie for about a year; revoke by rotation (FIND-037) |
+| Concurrent users | One operator; shared focus and input (FIND-033) | Same; shared input |
+| Claude credential exposure | None added | None: not in the Ovis env; the pod's `CLAUDE_CODE_OAUTH_TOKEN` stays in the Herdr container |
+| Residual risks | Undocumented bridge interface | "Update herdr" API with no off switch, contained only by read-only rootfs and no `curl`; a token holder could enable the relay; single-maintainer, fast-moving project; Ovis image must track Herdr |
+
+**Recommendation for MVP review (a proposal, not a decision):**
+- **Desktop:** path B as the primary client, with path A as the fallback. Both are gated by RBAC on `pods/exec`.
+- **Browser and mobile:** the Ovis sidecar on loopback behind `kubectl port-forward`, with an owner-sealed token.
+- **No public ingress, SSH daemon or relay.**
+- **Phone reach:** needs a private route to the Kubernetes API, or to a host that holds the port-forward. That network
+  choice (VPN or Tailscale) is the owner's and is the next approval gate. If Ovis is ever exposed beyond loopback, it
+  needs TLS and per-device pairing in place of the shared token.
+
+**Process note:** during browser automation, a Playwright error message echoed the token into an agent transcript. It
+was never written to a file or the repo. The token should be rotated, and later scripts redact exceptions.
+
+## 7. Traceability
+
+| Requirement | Findings | Status |
+| --- | --- | --- |
+| REQ-001 One unified Herdr server | FIND-031, 033, 035 | **Met:** every client attached to the one server |
+| REQ-005 Optional services in independent pods | FIND-028, 029, 036 | **Partly met.** A separate pod is impossible with Herdr 0.9.5 and Ovis 0.5.4. A container in the Herdr pod has an independent process lifecycle; its upgrades replace the Herdr pod. The owner accepts this for the MVP |
+| REQ-007 Remote client and mobile browser access | FIND-023–027, 031–038 | **Met for desktop** (paths A and B) **and for browser plus mobile emulation** (Ovis). A physical phone and private remote reach are untested |
+| REQ-002 Pinned images | FIND-024, 034, 036 | Clients upgrade independently within endpoint generation 1; Ovis must be rebuilt with Herdr |
+
+## 8. Follow-ups
+
+- A physical phone test over an owner-approved private network path.
+- A Herdr network transport, or an authenticated socket relay, so that browser services can run in their own pods
+  (REQ-005). This could be raised upstream with Herdr.
+- Ovis token rotation, and Ovis container restart when the Secret changes.
+- Whether to keep Ovis's "Update herdr" API reachable, for example by asking upstream for a switch to disable it.
+- Agent permission-mode baseline (FIND-038); the `/tmp` sticky bit in the image.
+- Measure the transport stall tolerance below 60 s (FIND-032), and where keystrokes go when client and server focus
+  disagree (FIND-033).
+- Harness: identify panes by process start time as well as PID. After the pod replacement, four new shells reused the
+  old PIDs.
