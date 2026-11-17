@@ -1,8 +1,11 @@
 # EXP-004: Git credentials and signing
 
-**Status:** Milestones 1–4 executed **mock/local** on 2026-11-16 (run `m1`). **Blocked on owner approval:** every live
-GitHub test (App, test repositories, real tokens, rulesets, "Verified" badges). These are review gates G1–G6 on
-[#5](https://github.com/jlaska/herdrnetes/issues/5#issuecomment-6933768465). Nothing in the cluster, the running Herdr
+**Status:** Milestones 1–4 executed **mock/local** on 2026-11-16 (run `m1`). On 2026-11-17 (run `m2`), both
+matrices were re-run in the pinned Herdr image under local Podman (FIND-052). The live GitHub adapter was implemented
+and tested **offline** against a fake API (FIND-053). The owner approved G1–G4 and G6 with conditions and declined G5
+([decisions](https://github.com/jlaska/herdrnetes/issues/5)). **Not yet run:** every live GitHub test. It is waiting
+on security review of the adapter and on owner-performed key steps
+([`live/RUNBOOK.md`](../../experiments/exp-004/live/RUNBOOK.md)). Nothing in the cluster, the running Herdr
 pod, GitOps, SealedSecrets, or the owner's GitHub/SSH/GPG/YubiKey identities was changed. Proposed for review; no ADR
 changes made. Tracking issue: [#5](https://github.com/jlaska/herdrnetes/issues/5). Builds on
 [EXP-003](03-remote-access.md) (FIND-023–038).
@@ -138,6 +141,17 @@ documented stub until G2/G3 are approved.
   `GIT_TRACE_CURL` trace (T11). With `GIT_TRACE_REDACT=0` the token appears base64-encoded in the trace (T11b). Agent
   transcripts were not tested, but an agent that runs `git credential fill` would record the token in its transcript on
   the home PVC, which Ovis also reads (FIND-028). Short lifetime and narrow scope are the real controls. (REQ-008)
+- **FIND-052 — The helper and signing behavior are unchanged on the pod's toolchain.** [observed, pinned image under
+  local Podman, `--network=none`, no host credentials] Both matrices gave identical outcomes with git 2.47.3,
+  OpenSSH 10.0p2 and Python 3.13.5. This confirms FIND-039's version inference. It does not test the live pod. (REQ-008)
+- **FIND-053 — An issuer holding the App key needs explicit transport and lifecycle guards; the first adapter lacked
+  them.** [observed offline, fake API] The lead's review found three gaps. (1) Python's urllib follows redirects and
+  re-sends the `Authorization` header: a control test showed the bearer arriving at the redirect target. (2) Nothing
+  required https. (3) A mint finishing after revoke-on-exit left a token alive for up to 1 h. The fixed adapter refuses
+  redirects and non-https API URLs, tracks every minted token before any further check, and on SIGTERM stops new mints,
+  drains in-flight ones, then DELETEs all (G09, G16, G16c, G17, G19). The separate-identity deployment
+  (`live/RUNBOOK.md`) keeps the key and the code that reads it out of the agent's UID. That covers the root secret
+  only; minted tokens still reach the client UID (FIND-044). (REQ-008)
 
 ## 6. Commit signing (Milestone 4)
 
@@ -216,7 +230,7 @@ Every workflow shares FIND-044: within the pod, the credential belongs to the po
 
 | Requirement | Findings | Status |
 | --- | --- | --- |
-| REQ-008 Git access and commit signing without a YubiKey on the Herdr host | FIND-039–051 | **Partly met (mock/local).** Design shown: scoped short-lived credentials without a root secret in the pod (FIND-042–045), and human signing kept on the workstation (FIND-050). **Not yet shown against GitHub** (G1–G6). Per-agent isolation **not achievable** in the shared pod (FIND-044, 048, 051) |
+| REQ-008 Git access and commit signing without a YubiKey on the Herdr host | FIND-039–053 | **Partly met (mock/local).** Design shown: scoped short-lived credentials without a root secret in the pod (FIND-042–045), and human signing kept on the workstation (FIND-050). **Not yet shown against GitHub** (G1–G6). Per-agent isolation **not achievable** in the shared pod (FIND-044, 048, 051) |
 | REQ-011 Agent isolation (future) | FIND-044, 051 | Input to EXP-006: per-agent Git authorization depends on per-agent execution identity |
 | REQ-007 Remote access | FIND-041 | `kubectl exec` carries no agent. Remote signing depends on #25 |
 

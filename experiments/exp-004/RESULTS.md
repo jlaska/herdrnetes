@@ -5,10 +5,14 @@ Git host on `127.0.0.1`. Nothing touched GitHub, the cluster, the owner's agents
 expiry and revocation show how the *design* behaves; they say nothing about GitHub's real behavior. Temp paths are
 shown as `<T>`; fingerprints are elided.
 
-Environment: Fedora workstation, git 2.56.0, OpenSSH 10.2p1, Python 3.13.16. The live Herdr image has git 2.47.3
-and OpenSSH 10.0p2 (FIND-039). The matrix was **not** run inside that image: a local `podman` run of the pinned
-image was not permitted in this session. Compatibility with 2.47.3 is inferred from Git docs (`password_expiry_utc`
-≥ 2.41, SSH signing ≥ 2.34), not observed.
+Environment: Fedora workstation, git 2.56.0, OpenSSH 10.2p1, Python 3.13.16.
+
+**Pinned image (run `m2`, 2026-11-17, owner-approved):** both matrices were also run inside the live Herdr image
+`ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277` (git 2.47.3,
+OpenSSH 10.0p2, Python 3.13.5, uid 1000) under local rootless Podman. Flags: `--network=none --read-only
+--userns=keep-id`, tmpfs `/tmp`, disposable `HOME=/tmp/h`, and only `experiments/exp-004` mounted read-only. No host
+credentials, sockets or cluster config were mounted. Outcomes were **identical** to the workstation run: T01–T12 all
+pass (T10 LIMITATION, T07c/T11b NOTE), and S01–S11 have 0 FAIL (FIND-052).
 
 ## Authentication matrix (`tests/run-matrix.sh`, ~6 s, TTL 3 s)
 
@@ -84,5 +88,37 @@ Surprises recorded by the implementer and checked by the lead:
 | Ruleset: App cannot update `main`; "require signed commits" rejects unsigned agent pushes | Needs test repo | G4 |
 | GitHub "Verified" for an SSH signing key, owner re-signed commit, App API-created (`createCommitOnBranch`) commit | Needs test repo / key | G5, G6, G2 |
 | YubiKey touch through a forwarded/relayed agent; OpenPGP `S.gpg-agent.extra` forwarding | Real owner hardware; image has no gpg; not requested (FIND-041) | not requested |
-| Helper in the pinned image (git 2.47.3) | Local pinned-image run not permitted this session | owner |
 | Anything in the live Herdr pod | Out of scope without review | — |
+
+## GitHub adapter, offline (`tests/run-github-offline.sh`, run `m2`, 2026-11-17)
+
+`issuer.py --backend github` against `tests/fake_github.py` on 127.0.0.1 with a synthetic RSA key. The fake checks the
+JWT signature with `openssl` and emulates mint and `DELETE /installation/token`. **Its error codes and wording are
+invented and are not evidence of GitHub's behavior.** All of G01–G19 pass.
+
+| ID | Check | Observed |
+| --- | --- | --- |
+| G01/G01b | Helper mint for `acme/a` | Request body `repositories: ["a"]`, `permissions: {contents: read, metadata: read}`. Helper prints `password_expiry_utc` |
+| G02 | App JWT | Verified by the fake. `exp − iat ≤ 600` |
+| G03 | Read client asks for write | Refused locally; no request reached the API |
+| G04/G05 | Repository outside the installation; ungranted `workflows` | API 422, surfaced sanitized: `github mint failed: HTTP 422 …`, `quit=1` |
+| G06 | API returns a broader token than requested | Issuer refuses and DELETEs it |
+| G07/G08/G15 | `erase` → revoke_own; `revoke_all`; `revoke_client` | Each DELETEs at the API (counts match). `revoke_client` also refuses new mints |
+| G09/G19 | SIGTERM, including **mid-mint** | All outstanding tokens DELETEd before exit, `inflight_abandoned: 0` |
+| G10 | API unreachable | `github unreachable: ConnectionRefusedError`, `quit=1`, fast |
+| G11/G12 | Peer UID not in `client_uids` / `admin_uids` | Refused |
+| G13/G14 | Leak scan / sanitizer | No token or `eyJ` JWT in issuer logs, HOME, outputs. `ghs_…` and long base64 redacted |
+| G16/G16c | API answers with a 302 redirect | Issuer refuses, and the JWT is not re-sent. **Control:** a default urllib client follows the same redirect *with* its Authorization header |
+| G17/G18 | `http://` API URL to a non-loopback host; policy access `"admin"` | Issuer refuses to start |
+
+The lead's review of the first adapter found, and fixed:
+- urllib followed redirects with the Authorization header (G16c shows this was a real risk);
+- no https requirement;
+- a shutdown race in which a mint that finished after revoke-on-exit left a live token;
+- a helper timeout (3 s) shorter than the API timeout (10 s);
+- an untracked token if a broad-token DELETE failed;
+- the test-only token-recording hook active for the github backend;
+- unvalidated policy access values.
+
+All are covered by tests above except the helper timeout and the recording hook, which are now mock-only by
+construction.

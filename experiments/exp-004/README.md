@@ -14,9 +14,12 @@ secrets are generated at test time, no real GitHub, SSH, kubectl or `~/.gitconfi
 
 | File | Role |
 | --- | --- |
-| `harness/issuer.py` | Mints `ghs_mock_*` tokens per policy. Tokens in memory only; client revocations persisted in `--state` (T08c). Ops: token, revoke_own, revoke_token, revoke_client, reinstate_client, introspect. `mint_github()` is a stub |
+| `harness/issuer.py` | Mints `ghs_mock_*` tokens per policy. Tokens in memory only; client revocations persisted in `--state` (T08c). Ops: token, revoke_own, revoke_token, revoke_client, reinstate_client, introspect. `--backend github` is implemented (App JWT signed by `openssl`, installation token per request, revoke via `DELETE /installation/token`) |
 | `harness/mock_githost.py` | Smart-HTTP host: 401 bad/expired/revoked, 404 other repo, 403 read token pushing |
 | `harness/git-credential-exp004` | Credential helper: `get` mints, `store` ignored, `erase` revokes (best effort); `quit=1` on failure |
+| `harness/issuer-ctl.py` | Admin CLI: revoke_all, revoke_client, reinstate_client, revoke_token (token on stdin) |
+| `tests/fake_github.py` | Offline fake of the two GitHub App endpoints (JWT verified with openssl); NOT evidence of real GitHub behavior |
+| `tests/run-github-offline.sh` | Offline test G01-G15 of `--backend github` against the fake (127.0.0.1 only, synthetic RSA key) |
 | `tests/run-matrix.sh` | Self-contained matrix T01-T12; results in `$T/results.tsv` |
 
 ## Run
@@ -40,8 +43,19 @@ LIMITATION/NOTE fails. The temp dir must be outside the repository.
 
 | Mock | GitHub |
 | --- | --- |
-| `ghs_mock_*` from `issuer.py` | Installation token from `POST /app/installations/{id}/access_tokens` with `repositories` and `permissions` (see `mint_github()`) |
+| `ghs_mock_*` from `issuer.py` | Installation token from `POST /app/installations/{id}/access_tokens` with `repositories` and `permissions` (see `GitHub.mint()`) |
 | HMAC root key file | GitHub App private key (RS256 JWT) |
 | host returns 404 for another repo | GitHub hides repositories a token cannot see |
 | mock TTL (seconds) | GitHub installation tokens last about 1 hour; mock expiry does not prove GitHub's behavior |
 | issuer revoke ops, introspect | GitHub `DELETE /installation/token`; there is no introspection, so mock-host revocation semantics must be verified against GitHub separately |
+
+## GitHub backend and separate-identity deployment
+
+`issuer.py --backend github` reads `policy.github` (`api_url`, `app_id`, `owner`, `installation_id`,
+`private_key_file`); the key is only passed by path to `openssl dgst -sign`. Intended deployment: run
+the issuer as a separate OS user (e.g. `exp004-issuer`) from a root-owned copy of the code, with the
+App key readable only by that user; the agent's user connects over the Unix socket. The socket mode
+(`--socket-mode`, e.g. 0666 in a 0755 dir) is not the control: policy `client_uids` (SO_PEERCRED)
+plus the client secret are, and admin ops need `admin_uids` (default: issuer euid) plus the admin secret.
+Tokens are revoked on `revoke_own`/`revoke_token`/`revoke_client`/`revoke_all` and, by default, on SIGTERM/SIGINT.
+Offline test: `tests/run-github-offline.sh` (needs openssl; never contacts GitHub).
