@@ -1,7 +1,8 @@
 # EXP-004 live GitHub runbook (owner-run)
 
 Implements the approvals in [#5](https://github.com/jlaska/herdrnetes/issues/5) (G1–G4, optional G6; G5 declined).
-**Status: awaiting security review of the live adapter. Do not start phase 3 before that review.**
+**Status:** the first review at `9aa6ef1` found five blocking issues. The corrections are awaiting a second security
+review. **Do not start phase 3 before that review clears a specific commit (`REV`).**
 
 Every step that touches the App key, the admin secret or `sudo` is performed by the **owner**. Autonomous agents
 prepared these files, but never run them, and never see the key, JWTs, tokens or unredacted output.
@@ -17,19 +18,21 @@ prepared these files, but never run them, and never see the key, JWTs, tokens or
 | Client secrets | `~/.config/exp004-live/*.json` (0600) | **Every process of the owner's login, including agents** |
 | Minted tokens | Issuer memory; the client-side Git process | Any process of the owner's login while the issuer runs |
 
-What this does **not** protect: the client side is the owner's UID. While the issuer runs, any process of that login,
-including an agent session, can request tokens **within policy**: `herdrnetes-exp004-a` contents read/write, ≤1 h.
-That is the workload boundary of FIND-044. Policy and the App installation keep the blast radius to one throwaway
-repository. Stop the issuer when not testing.
+What this does **not** protect: the client side is the owner's UID. While the issuer runs, any process of that login
+can request tokens **within policy**: `herdrnetes-exp004-a` contents read/write, ≤1 h. That is the workload boundary
+of FIND-044. The owner accepted this **for the two disposable private repositories only**, on the condition that
+**all autonomous agents are stopped for the entire live-issuer session**, from phase 3 until phase 7 has stopped the
+issuer. No per-agent isolation is claimed.
 
 Preconditions the owner checks:
 
-- The owner's login has **no passwordless sudo** (`sudo -l` shows no `NOPASSWD`). An agent able to run
-  `sudo -n` would defeat the separate identity.
-- `sudo` timestamps are per-terminal (Fedora default `timestamp_type=tty`). Do not run `sudo` in a terminal that hosts
-  an agent.
-- Close or pause agent sessions on the workstation during **phase 3 key handling**. The browser download briefly
-  lands in the owner's home.
+- **No autonomous agent is running on the workstation** (Claude Code, Codex, sub-agents, scheduled agents):
+  `pgrep -fa 'claude|codex'` prints nothing. `run-live.sh` refuses to start otherwise. Agents in the Herdr pod have no
+  path to the workstation socket and are not affected.
+- The owner's login has **no passwordless sudo** (`sudo -l` shows no `NOPASSWD`).
+- `sudo` timestamps are per-terminal (Fedora default `timestamp_type=tty`).
+- Commits made by an agent on this workstation are signed by the owner's key without a per-commit prompt (FIND-055).
+  Signing is therefore not evidence of owner review here.
 
 ## Phase 1 — test repositories (G1)
 
@@ -40,8 +43,8 @@ gh repo create "$O/herdrnetes-exp004-b" --private --add-readme
 for r in a b; do gh repo view "$O/herdrnetes-exp004-$r" --json nameWithOwner,visibility,id,createdAt; done
 ```
 
-Record and review identity and visibility (both `PRIVATE`). The README is the only content. Use `gh repo create`
-without `--add-readme` if a zero-commit repository is required; `run-live.sh` then needs an initial commit first.
+Record and review identity and visibility (both `PRIVATE`). The single README commit is the only content (owner
+decision on #5).
 
 ## Phase 2 — GitHub App (G2), browser
 
@@ -57,17 +60,32 @@ without `--add-readme` if a zero-commit repository is required; `run-live.sh` th
 
 ## Phase 3 — issuer under a separate identity (G3)
 
-Run from a terminal with no agent. Check out the reviewed commit and verify it:
+All agents are stopped (see preconditions). Install **only from a fresh root-owned clone of the reviewed commit**,
+never from the agent-writable checkout. `install-issuer.sh` fails hard if:
+- the clone is not at the full 40-hex `REV`, or its tracked files are modified;
+- any file differs from the committed blob or from `live/MANIFEST.sha256`;
+- (as root) any source path is not root-owned, or is group/world-writable.
+
+It copies into a private staging directory, re-verifies the staged copies, installs from them, and verifies the
+installed files a third time.
 
 ```bash
-REV=<reviewed commit sha from #5>
-git -C ~/Projects/herdrnetes fetch && git -C ~/Projects/herdrnetes diff --quiet "$REV" -- experiments/exp-004 || echo "TREE DIFFERS FROM REVIEW"
-X=~/Projects/herdrnetes/experiments/exp-004
+REV=<full 40-hex commit cleared in the second review on #5>
+sudo rm -rf /root/exp004-src
+sudo git clone --no-checkout https://github.com/jlaska/herdrnetes /root/exp004-src
+sudo git -C /root/exp004-src -c transfer.fsckObjects=true checkout --detach "$REV"
 sudo useradd --system --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin exp004-issuer
-sudo install -d -o root -g root -m 0755 /usr/local/libexec/exp004
-sudo install -o root -g root -m 0755 "$X/harness/issuer.py" "$X/harness/issuer-ctl.py" "$X/live/issuer-start.sh" /usr/local/libexec/exp004/
-sha256sum /usr/local/libexec/exp004/* ; git -C ~/Projects/herdrnetes show "$REV:experiments/exp-004/harness/issuer.py" | sha256sum
+sudo sh /root/exp004-src/experiments/exp-004/live/install-issuer.sh /root/exp004-src "$REV" /usr/local/libexec/exp004
+```
+
+Compare the hashes it prints with the hashes **posted in the clearing review comment on GitHub**, not with anything
+on the workstation. Any `INSTALL REFUSED` line, or any difference: stop.
+
+```bash
 sudo install -d -o exp004-issuer -g exp004-issuer -m 0700 /var/lib/exp004-issuer
+# Revocation state must exist before the first start: the issuer refuses to run without a valid one, so a lost
+# or corrupted file can never silently reinstate a revoked client.
+sudo -u exp004-issuer sh -c 'umask 077; printf "[]" > /var/lib/exp004-issuer/revoked-clients.json'
 ```
 
 Generate the App key in the browser (*App settings → Private keys → Generate*), then move it immediately:
@@ -93,17 +111,33 @@ Fill `live/policy.template.json`: owner, App ID, installation ID, the four hashe
 it as `exp004-issuer`-owned `0400` at `/var/lib/exp004-issuer/policy.json`. Then start the issuer:
 
 ```bash
-sudo /usr/local/libexec/exp004/issuer-start.sh
+sudo /usr/local/libexec/exp004/live/issuer-start.sh
 systemctl status exp004-issuer; sudo journalctl -u exp004-issuer -n 5
 ```
 
 Admin commands (owner, separate terminal):
 
 ```bash
-CTL="sudo -u exp004-issuer /usr/bin/python3 /usr/local/libexec/exp004/issuer-ctl.py /run/exp004-issuer/issuer.sock --admin-secret /var/lib/exp004-issuer/admin.secret"
+CTL="sudo -u exp004-issuer /usr/bin/python3 /usr/local/libexec/exp004/harness/issuer-ctl.py /run/exp004-issuer/issuer.sock --admin-secret /var/lib/exp004-issuer/admin.secret"
 $CTL revoke_all ; $CTL revoke_client --client agent-rw ; $CTL reinstate_client --client agent-rw
-sudo systemctl stop exp004-issuer     # SIGTERM: finishes in-flight mints, then DELETEs every outstanding token
+sudo systemctl stop exp004-issuer     # SIGTERM: refuse new mints, drain in-flight (≤45 s), DELETE every outstanding token
+systemctl show -p ExecMainStatus exp004-issuer; sudo journalctl -u exp004-issuer -n 5   # status 0 = all revoked
 ```
+
+`issuer-ctl.py` exits **1** and prints `REVOCATION INCOMPLETE` whenever any DELETE failed. A stop that cannot drain
+or revoke everything exits **2** with a `CRITICAL` journal line. Treat either as *tokens may still be valid*.
+
+### Revocation fallback (use whenever revocation is incomplete or uncertain)
+
+1. Do not claim the tokens were revoked. Record the counts from the `REVOCATION INCOMPLETE`/`CRITICAL` output.
+2. GitHub → *Settings → Applications → Installed GitHub Apps → the test App → Uninstall*. Uninstalling the App's
+   only installation is the owner's control that does not depend on the issuer. Its effect on already-issued tokens
+   is itself an **untested assumption** (see L17), so also do step 3.
+3. Confirm the installation is gone (`gh api /user/installations --jq '.installations[].app_slug'`), then delete the
+   App, which invalidates its private keys so no new tokens can be minted. `run-live.sh` keeps no token copies, so
+   un-revoked tokens cannot be re-tested. **Treat them as valid until their `expires_at` (≤1 h after the last
+   mint)**, and do not record cleanup as complete before then.
+4. If the issuer was killed (SIGKILL, crash, power loss) it revoked nothing. Follow the same steps.
 
 ## Phase 4 — rulesets on `a` only (G4)
 
@@ -171,8 +205,10 @@ recorded. If skipped, GitHub "Verified" stays **untested**.
 ## Phase 7 — cleanup (record each step's status in #5)
 
 ```bash
-$CTL revoke_all; sudo systemctl stop exp004-issuer
+$CTL revoke_all || echo "INCOMPLETE -> Revocation fallback"
+sudo systemctl stop exp004-issuer; systemctl show -p ExecMainStatus exp004-issuer   # non-zero -> Revocation fallback
 # GitHub: uninstall the App from the account, then delete the App (invalidates its keys)
+sudo rm -rf /root/exp004-src
 sudo shred -u /var/lib/exp004-issuer/app.pem /var/lib/exp004-issuer/admin.secret
 sudo rm -rf /var/lib/exp004-issuer /usr/local/libexec/exp004 && sudo userdel exp004-issuer
 shred -u ~/.config/exp004-live/*.json && rmdir ~/.config/exp004-live

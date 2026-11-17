@@ -5,6 +5,8 @@
 
 ops: revoke_all | revoke_client | reinstate_client | revoke_token (token read from stdin, never argv).
 Prints the issuer's JSON reply. The caller's uid must be in the issuer policy's admin_uids.
+Exit 0 only if the reply has no "error" and is not "ok": false; otherwise exit 1, and for an
+incomplete revocation print a REVOCATION INCOMPLETE line (with the fallback) to stderr.
 """
 
 import argparse
@@ -30,7 +32,17 @@ def main():
         s.settimeout(30)
         s.connect(a.socket)
         s.sendall((json.dumps(req) + "\n").encode())
-        print(s.makefile().readline().strip())
+        line = s.makefile().readline().strip()
+    print(line)
+    try:
+        reply = json.loads(line)
+    except ValueError:
+        reply = {"error": "unparseable reply"}
+    if "error" in reply or reply.get("ok") is False:
+        if reply.get("ok") is False:
+            print("REVOCATION INCOMPLETE: " + str(reply.get("fallback", "tokens may remain valid")),
+                  file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

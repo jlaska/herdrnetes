@@ -42,6 +42,7 @@ sha() { printf %s "$1" | sha256sum | cut -d' ' -f1; }
 # --- fixtures: secrets, policy, client files, helper config, bare repos ---
 rand >"$T/issuer/root.key"; ADMIN=$(rand); printf %s "$ADMIN" >"$T/issuer/admin.secret"
 SEC_RO=$(rand); SEC_RW=$(rand)
+printf "[]" >"$T/issuer/revoked-clients.json"   # owner step: the issuer refuses a missing state file
 chmod 600 "$T"/issuer/*
 cat >"$T/issuer/policy.json" <<EOF
 {"ttl_seconds": $TTL, "clients": {

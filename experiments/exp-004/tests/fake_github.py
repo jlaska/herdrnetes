@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """FAKE GitHub API for offline EXP-004 tests (127.0.0.1 only; NOT evidence of real GitHub behavior).
 
-    fake_github.py --port N --pub PUBKEY.pem [--ttl 3600] [--misbehave broaden]
+    fake_github.py --port N --pub PUBKEY.pem [--ttl 3600] [--misbehave broaden|redirect] [--delay S]
+                   [--fail-delete] [--token-len N] [--git-root DIR]
 
 POST /app/installations/42/access_tokens   verifies the App JWT (RS256 via openssl, iss, iat/exp)
 DELETE /installation/token                 revokes the bearer installation token
+  --fail-delete: DELETE answers 500.  --token-len N: ~N-char stateless-style tokens
+  (ghs_<app id>_<b64url>.<b64url>.<b64url>, with . - _ in them) instead of the short form.
+  --git-root DIR: /<owner>/<repo>.git/... is Git smart HTTP via `git http-backend`; Basic auth,
+  user x-access-token, password = a minted, unrevoked, unexpired token whose repositories include
+  <repo> (401 otherwise, 404 for another repo).
 GET /__fake/state                          token sha256 prefixes + revoked flags (test assertions)
 Installation 42 has repos {"a"} and grants contents:write, metadata:read. Request bodies and
 statuses are logged to stderr (bodies contain no secrets; tokens are never logged, only prefixes).
@@ -12,6 +18,7 @@ statuses are logged to stderr (bodies contain no secrets; tokens are never logge
 
 import argparse
 import base64
+import re
 import hashlib
 import json
 import os
@@ -22,12 +29,28 @@ import subprocess
 import sys
 import tempfile
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlsplit
 
 GRANTED = {"contents": "write", "metadata": "read"}
 LEVEL = {"read": 1, "write": 2, "admin": 3}
 REPOS = {"a"}
-TOKENS = {}  # token -> {"revoked": bool, "exp": int}
+TOKENS = {}  # token -> {"revoked": bool, "exp": int, "repos": [names]}
+GIT_RE = re.compile(r"^/([\w.-]+)/([\w.-]+?)\.git(/.*)?$")
+
+
+def make_token(n):
+    """Short form, or a stateless-style token of exactly n chars (n > 0)."""
+    if not n:
+        return "ghs_FAKE" + secrets.token_hex(16)
+    pre = "ghs_%06d_" % secrets.randbelow(10**6)
+    while True:
+        body = ".".join(base64.urlsafe_b64encode(x).rstrip(b"=").decode() for x in (
+            b'{"alg":"fake","typ":"ghs"}', b'{"i":42,"r":"a","n":"%s"}' % secrets.token_hex(8).encode(),
+            secrets.token_bytes(n)))
+        tok = (pre + body)[:n]
+        if n < 40 or all(c in tok[len(pre):] for c in ".-_"):
+            return tok
 
 
 def b64d(s):
@@ -42,11 +65,12 @@ def jwt_ok(tok, pub, tmp):
             return False
         if not pl["iat"] - 5 <= time.time() <= pl["exp"]:
             return False
-        sf = os.path.join(tmp, "sig")
+        sf = os.path.join(tmp, "sig" + secrets.token_hex(4))
         with open(sf, "wb") as f:
             f.write(b64d(sig))
         r = subprocess.run(["openssl", "dgst", "-sha256", "-verify", pub, "-signature", sf],
                            input=(h + "." + p).encode(), capture_output=True, check=False)
+        os.unlink(sf)
         return r.returncode == 0
     except Exception:
         return False
@@ -70,7 +94,69 @@ def make_handler(a, tmp):
         def bearer(self):
             return self.headers.get("Authorization", "")[7:]
 
+        def body(self):
+            if "chunked" in self.headers.get("Transfer-Encoding", ""):
+                out = b""
+                while True:
+                    n = int(self.rfile.readline().split(b";")[0], 16)
+                    out += self.rfile.read(n)
+                    self.rfile.readline()
+                    if n == 0:
+                        return out
+            return self.rfile.read(int(self.headers.get("Content-Length") or 0))
+
+        def git(self, m, url):
+            """Smart HTTP behind token auth; tokens are never logged."""
+            try:
+                user, _, pw = base64.b64decode(self.headers.get("Authorization", "")[6:]).decode().partition(":")
+            except ValueError:
+                user, pw = "", ""
+            t = TOKENS.get(pw) if user == "x-access-token" else None
+            body = self.body()
+            if not t or t["revoked"] or t["exp"] <= time.time():
+                code = 401
+            elif m[2] not in t["repos"] or not os.path.isdir(os.path.join(a.git_root, m[1], m[2] + ".git")):
+                code = 404
+            else:
+                code = 0
+            self.note(kind="git", method=self.command, path=url.path, auth=bool(pw), status=code or "cgi")
+            if code:
+                self.send_response(code)
+                if code == 401:
+                    self.send_header("WWW-Authenticate", 'Basic realm="fake"')
+                self.send_header("Content-Length", "0")
+                return self.end_headers()
+            h = self.headers
+            env = {"PATH": os.environ["PATH"], "GIT_PROJECT_ROOT": a.git_root, "GIT_HTTP_EXPORT_ALL": "1",
+                   "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_NOSYSTEM": "1",
+                   "PATH_INFO": url.path, "QUERY_STRING": url.query, "REQUEST_METHOD": self.command,
+                   "CONTENT_TYPE": h.get("Content-Type", ""), "CONTENT_LENGTH": str(len(body)),
+                   "REMOTE_USER": "x-access-token", "REMOTE_ADDR": self.client_address[0]}
+            for src, dst in (("Content-Encoding", "HTTP_CONTENT_ENCODING"), ("Git-Protocol", "HTTP_GIT_PROTOCOL")):
+                if h.get(src):
+                    env[dst] = h[src]
+            p = subprocess.run(["git", "http-backend"], input=body, env=env, capture_output=True)
+            head, sep, out = p.stdout.partition(b"\r\n\r\n")
+            if not sep:
+                head, sep, out = p.stdout.partition(b"\n\n")
+            code, hdrs = 200, []
+            for line in head.decode("latin-1").splitlines():
+                k, _, v = line.partition(":")
+                if k.lower() == "status":
+                    code = int(v.split()[0])
+                elif k:
+                    hdrs.append((k, v.strip()))
+            self.send_response(code)
+            for k, v in hdrs:
+                self.send_header(k, v)
+            self.send_header("Content-Length", str(len(out)))
+            self.end_headers()
+            self.wfile.write(out)
+
         def do_GET(self):
+            m = GIT_RE.match(urlsplit(self.path).path) if a.git_root else None
+            if m:
+                return self.git(m, urlsplit(self.path))
             if self.path == "/__fake/elsewhere":  # urllib re-sends a redirected POST as GET
                 self.note(method="GET", path=self.path, followed_redirect=True,
                           had_auth=bool(self.headers.get("Authorization")))
@@ -82,6 +168,9 @@ def make_handler(a, tmp):
 
         def do_DELETE(self):
             t = TOKENS.get(self.bearer())
+            if a.fail_delete:
+                self.note(method="DELETE", path=self.path, status=500)
+                return self.reply(500, {"message": "Server Error"})
             ok = self.path == "/installation/token" and t and not t["revoked"]
             if ok:
                 t["revoked"] = True
@@ -89,6 +178,9 @@ def make_handler(a, tmp):
             self.reply(204) if ok else self.reply(401, {"message": "Bad credentials"})
 
         def do_POST(self):
+            m = GIT_RE.match(urlsplit(self.path).path) if a.git_root else None
+            if m:
+                return self.git(m, urlsplit(self.path))
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
             if a.misbehave == "redirect":  # 302: urllib would follow it (as GET) by default
                 self.send_response(302)
@@ -111,9 +203,9 @@ def make_handler(a, tmp):
             if msg:
                 return self.reply(code, {"message": msg})
             time.sleep(a.delay)  # lets a test signal the issuer while a mint is in flight
-            tok = "ghs_FAKE" + secrets.token_hex(16)
+            tok = make_token(a.token_len)
             exp = int(time.time()) + a.ttl
-            TOKENS[tok] = {"revoked": False, "exp": exp}
+            TOKENS[tok] = {"revoked": False, "exp": exp, "repos": list(repos)}
             names = list(repos) + (["extra"] if a.misbehave == "broaden" else [])
             self.reply(201, {"token": tok, "permissions": perms,
                              "expires_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp)),
@@ -128,11 +220,14 @@ def main():
     ap.add_argument("--ttl", type=int, default=3600)
     ap.add_argument("--misbehave", choices=["broaden", "redirect"])
     ap.add_argument("--delay", type=float, default=0, help="seconds before answering a mint")
+    ap.add_argument("--fail-delete", action="store_true", help="DELETE answers 500")
+    ap.add_argument("--token-len", type=int, default=0, help="stateless-style token of exactly N chars")
+    ap.add_argument("--git-root", help="serve bare repos DIR/<owner>/<repo>.git over token-authed HTTP")
     a = ap.parse_args()
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     tmp = tempfile.mkdtemp(prefix="fakegh.")
     try:
-        HTTPServer(("127.0.0.1", a.port), make_handler(a, tmp)).serve_forever()
+        ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(a, tmp)).serve_forever()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

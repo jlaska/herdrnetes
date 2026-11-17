@@ -22,11 +22,15 @@ EXPIRY=0 MANUAL_SCOPE=0
 for a in "$@"; do case $a in --expiry) EXPIRY=1 ;; --manual-scope) MANUAL_SCOPE=1 ;; *) die "unknown option $a" ;; esac; done
 [[ $OWNER =~ ^[A-Za-z0-9-]+$ ]] || die "bad owner"
 [[ $RUN =~ ^[a-z0-9][a-z0-9-]{0,30}$ ]] || die "bad run id"
+# Owner condition (#5): every autonomous agent stays stopped for the whole live-issuer session.
+if pgrep -fa '(^|/)(claude|codex)( |$)|claude-code|@anthropic-ai|@openai/codex' >/dev/null; then
+    die "an agent process is running (pgrep -fa 'claude|codex'); stop all agents before live tests"
+fi
 
 # Only these two repositories, ever (G1).
 A=herdrnetes-exp004-a B=herdrnetes-exp004-b
 URL_A="https://github.com/$OWNER/$A.git" URL_B="https://github.com/$OWNER/$B.git"
-CTL='sudo -u exp004-issuer /usr/bin/python3 /usr/local/libexec/exp004/issuer-ctl.py /run/exp004-issuer/issuer.sock --admin-secret /var/lib/exp004-issuer/admin.secret'
+CTL='sudo -u exp004-issuer /usr/bin/python3 /usr/local/libexec/exp004/harness/issuer-ctl.py /run/exp004-issuer/issuer.sock --admin-secret /var/lib/exp004-issuer/admin.secret'
 
 export EXP004_ISSUER_SOCK=${EXP004_ISSUER_SOCK:-/run/exp004-issuer/issuer.sock} EXP004_HOST=github.com
 CLIENTS=${EXP004_LIVE_CLIENTS:-$HOME/.config/exp004-live}
@@ -59,8 +63,9 @@ chmod 700 "$T/replay"
 
 RES=$EVID/results.tsv
 printf 'id\toutcome\texpected\tobserved\telapsed_s\n' >"$RES"
-# Strip anything token-, JWT- or base64-shaped (commit SHAs too; record those deliberately).
-redact() { sed -E 's/gh[a-z]_[A-Za-z0-9_.-]+/<redacted>/g; s/eyJ[A-Za-z0-9_.-]+/<jwt>/g; s/[A-Za-z0-9+\/=_-]{30,}/<redacted>/g'; }
+# Strip anything token-, JWT- or base64-shaped, incl. ~520-char stateless tokens (commit SHAs too;
+# record those deliberately). Same expressions are tested offline (tests/run-github-offline.sh G36).
+redact() { sed -E -f "$HERE/live/redact.sed"; }
 rec() { # rec <id> <outcome> <expected> <observed>
     local obs; obs=$(printf %s "$4" | tr '\n\t' '  ' | redact | cut -c1-300)
     printf '%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$obs" "${EL:-}" >>"$RES"
@@ -153,13 +158,14 @@ if capture agent-rw write "$OWNER/$A" && pause "In ANOTHER terminal run: $CTL re
 else rec L10 UNTESTED "revoke_client" "skipped by owner"; fi
 
 # --- L11: issuer down (revoke-on-exit) ---
-if capture agent-ro read "$OWNER/$A" && pause "In ANOTHER terminal run: sudo systemctl stop exp004-issuer"; then
+if capture agent-ro read "$OWNER/$A" && pause "In ANOTHER terminal run: sudo systemctl stop exp004-issuer; sudo journalctl -u exp004-issuer -n 3
+    A CRITICAL line / non-zero status means revocation is INCOMPLETE: follow RUNBOOK 'Revocation fallback'"; then
     run L11 agent-ro read git -C "$T/ro" fetch -q
     replay "$URL_A"
     { [ $RC -ne 0 ] && grep -q 'issuer unavailable' "$T/out/L11.err"; } &&
         rec L11 PASS "issuer stopped: fetch fails closed and outstanding token revoked on exit" "fetch: $ERR; old token exit $RC" ||
         rec L11 FAIL "issuer stopped" "fetch: $ERR; outstanding token exit $RC (0 = still valid)"
-    pause "Restart the issuer: sudo /usr/local/libexec/exp004/issuer-start.sh" || die "issuer needed for remaining tests"
+    pause "Restart the issuer: sudo /usr/local/libexec/exp004/live/issuer-start.sh" || die "issuer needed for remaining tests"
 else rec L11 UNTESTED "issuer down" "skipped by owner"; fi
 
 # --- L12-L13: GitHub-side policy (rulesets, workflows permission) ---

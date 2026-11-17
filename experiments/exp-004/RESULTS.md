@@ -122,3 +122,29 @@ The lead's review of the first adapter found, and fixed:
 
 All are covered by tests above except the helper timeout and the recording hook, which are now mock-only by
 construction.
+
+## Second review corrections (run `m3`, 2026-11-17)
+
+The owner's review of `9aa6ef1` (PR #28) listed five blocking findings plus a long-token regression. The lead's review
+of the corrections found four more (rows 6–9). All are offline: fake API, synthetic keys and 520-char synthetic
+tokens. **These do not show GitHub's behavior.** Suites: `tests/test-install.sh` (I01–I09),
+`tests/run-github-offline.sh` (G01–G41), `tests/run-matrix.sh` (T01–T12, unchanged except for state initialization).
+
+| # | Finding | Correction | Tests |
+| --- | --- | --- | --- |
+| 1 | Install copied unreviewed code from the agent-writable checkout | `live/install-issuer.sh`, run as root from a fresh root-owned clone at the full 40-hex rev. It refuses on any dirty tracked file and requires the manifest to equal the committed one, and every file to equal its committed blob. It stages from `git show <rev>`, re-verifies the stage, installs, and verifies the installed files. As root, any non-root-owned or group/world-writable source path or dest ancestor is refused. Rollback on failure | I01–I09 (root-only ownership checks **untested offline**) |
+| 2 | `revoke_client` raced an in-flight mint | Track and check (closing / state-broken / client revoked / broader) run in one critical section. `revoke_client` adds, persists and snapshots in one critical section. A late token is DELETEd and never delivered | G20 |
+| 3 | Fixed 15 s shutdown wait < mint time | `--drain-seconds` (45) must be ≥ openssl 10 s + 2 × `--github-timeout`, enforced at start (G41). `TimeoutStopSec=120`. DELETEs in parallel. Exit 0 only if drained and all revoked, else exit 2 + CRITICAL + fallback | G21 (20 s mint), G22, G29 |
+| 4 | Missing state file = empty revocation set | State must pre-exist as a regular file owned by the issuer, not group/world-writable, holding a JSON list of strings; otherwise the issuer refuses to start. Writes are atomic with fsync | G23–G27 |
+| 5 | Revocation failure looked like success | `ok:false` + `fallback` in replies. `issuer-ctl` exits 1 with `REVOCATION INCOMPLETE`. Shutdown exits 2. A broad token reports "DELETEd at GitHub" vs "DELETE FAILED…" | G28–G31 |
+| 6 | (lead) State-save failure left minting on | `state_broken`: every mint refused until the owner fixes the state | G39 |
+| 7 | (lead) Racing kills DELETEd twice; the second 401 counted as failure | One claim per token. A 401 on DELETE counts as already unusable (DELETE authenticates with the token itself) | G38 |
+| 8 | (lead) Serial DELETEs could exceed the stop budget | Parallel DELETEs (16 workers) | G09, G29 |
+| 9 | (lead) Token minted but the reply never delivered (helper timeout or hang-up) | The issuer kills it. The helper timeout is raised to 45 s, above the worst mint path | G40 |
+| L | ~520-char stateless tokens | Helper, real `git ls-remote`/`clone` through a fake Git smart-HTTP route, erase/revoke and replay → 401, `revoke_token` via stdin, `sanitize` and `live/redact.sed`, leak scan for any 12-char substring | G32–G37b |
+
+**Remaining limitations (stated, not fixed):**
+- G22: a token GitHub issues after the issuer has exited or abandoned the request cannot be revoked by the issuer.
+- SIGKILL, a crash or power loss revoke nothing.
+- The fake's acceptance of the revoked-token replay is not evidence of GitHub's behavior.
+- The client side is still the owner's UID (FIND-044), accepted by the owner only while all agents are stopped.
