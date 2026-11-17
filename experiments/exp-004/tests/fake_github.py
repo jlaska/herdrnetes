@@ -2,15 +2,22 @@
 """FAKE GitHub API for offline EXP-004 tests (127.0.0.1 only; NOT evidence of real GitHub behavior).
 
     fake_github.py --port N --pub PUBKEY.pem [--ttl 3600] [--misbehave broaden|redirect] [--delay S]
-                   [--fail-delete] [--token-len N] [--git-root DIR]
+                   [--fail-delete] [--delete-delay S] [--token-len N] [--git-root DIR]
 
 POST /app/installations/42/access_tokens   verifies the App JWT (RS256 via openssl, iss, iat/exp)
 DELETE /installation/token                 revokes the bearer installation token
-  --fail-delete: DELETE answers 500.  --token-len N: ~N-char stateless-style tokens
+  --fail-delete: DELETE answers 500.  --delete-delay S: sleep S seconds before answering a DELETE.
+  --token-len N: ~N-char stateless-style tokens
   (ghs_<app id>_<b64url>.<b64url>.<b64url>, with . - _ in them) instead of the short form.
   --git-root DIR: /<owner>/<repo>.git/... is Git smart HTTP via `git http-backend`; Basic auth,
   user x-access-token, password = a minted, unrevoked, unexpired token whose repositories include
   <repo> (401 otherwise, 404 for another repo).
+GET /__fake/ctl?fail_delete=0|1&delete_delay=S&delete_trickle=0|1   change DELETE behavior at runtime
+  (a test can mint normally, then make DELETEs slow or failing). delete_trickle=1: DELETE answers 200
+  with Content-Length 120 then sends one byte per second, so the issuer's per-socket-op timeout never
+  fires and the DELETE outlives any total deadline (an unresolved network operation); the token is
+  NOT revoked in that case. A DELETE's arrival is logged as event=delete_arrived (no "method" key);
+  its answer as method=DELETE with the status.
 GET /__fake/state                          token sha256 prefixes + revoked flags (test assertions)
 Installation 42 has repos {"a"} and grants contents:write, metadata:read. Request bodies and
 statuses are logged to stderr (bodies contain no secrets; tokens are never logged, only prefixes).
@@ -30,11 +37,12 @@ import sys
 import tempfile
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 GRANTED = {"contents": "write", "metadata": "read"}
 LEVEL = {"read": 1, "write": 2, "admin": 3}
 REPOS = {"a"}
+CTL = {"fail_delete": False, "delete_delay": 0.0, "delete_trickle": False}  # runtime-mutable
 TOKENS = {}  # token -> {"revoked": bool, "exp": int, "repos": [names]}
 GIT_RE = re.compile(r"^/([\w.-]+)/([\w.-]+?)\.git(/.*)?$")
 
@@ -161,14 +169,40 @@ def make_handler(a, tmp):
                 self.note(method="GET", path=self.path, followed_redirect=True,
                           had_auth=bool(self.headers.get("Authorization")))
                 return self.reply(404, {"message": "Not Found"})
+            if self.path.startswith("/__fake/ctl"):
+                q = parse_qs(urlsplit(self.path).query)
+                if "fail_delete" in q:
+                    CTL["fail_delete"] = q["fail_delete"][0] == "1"
+                if "delete_delay" in q:
+                    CTL["delete_delay"] = float(q["delete_delay"][0])
+                if "delete_trickle" in q:
+                    CTL["delete_trickle"] = q["delete_trickle"][0] == "1"
+                return self.reply(200, CTL)
             if self.path != "/__fake/state":
                 return self.reply(404, {"message": "Not Found"})
             self.reply(200, {hashlib.sha256(t.encode()).hexdigest()[:8]: v["revoked"]
                              for t, v in TOKENS.items()})
 
         def do_DELETE(self):
+            self.note(event="delete_arrived")
+            if CTL["delete_trickle"]:
+                self.send_response(200)
+                self.send_header("Content-Length", "120")
+                self.end_headers()
+                self.wfile.flush()
+                try:
+                    for _ in range(120):
+                        time.sleep(1)
+                        self.wfile.write(b" ")
+                        self.wfile.flush()
+                except OSError:
+                    pass
+                self.close_connection = True
+                return
+            if CTL["delete_delay"]:
+                time.sleep(CTL["delete_delay"])
             t = TOKENS.get(self.bearer())
-            if a.fail_delete:
+            if CTL["fail_delete"]:
                 self.note(method="DELETE", path=self.path, status=500)
                 return self.reply(500, {"message": "Server Error"})
             ok = self.path == "/installation/token" and t and not t["revoked"]
@@ -221,13 +255,17 @@ def main():
     ap.add_argument("--misbehave", choices=["broaden", "redirect"])
     ap.add_argument("--delay", type=float, default=0, help="seconds before answering a mint")
     ap.add_argument("--fail-delete", action="store_true", help="DELETE answers 500")
+    ap.add_argument("--delete-delay", type=float, default=0, help="seconds before answering a DELETE")
     ap.add_argument("--token-len", type=int, default=0, help="stateless-style token of exactly N chars")
     ap.add_argument("--git-root", help="serve bare repos DIR/<owner>/<repo>.git over token-authed HTTP")
     a = ap.parse_args()
+    CTL["fail_delete"], CTL["delete_delay"] = a.fail_delete, a.delete_delay
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     tmp = tempfile.mkdtemp(prefix="fakegh.")
     try:
-        ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(a, tmp)).serve_forever()
+        srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(a, tmp))
+        srv.daemon_threads = True  # a sleeping/trickling DELETE must not block fake shutdown
+        srv.serve_forever()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

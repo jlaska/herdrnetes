@@ -148,3 +148,63 @@ tokens. **These do not show GitHub's behavior.** Suites: `tests/test-install.sh`
 - SIGKILL, a crash or power loss revoke nothing.
 - The fake's acceptance of the revoked-token replay is not evidence of GitHub's behavior.
 - The client side is still the owner's UID (FIND-044), accepted by the owner only while all agents are stopped.
+
+## Third review corrections (run `m4`, 2026-11-17)
+
+The owner's second review of `9f66638` (PR #28) found two residual fail-open cases. The lead found one more while
+reviewing the merged fixes (row 3). Everything here is offline: a fake API, synthetic keys and tokens, and
+deterministic in-process unit tests (`tests/test_issuer_state.py`, run as G42u/G60u). **None of it shows GitHub's
+behavior.** Fix A and fix B were implemented separately (Sonnet). The lead (Opus) merged them and reviewed the
+combined concurrency.
+
+| # | Finding | Correction | Tests |
+| --- | --- | --- | --- |
+| A | A DELETE claimed by another handler was skipped by `revoke_all` and shutdown, which could report `ok:true` or exit 0 while it was pending and later failed. A second `revoke_token` reported success with the outcome unknown | Each token is `active → revoking → revoked \| failed`. One DELETE owner per token. Other revokers wait (≤ `--github-timeout` + 5 s) and report its **real** outcome; a concurrent failure is not retried. Results count `revoked`/`failed`/`unresolved`, and `ok` requires both failed and unresolved to be 0. Shutdown waits for pending DELETEs, then scans: exit 0 only if no unexpired token is unrevoked (`residual`). Daemon DELETE workers; no lock held across network calls | G42–G51 (fake API), G42u (30 unit tests) |
+| B | `reinstate_client` published the new set before saving it, and a failed save did not fail closed | Save the proposed set durably, then publish it by reference swap. A failed save leaves the client revoked and sets `state_broken` (all mints refused). `reinstate_client` is refused while broken. The new admin op `recover_state` re-writes the in-memory (fail-closed) set and clears the latch only after a durable write. `revoke_client` publishes first (fail-closed), then saves | G60–G67 (fake API), G60u (6 unit tests) |
+| 3 | (lead) An unparseable `expires_at` in a mint response was tracked as `exp=0`. If the kill DELETE failed, `revoke_all` and the shutdown scan would skip the token as "expired" | An unknown expiry is tracked as now + 1 h (GitHub's maximum) | `LeadReview` unit test: fails with the old line, passes with the fix |
+
+Selected observed lines (workstation):
+
+| ID | Scenario | Result | Observed |
+| --- | --- | --- | --- |
+| G42 | Slow DELETE (3 s, succeeds); a second `revoke_all` during it | PASS | waited 2.9 s, exit 0, `concurrent: 1`, exactly 1 DELETE |
+| G43 | Slow DELETE that then fails; concurrent `revoke_all` | PASS | exit 1, `failed: 1`, `ok: false`, `REVOCATION INCOMPLETE`, token still open at the fake |
+| G43b | Same; concurrent second `revoke_token` | PASS | exit 1 "concurrent revocation failed at GitHub (HTTP 500)", 1 DELETE |
+| G44 | Two concurrent `revoke_token`, same token | PASS | both exit 0, 1 DELETE, one "revoked by a concurrent request" |
+| G45 / G45b | SIGTERM during a slow DELETE that succeeds / fails | PASS | exit 0 after 3.0 s, `residual: 0` / exit 2, CRITICAL + fallback |
+| G46 | DELETE times out (`--github-timeout 2`, fake answers after 10 s) during shutdown | PASS | exit 2 after 2.0 s, `failed: 1` |
+| G47 | Trickled DELETE (outlives urllib's per-read timeout) + SIGTERM | PASS | exit 2 after 7.1 s (settle 7 s), `unresolved: 1`; never exit 0 |
+| G48 | Concurrent revocations, then SIGTERM | PASS | exit 0, failed/unresolved/residual 0, open 0 |
+| G49 | Revoked token replayed through the fake Git route | PASS | valid before (rc 0), 401 after (rc 128) |
+| G50 | SIGKILL with a DELETE pending | LIMITATION | exit 137, no `revoke_on_exit` line, so nothing claims revocation |
+| G51 / G51b | `revoke_client` during a pending `revoke_token` that fails / succeeds | PASS | exit 1 `failed: 1` / exit 0 `revoked: 1`, 1 DELETE each |
+| G60 / G61 | Revoked client mints / reinstate then restart | PASS | refused / file `[]`, mints after restart |
+| G62 | Reinstate with the state dir unwritable | PASS | exit 1 "reinstatement NOT persisted: agent-rw remains revoked; issuer now refuses all mints; …"; agent-rw still refused |
+| G63 / G64 | Other client after G62 / reinstate while broken | PASS | agent-ro refused "refuses all mints" / refused "run recover_state first" |
+| G67 | `recover_state` with the dir still unwritable | PASS | exit 1 "recovery save failed", mints still refused |
+| G65 | `recover_state` after fixing the dir | PASS | exit 0; agent-ro mints; agent-rw **still refused** (failed reinstatement not applied); a fresh reinstate then mints |
+| G66 | Restart after a failed reinstate, without recover | PASS | file still lists agent-rw; refused |
+
+Suites (workstation: git 2.56.0, Python 3.13.16, OpenSSL 4.1.0, OpenSSH 10.2p1. Pinned image `…@sha256:c5a235ae…8e277`:
+git 2.47.3, Python 3.13.5, OpenSSL 3.5.7, OpenSSH 10.0p2, uid 1000, rootless Podman 5.8.9 with the m2 flags). Counts
+are identical in both environments:
+
+| Suite | PASS | FAIL | LIMITATION / NOTE |
+| --- | --- | --- | --- |
+| `tests/run-github-offline.sh` (G01–G67) | 68 | 0 | G22, G50 |
+| `tests/test_issuer_state.py` | 37 tests OK | 0 | — |
+| `tests/run-matrix.sh` (T01–T12) | 15 | 0 | T10 / T07c, T11b |
+| `tests/test-install.sh` (I01–I09) | 13 | 0 | root-only checks untested |
+| `signing/run-signing.sh` (unchanged) | 17 | 0 | 2 LIMITATION, 3 NOTE |
+
+Run provenance: a Haiku agent ran these on the working tree. Part of the offline suite ran before the row-3 fix
+landed. The lead then re-ran every suite from a clean export of the committed tree; see the issue #5 review request
+for those counts.
+
+**Remaining limitations (stated, not fixed):**
+- A DELETE still pending at the deadline is `unresolved`. It is treated as live and is not proven to have failed.
+- A `failed` DELETE is retried only by a later revocation request.
+- If `os.replace` succeeded but the directory fsync failed, the file may differ from memory. The runbook requires
+  `recover_state` or an inspection of the file before any restart.
+- G22 and G50: tokens GitHub issues after the issuer has exited, and SIGKILL, crash or power loss, are not revoked.
+- The fake's status codes and timing are not GitHub's.

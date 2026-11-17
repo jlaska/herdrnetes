@@ -3,7 +3,9 @@
 
     issuer-ctl.py <socket> --admin-secret FILE <op> [--client X] [--token-stdin]
 
-ops: revoke_all | revoke_client | reinstate_client | revoke_token (token read from stdin, never argv).
+ops: revoke_all | revoke_client | reinstate_client | recover_state | revoke_token (token read from stdin,
+never argv). recover_state re-writes the fail-closed revocation set and clears the issuer's broken-state latch
+after a failed state write; run it (or inspect the state file) before any restart.
 Prints the issuer's JSON reply. The caller's uid must be in the issuer policy's admin_uids.
 Exit 0 only if the reply has no "error" and is not "ok": false; otherwise exit 1, and for an
 incomplete revocation print a REVOCATION INCOMPLETE line (with the fallback) to stderr.
@@ -19,7 +21,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("socket")
     ap.add_argument("--admin-secret", required=True)
-    ap.add_argument("op", choices=["revoke_all", "revoke_client", "reinstate_client", "revoke_token"])
+    ap.add_argument("op", choices=["revoke_all", "revoke_client", "reinstate_client", "recover_state",
+                                  "revoke_token"])
     ap.add_argument("--client")
     ap.add_argument("--token-stdin", action="store_true")
     a = ap.parse_args()

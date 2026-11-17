@@ -5,8 +5,9 @@ matrices were re-run in the pinned Herdr image under local Podman (FIND-052). Th
 and tested **offline** against a fake API (FIND-053). The owner approved G1–G4 and G6 with conditions and declined G5
 ([decisions](https://github.com/jlaska/herdrnetes/issues/5)). The owner's first security review of the adapter (`9aa6ef1`)
 did **not** clear it for live credentials and listed five blocking findings. Those are now corrected and regression-tested
-offline (FIND-054). **Not yet run:** every live GitHub test. It is waiting on a second security review and on
-owner-performed key steps, with all autonomous agents stopped
+offline (FIND-054). The second review (`9f66638`) found two residual fail-open cases. Both are corrected and
+regression-tested offline (FIND-056). **Not yet run:** every live GitHub test. It is waiting on the final security
+review and on owner-performed key steps, with all autonomous agents stopped
 ([`live/RUNBOOK.md`](../../experiments/exp-004/live/RUNBOOK.md)). Nothing in the cluster, the running Herdr
 pod, GitOps, SealedSecrets, or the owner's GitHub/SSH/GPG/YubiKey identities was changed. Proposed for review; no ADR
 changes made. Tracking issue: [#5](https://github.com/jlaska/herdrnetes/issues/5). Builds on
@@ -184,6 +185,34 @@ documented stub until G2/G3 are approved.
   - SIGKILL, a crash or power loss revoke nothing.
 
   In both cases the only control is uninstalling the App and waiting out the ≤1 h expiry. (REQ-008)
+- **FIND-056 — "Being revoked" is not "revoked", and a failed write must not re-authorize a client.** [observed offline,
+  fake API and deterministic unit tests; owner's second security review of `9f66638`]
+  1. A DELETE claimed by one handler was skipped by `revoke_all` and shutdown. They could therefore report `ok:true`
+     or exit 0 while that DELETE was still pending and later failed. A second `revoke_token` answered success for a
+     DELETE whose outcome was unknown.
+  2. `reinstate_client` removed the client from the in-memory set before saving it. A failed save then left the
+     client able to mint.
+
+  Corrections:
+  - Each token now has an explicit state: `active → revoking → revoked | failed`. Exactly one thread owns a DELETE.
+    Every other revoker waits for its real outcome, on a deadline of `--github-timeout` + 5 s, and reports success
+    only if that outcome is success.
+  - `revoke_all`, `revoke_client` and shutdown count each target token as revoked, failed or unresolved.
+    `ok` is true only when nothing failed and nothing is unresolved.
+  - Shutdown exits 0 only after a final scan finds no unexpired token that is not revoked. Its worst-case length is
+    drain + github-timeout + 5 = 60 s, under `TimeoutStopSec=120`.
+  - DELETE workers are daemon threads, so a hung DELETE cannot hold the process past the deadline. No lock is held
+    across a network call (G42–G51, G42u).
+  - `reinstate_client` writes the proposed set durably before publishing it, by a reference swap. A failed write
+    leaves the client revoked and stops all mints. Recovery is the explicit admin op `recover_state` (G60–G67,
+    G60u).
+
+  **Limitations that remain:**
+  - A DELETE still pending at the deadline is reported as unresolved and treated as live. Nothing proves it failed.
+  - A `failed` DELETE is retried only by a later revocation request.
+  - If `os.replace` succeeds but the directory fsync fails, the file on disk may hold a set that memory does not.
+    The runbook therefore requires `recover_state`, or an inspection of the file, before any restart.
+  - SIGKILL with a DELETE pending reports nothing (G50 LIMITATION). (REQ-008)
 - **FIND-055 — An agent on the owner's workstation produced commits signed with the owner's hardware-backed key.**
   [observed] The three EXP-004 commits on PR #28 before the corrections, and this correction commit, were created by the agent
   session. `git log --format=%G?` shows `G`, a good signature by the owner's identity, because `commit.gpgsign=true` is
@@ -191,7 +220,11 @@ documented stub until G2/G3 are approved.
   This is the workstation form of FIND-048: a signature by the owner's key shows that the owner's signer was reachable,
   not that the owner reviewed the commit. It reinforces recommendation 3. Owner-reviewed signing must be a deliberate
   owner action, and an agent session should run with signing disabled or a separate key. The owner explicitly requested
-  that this correction commit be signed; nothing in the owner's configuration was changed. (REQ-008)
+  that this correction commit be signed; nothing in the owner's configuration was changed. The owner's second review
+asked for it to be tracked separately: [#29](https://github.com/jlaska/herdrnetes/issues/29). That issue covers how the
+signer is reachable, Verified vs approved, further signatures, and separation and confirmation options. The third-round
+correction commit is signed the same way, at the owner's request. Its signature is **not** evidence of owner review.
+(REQ-008)
 
 ## 6. Commit signing (Milestone 4)
 
@@ -270,7 +303,7 @@ Every workflow shares FIND-044: within the pod, the credential belongs to the po
 
 | Requirement | Findings | Status |
 | --- | --- | --- |
-| REQ-008 Git access and commit signing without a YubiKey on the Herdr host | FIND-039–055 | **Partly met (mock/local).** Design shown: scoped short-lived credentials without a root secret in the pod (FIND-042–045), and human signing kept on the workstation (FIND-050). **Not yet shown against GitHub** (G1–G6). Per-agent isolation **not achievable** in the shared pod (FIND-044, 048, 051) |
+| REQ-008 Git access and commit signing without a YubiKey on the Herdr host | FIND-039–056 | **Partly met (mock/local).** Design shown: scoped short-lived credentials without a root secret in the pod (FIND-042–045), and human signing kept on the workstation (FIND-050). **Not yet shown against GitHub** (G1–G6). Per-agent isolation **not achievable** in the shared pod (FIND-044, 048, 051) |
 | REQ-011 Agent isolation (future) | FIND-044, 051 | Input to EXP-006: per-agent Git authorization depends on per-agent execution identity |
 | REQ-007 Remote access | FIND-041 | `kubectl exec` carries no agent. Remote signing depends on #25 |
 
@@ -283,3 +316,4 @@ Every workflow shares FIND-044: within the pod, the credential belongs to the po
 | Credentials in agent transcripts and Ovis-visible history | FIND-046 | [#27](https://github.com/jlaska/herdrnetes/issues/27) |
 | Per-agent Git authorization | FIND-044, 051 | [#7](https://github.com/jlaska/herdrnetes/issues/7) |
 | Owner-supervised remote signing over native SSH | FIND-041, 048, 049 | [#25](https://github.com/jlaska/herdrnetes/issues/25) |
+| Owner signing key reachable from autonomous agent sessions | FIND-055, 048 | [#29](https://github.com/jlaska/herdrnetes/issues/29) |

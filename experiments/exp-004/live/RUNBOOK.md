@@ -124,8 +124,27 @@ sudo systemctl stop exp004-issuer     # SIGTERM: refuse new mints, drain in-flig
 systemctl show -p ExecMainStatus exp004-issuer; sudo journalctl -u exp004-issuer -n 5   # status 0 = all revoked
 ```
 
-`issuer-ctl.py` exits **1** and prints `REVOCATION INCOMPLETE` whenever any DELETE failed. A stop that cannot drain
-or revoke everything exits **2** with a `CRITICAL` journal line. Treat either as *tokens may still be valid*.
+A `reinstate_client` that cannot persist leaves the client **revoked** and makes the issuer refuse **all** mints
+(`state_broken`); `revoke_client` does the same. A client is authorized again only after the new state file is durably
+written.
+
+### State-file write failure (`state_save_failed` in the journal, or "refuses all mints")
+
+1. Fix the cause first (disk full, read-only mount, permissions on `/var/lib/exp004-issuer/`).
+2. Run `$CTL recover_state`. It re-writes the issuer's in-memory set, which is always the fail-closed view (every
+   revocation, and no reinstatement that failed), and clears the broken latch only if the write is durable.
+   Exit 1 with "recovery save failed" means the cause is not fixed yet; mints stay refused.
+3. Re-run `reinstate_client` if you still want that client back; a failed reinstatement is never applied implicitly.
+4. **Inspect the file before any restart** (`sudo cat /var/lib/exp004-issuer/revoked-clients.json`). If `os.replace`
+   succeeded but the directory fsync failed, the file may already hold a set that memory does not (for example the
+   reinstated client missing), and a restart would load it. Run `recover_state`, or correct the file, first.
+
+`issuer-ctl.py` exits **1** and prints `REVOCATION INCOMPLETE` whenever any DELETE failed or is `unresolved` (still
+pending at the bounded deadline, `--github-timeout` + 5 s). A `revoke_token` that overlaps another request's DELETE
+waits for that DELETE's outcome. It reports "revoked by a concurrent request" only on success. Otherwise it exits 1
+with "concurrent revocation failed" or "revocation outcome unknown". A stop that cannot drain, revoke and confirm every
+token exits **2** with a `CRITICAL` journal line (`failed`, `unresolved`, `residual`, `inflight_abandoned`). The
+worst-case stop time is 45 + 10 + 5 = 60 s, under `TimeoutStopSec=120`. Treat any of these as *tokens may still be valid*.
 
 ### Revocation fallback (use whenever revocation is incomplete or uncertain)
 

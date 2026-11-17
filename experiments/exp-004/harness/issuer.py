@@ -21,14 +21,34 @@ pane HOME. Requests are one JSON line, replies one JSON line:
   revoke_token  {admin, token}                   admin
   revoke_client {admin, client}                  admin; also revokes the client's outstanding tokens.
                                                  Persisted to --state so a restart cannot undo it
-  reinstate_client {admin, client}               admin; undoes revoke_client
+  reinstate_client {admin, client}               admin; undoes revoke_client. The client regains
+                                                 access only after the new state file is durably
+                                                 committed; a failed save leaves it revoked, sets
+                                                 state_broken (all mints refused) and needs recover_state
+  recover_state {admin}                          admin; re-writes the in-memory (fail-closed) revocation
+                                                 set to --state and, only if that succeeds, clears
+                                                 state_broken. Failed reinstatements are NOT applied
   introspect    {admin, token, repo}             admin (the mock host) -> {valid, reason, access}; mock only
   revoke_all    {admin}                          admin; revokes every tracked unexpired token
+Each tracked token has a state: active -> revoking (one thread owns its DELETE) -> revoked (GitHub
+answered 204, or 401 = already unusable) | failed (any other answer or unreachable; a later revoke
+retries it). Exactly one thread DELETEs a token at a time; any other revoker WAITS (bounded by
+settle_timeout = --github-timeout + 5 s) for that DELETE's outcome instead of assuming success.
+Results never count an unsettled token as revoked: revoke_all/revoke_client report revoked, failed
+and unresolved (DELETE still pending at the deadline); ok is true only if failed == 0 and
+unresolved == 0. A concurrent revoke_token answers "revoked by a concurrent request", or an error
+if that DELETE failed or is still pending. A token whose exp (+60 s clock skew, github backend) has
+passed is skipped, counted as expired_skipped.
+After ANY state_save_failed log line, run recover_state (or inspect and fix the state file) BEFORE
+restarting: if os.replace succeeded but the directory fsync failed, the file on disk may already hold
+a set that memory does not (e.g. the reinstated client missing), and a restart would load it.
 Tokens exist only in memory and are never written to disk. A mock restart invalidates them; GitHub
 tokens outlive a restart, so the github backend, on SIGTERM/SIGINT, refuses new mints, waits up to
 --drain-seconds for in-flight mints (a mint finishing while closing kills its own token), then
-revokes everything. Exit 0 only if all drained and every DELETE succeeded; otherwise a CRITICAL log
-line with a fallback and exit 2. SIGKILL, a crash or power loss skip all of this: minted tokens then
+revokes everything and waits for every pending DELETE (<= --github-timeout + 5 s). Exit 0 only if all
+drained, every DELETE succeeded and a final scan finds no unexpired token that is not revoked
+(logged as inflight_abandoned / failed / unresolved / residual); otherwise a CRITICAL log line with
+a fallback and exit 2. SIGKILL, a crash or power loss skip all of this: minted tokens then
 stay valid at GitHub until expiry (<= 1 h). A token GitHub issues after the issuer has exited
 cannot be revoked by it.
 Client revocations persist in --state, which must pre-exist (owner step: write `[]`, mode 0600),
@@ -41,11 +61,11 @@ github api_url must be https (http only to 127.0.0.1 for the offline fake); redi
 
 import argparse
 import base64
-import concurrent.futures
 import hashlib
 import hmac
 import json
 import os
+import queue
 import re
 import secrets
 import signal
@@ -62,7 +82,8 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-ADMIN_OPS = {"revoke_token", "revoke_client", "reinstate_client", "introspect", "revoke_all"}
+ADMIN_OPS = {"revoke_token", "revoke_client", "reinstate_client", "recover_state", "introspect",
+             "revoke_all"}
 LEVEL = {"read": 1, "write": 2, "admin": 3}
 # Keep equivalent to live/redact.sed.
 REDACT = [re.compile(r"gh[a-z]_[A-Za-z0-9_.\-]+"), re.compile(r"eyJ[A-Za-z0-9_.\-]+"),
@@ -179,7 +200,9 @@ class GitHub:
             broader = repos != {name} or any(
                 k not in perms or LEVEL.get(v, 99) > LEVEL[perms[k]] for k, v in got.items())
         except (KeyError, TypeError, ValueError, AttributeError):
-            broader, exp = True, 0
+            # unknown expiry: assume GitHub's maximum (1 h), never "already expired", so a failed
+            # kill of this token is not skipped by revoke_all or the shutdown scan
+            broader, exp = True, int(time.time()) + 3600
         return tok, exp, broader
 
     def delete(self, token):
@@ -216,7 +239,11 @@ class Issuer:
         self.policy, self.root_key, self.admin, self.state = policy, root_key, admin_secret, state
         self.backend = backend
         self.gh = GitHub(policy["github"], gh_timeout) if backend == "github" else None
-        self.tokens = {}  # token -> {repo, access, client, exp, revoked}
+        self.tokens = {}  # token -> {repo, access, client, exp, state, status}
+        # state: active | revoking (a DELETE is pending) | revoked | failed; status: last DELETE HTTP
+        # status or None. Transitions only under self.lock; see _claim/kill.
+        self.skew = 60 if backend == "github" else 0  # GitHub clock skew: treat as live until exp + skew
+        self.settle_timeout = (gh_timeout if backend == "github" else 0) + 5  # bound on any wait for a DELETE
         self.revoked_clients = load_state(state)  # missing/corrupt/unsafe is fatal (fail closed)
         self.lock = threading.Condition()
         self.closing, self.inflight, self.state_broken = False, 0, False
@@ -292,9 +319,10 @@ class Issuer:
                    STATE_BROKEN if self.state_broken else
                    "client revoked by administrator" if client in self.revoked_clients else
                    "github returned a token broader than requested or malformed" if broader else None)
-            # claimed: one killer per token, so racing revocations never DELETE twice
-            rec = self.tokens[token] = {"repo": repo, "access": access, "client": client,
-                                        "exp": exp, "revoked": False, "claimed": bool(why)}
+            # revoking from birth when we kill it ourselves: one killer per token, so racing
+            # revocations never DELETE twice and wait for our outcome instead
+            rec = self.tokens[token] = {"repo": repo, "access": access, "client": client, "exp": exp,
+                                        "state": "revoking" if why else "active", "status": None}
             if self.record:
                 with open(self.record, "a") as f:
                     f.write(token + "\n")
@@ -304,26 +332,52 @@ class Issuer:
             raise Refuse(f"{why}; " + (("DELETEd at GitHub" if self.gh else "revoked") if ok else DEL_FAILED))
         return {"token": token, "expires_at": exp, "repo": repo, "access": access}
 
+    @staticmethod
+    def _claim(rec):
+        """Caller holds self.lock. active|failed -> revoking and True: the caller now owns the one
+        DELETE. Any other state (revoking: someone else owns it; revoked: done) -> False."""
+        if rec["state"] in ("active", "failed"):
+            rec["state"] = "revoking"
+            return True
+        return False
+
+    def _expired(self, rec, now):
+        return rec["exp"] + self.skew <= now
+
     def kill(self, token, rec):
-        """Revoke one tracked token the caller has claimed (github: DELETE it). -> bool success.
-        204 = revoked. 401 also counts: DELETE authenticates with the token itself, so GitHub
-        rejecting it means the token is already unusable. Anything else releases the claim so a
-        later revoke_all retries."""
-        status = self.gh.delete(token) if self.gh else 204
-        with self.lock:
-            rec["status"] = status
-            rec["revoked"] = status in (204, 401)
-            rec["claimed"] = rec["revoked"]
-            return rec["revoked"]
+        """Revoke one tracked token the caller has CLAIMED (state revoking): github DELETE, no lock
+        held during the network call. 204 = revoked. 401 also counts: DELETE authenticates with the
+        token itself, so GitHub rejecting it means the token is already unusable. Anything else (or
+        an unexpected exception) -> failed, which a later revoke may retry. Always leaves `revoking`
+        and wakes waiters. -> bool success."""
+        status = None
+        try:
+            status = self.gh.delete(token) if self.gh else 204
+        finally:
+            ok = status in (204, 401)
+            with self.lock:
+                rec["status"] = status
+                rec["state"] = "revoked" if ok else "failed"
+                self.lock.notify_all()
+        return ok
 
     def revoke(self, token, client=None):
         with self.lock:
             rec = self.tokens.get(token)
             if not rec or (client and rec["client"] != client):
                 raise Refuse("unknown token")
-            if rec["revoked"] or rec["claimed"]:
-                return {"revoked": 1, "note": "already revoked or being revoked"}
-            rec["claimed"] = True
+            if rec["state"] == "revoked":
+                return {"revoked": 1, "note": "already revoked"}
+            if not self._claim(rec):  # revoking: another thread's DELETE is pending; await its outcome
+                self.lock.wait_for(lambda: rec["state"] != "revoking", timeout=self.settle_timeout)
+                if rec["state"] == "revoked":
+                    return {"revoked": 1, "note": "revoked by a concurrent request"}
+                if rec["state"] == "failed":  # never retried here: it failed concurrently with us
+                    raise Refuse("concurrent revocation failed at GitHub (HTTP "
+                                 f"{rec['status'] or 'unreachable'}); token remains valid until expiry; "
+                                 "uninstall the App installation")
+                raise Refuse("revocation outcome unknown: a concurrent DELETE is still pending; "
+                             "treat the token as valid until expiry")
         if not self.kill(token, rec):
             raise Refuse(f"revocation failed at GitHub (HTTP {rec['status'] or 'unreachable'}); "
                          "token remains valid until expiry")
@@ -331,59 +385,90 @@ class Issuer:
 
     def shutdown(self, drain):
         """Refuse new mints, wait up to `drain` s for in-flight mints (each kills its own token
-        once closing), then revoke everything. -> (clean, result)."""
+        once closing), revoke everything and wait for every pending DELETE (<= settle_timeout), then
+        scan: clean only if no unexpired token is left unrevoked. -> (clean, result)."""
         with self.lock:
             self.closing = True
             self.lock.wait_for(lambda: self.inflight == 0, timeout=drain)
             left = self.inflight
-        res = {**self.revoke_all(), "inflight_abandoned": left}
-        clean = left == 0 and res["failed"] == 0
+        res = self.revoke_all(deadline=time.monotonic() + self.settle_timeout)
+        with self.lock:  # invariant scan: independent of the counters above
+            now = time.time()
+            residual = sum(1 for r in self.tokens.values()
+                           if r["state"] != "revoked" and not self._expired(r, now))
+        res = {**res, "inflight_abandoned": left, "residual": residual}
+        clean = left == 0 and res["ok"] and residual == 0
         if not clean:
             res["ok"], res["fallback"] = False, FALLBACK
             log(level="CRITICAL", event="shutdown_incomplete", **res)
         return clean, res
 
-    def revoke_all(self, client=None):
+    def revoke_all(self, client=None, deadline=None):
+        if deadline is None:
+            deadline = time.monotonic() + self.settle_timeout
         with self.lock:
-            todo = self.snapshot(client)
-        return self.kill_many(todo)  # network calls outside the lock
+            claimed, targets, expired = self._collect(client)
+        return self._execute(claimed, targets, deadline, expired)  # network calls outside the lock
 
-    def snapshot(self, client=None):
-        """Claim the unrevoked, unclaimed tracked tokens (caller holds self.lock)."""
-        todo = [(t, r) for t, r in self.tokens.items() if not r["revoked"] and not r["claimed"]
-                and (client is None or r["client"] == client)]
-        for _, r in todo:
-            r["claimed"] = True
-        return todo
+    def _collect(self, client=None):
+        """Caller holds self.lock. -> (claimed, targets, expired_skipped). targets = every token not
+        revoked and not expired (matching client); claimed = the ones we now own (the rest are
+        already `revoking` under another thread and are only awaited)."""
+        now, claimed, targets, expired = time.time(), [], [], 0
+        for t, r in self.tokens.items():
+            if (client is not None and r["client"] != client) or r["state"] == "revoked":
+                continue
+            if self._expired(r, now):
+                expired += 1
+                continue
+            targets.append(r)
+            if self._claim(r):
+                claimed.append((t, r))
+        return claimed, targets, expired
 
-    def kill_many(self, todo):
-        """DELETE in parallel, so shutdown's revocation fits the stop budget whatever the count."""
-        n = {"revoked": 0, "failed": 0, "expired_skipped": 0}
-        live = []
-        for t, r in todo:
-            if r["exp"] <= time.time():
-                n["expired_skipped"] += 1
-                with self.lock:
-                    r["claimed"] = False
-            else:
-                live.append((t, r))
-        if live:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=16) as ex:
-                for ok in ex.map(lambda tr: self.kill(*tr), live):
-                    n["revoked" if ok else "failed"] += 1
-        n["ok"] = n["failed"] == 0
+    def _execute(self, claimed, targets, deadline, expired=0):
+        """No lock held on entry. DELETE the claimed tokens on <= 16 daemon workers (not a
+        ThreadPoolExecutor: its threads are joined at interpreter exit and could outlive the deadline),
+        then wait until no target is `revoking` or the monotonic `deadline` passes. Every target is
+        counted as revoked, failed or unresolved (still revoking): unresolved is never success."""
+        work = queue.Queue()
+        for item in claimed:
+            work.put(item)
+
+        def worker():
+            while True:
+                try:
+                    t, r = work.get_nowait()
+                except queue.Empty:
+                    return
+                try:
+                    self.kill(t, r)
+                except Exception:  # kill() already recorded `failed`
+                    pass
+
+        for _ in range(min(16, len(claimed))):
+            threading.Thread(target=worker, daemon=True).start()
+        with self.lock:
+            self.lock.wait_for(lambda: all(r["state"] != "revoking" for r in targets),
+                               timeout=max(0.0, deadline - time.monotonic()))
+            states = [r["state"] for r in targets]
+        n = {"revoked": states.count("revoked"), "failed": states.count("failed"),
+             "unresolved": states.count("revoking"), "concurrent": len(targets) - len(claimed),
+             "expired_skipped": expired}
+        n["ok"] = n["failed"] == 0 and n["unresolved"] == 0
         if not n["ok"]:
             n["fallback"] = FALLBACK
         return n
 
-    def save_state(self):
-        """Durable atomic replace: 0600 temp in the same dir, fsync, rename, fsync the dir."""
+    def save_state(self, clients):
+        """Durable atomic replace of the revocation set `clients`: 0600 temp in the same dir, fsync,
+        rename, fsync the dir. Raises OSError; never touches self.revoked_clients."""
         tmp = self.state + ".tmp"
         if os.path.lexists(tmp):
             os.unlink(tmp)
         fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, "w") as f:
-            json.dump(sorted(self.revoked_clients), f)
+            json.dump(sorted(clients), f)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, self.state)
@@ -394,28 +479,56 @@ class Issuer:
             os.close(dfd)
 
     def reinstate_client(self, req):
+        """A client regains authorization only after the new set is durably committed. The set is
+        never mutated in place: a lock-free reader (client()) sees the old set or the new one."""
+        client = str(req.get("client"))
         with self.lock:
-            self.revoked_clients.discard(str(req.get("client")))
-            self.save_state()
+            if self.state_broken:
+                raise Refuse(STATE_BROKEN + "; run recover_state first")
+            proposed = self.revoked_clients - {client}
+            try:
+                self.save_state(proposed)
+            except OSError as e:
+                self.state_broken = True
+                log(level="CRITICAL", event="state_save_failed", op="reinstate_client",
+                    error=type(e).__name__)
+                raise Refuse(f"reinstatement NOT persisted: {client} remains revoked; issuer now "
+                             "refuses all mints; fix the state file, then run recover_state")
+            self.revoked_clients = proposed
         return {"reinstated": 1}
+
+    def recover_state(self, req):
+        """Re-write the in-memory set (always fail-closed: every revocation, no failed reinstatement)
+        and clear state_broken only if that write is durable."""
+        with self.lock:
+            try:
+                self.save_state(self.revoked_clients)
+            except OSError as e:
+                log(level="CRITICAL", event="state_save_failed", op="recover_state",
+                    error=type(e).__name__)
+                raise Refuse(STATE_BROKEN + "; recovery save failed")
+            self.state_broken = False
+            log(level="WARNING", event="state_recovered", revoked_clients=len(self.revoked_clients))
+            return {"recovered": 1, "revoked_clients": len(self.revoked_clients)}
 
     def revoke_client(self, req):
         client, saved = str(req.get("client")), True
-        with self.lock:  # revoke + persist + snapshot atomically vs. finish_mint's check
-            self.revoked_clients.add(client)
+        with self.lock:  # revoke + persist + _collect atomically vs. finish_mint's check
+            self.revoked_clients = self.revoked_clients | {client}  # fail-closed: publish first
             try:
-                self.save_state()
+                self.save_state(self.revoked_clients)
             except OSError as e:  # revoke in memory, kill tokens, and stop minting for everyone
                 saved, self.state_broken = False, True
                 log(level="CRITICAL", event="state_save_failed", error=type(e).__name__)
-            todo = self.snapshot(client)
-        n = self.kill_many(todo)  # github: DELETEs each tracked token at the API
-        out = {"revoked": n["revoked"], "failed": n["failed"], "ok": n["ok"] and saved}
+            claimed, targets, expired = self._collect(client)
+        n = self._execute(claimed, targets, time.monotonic() + self.settle_timeout, expired)  # DELETEs
+        out = {"revoked": n["revoked"], "failed": n["failed"], "unresolved": n["unresolved"],
+               "ok": n["ok"] and saved}
         if not saved:
             out["state_saved"] = False
         if not out["ok"]:
             out["fallback"] = FALLBACK + ("" if saved else "; revocation state NOT persisted: the issuer "
-                                          "now refuses all mints; fix the state file before any restart")
+                                          "now refuses all mints; fix the cause, then run recover_state before any restart")
         return out
 
     def introspect(self, req):
@@ -425,7 +538,7 @@ class Issuer:
         if not rec:
             return {"valid": False, "reason": "unknown"}
         out = {"access": rec["access"], "repo": rec["repo"], "client": rec["client"]}
-        if rec["revoked"]:
+        if rec["state"] == "revoked":
             return {**out, "valid": False, "reason": "revoked"}
         if rec["exp"] <= time.time():
             return {**out, "valid": False, "reason": "expired"}
@@ -448,6 +561,8 @@ class Issuer:
             return self.revoke_client(req)
         if op == "reinstate_client":
             return self.reinstate_client(req)
+        if op == "recover_state":
+            return self.recover_state(req)
         if op == "introspect":
             return self.introspect(req)
         if op == "revoke_all":
@@ -508,8 +623,10 @@ def main():
     ap.add_argument("--socket-mode", default="0600", help="octal; not the access control by itself")
     # Stop budget: a mint is at most openssl (10 s) + POST + a kill DELETE (github-timeout each), so
     # drain >= 10 + 2 * github-timeout lets every in-flight mint finish and kill its own token. The
-    # final revoke_all runs its DELETEs in parallel (one github-timeout). live/issuer-start.sh sets
-    # TimeoutStopSec=120 > 45 + 10 so systemd's SIGKILL cannot cut the drain or the revocation short.
+    # final revoke_all runs its DELETEs in parallel and waits for every pending DELETE, however it
+    # was started, until settle_timeout = github-timeout + 5 s. Worst case: drain + github-timeout + 5
+    # (default 45 + 10 + 5 = 60 s). live/issuer-start.sh sets TimeoutStopSec=120 > 45 + 15 so
+    # systemd's SIGKILL cannot cut the drain or the revocation short.
     ap.add_argument("--drain-seconds", type=float, default=45,
                     help="max wait for in-flight mints on SIGTERM/SIGINT (default 45)")
     ap.add_argument("--github-timeout", type=float, default=10, help="per GitHub API call, seconds")

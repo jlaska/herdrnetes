@@ -14,12 +14,13 @@ secrets are generated at test time, no real GitHub, SSH, kubectl or `~/.gitconfi
 
 | File | Role |
 | --- | --- |
-| `harness/issuer.py` | Mints `ghs_mock_*` tokens per policy. Tokens in memory only; client revocations persisted in `--state` (T08c). Ops: token, revoke_own, revoke_token, revoke_client, reinstate_client, introspect. `--backend github` is implemented (App JWT signed by `openssl`, installation token per request, revoke via `DELETE /installation/token`) |
+| `harness/issuer.py` | Mints `ghs_mock_*` tokens per policy. Tokens in memory only; client revocations persisted in `--state` (T08c). Ops: token, revoke_own, revoke_token, revoke_client, reinstate_client, recover_state, introspect. A reinstatement takes effect only after the state file is durably committed; a failed save leaves the client revoked, refuses all mints, and needs `recover_state` (inspect the file before any restart). `--backend github` is implemented (App JWT signed by `openssl`, installation token per request, revoke via `DELETE /installation/token`). Each token is `active`, `revoking` (one thread owns the DELETE; other revokers wait for its real outcome, bounded by `--github-timeout` + 5 s), `revoked` or `failed`. `revoke_all`/`revoke_client`/shutdown report `revoked`, `failed` and `unresolved` (DELETE still pending at the deadline) and are `ok` only if both are 0; SIGTERM exits 0 only after a final scan finds no unexpired unrevoked token |
 | `harness/mock_githost.py` | Smart-HTTP host: 401 bad/expired/revoked, 404 other repo, 403 read token pushing |
 | `harness/git-credential-exp004` | Credential helper: `get` mints, `store` ignored, `erase` revokes (best effort); `quit=1` on failure |
 | `harness/issuer-ctl.py` | Admin CLI: revoke_all, revoke_client, reinstate_client, revoke_token (token on stdin). Exits 1 with `REVOCATION INCOMPLETE` if any DELETE failed |
-| `tests/fake_github.py` | Offline fake of the GitHub App endpoints (JWT verified with openssl), plus a Git smart-HTTP route, `--delay`, `--fail-delete`, `--token-len`, `--misbehave`. NOT evidence of real GitHub behavior |
-| `tests/run-github-offline.sh` | Offline tests G01–G41 of `--backend github` against the fake (127.0.0.1 only, synthetic RSA key, 520-char tokens) |
+| `tests/fake_github.py` | Offline fake of the GitHub App endpoints (JWT verified with openssl), plus a Git smart-HTTP route, `--delay`, `--fail-delete`, `--token-len`, `--misbehave`, `--delete-delay`, runtime `/__fake/ctl` (fail_delete, delete_delay, delete_trickle). NOT evidence of real GitHub behavior |
+| `tests/run-github-offline.sh` | Offline tests G01–G67 of `--backend github` against the fake (127.0.0.1 only, synthetic RSA key, 520-char tokens) |
+| `tests/test_issuer_state.py` | Deterministic unit tests of the issuer's token and client state (fake GitHub client with `threading.Event` gates; classes RevocationAccounting, LeadReview, ReinstatePersistence). Run by G42u/G60u |
 | `tests/run-matrix.sh` | Self-contained matrix T01-T12; results in `$T/results.tsv` |
 | `tests/test-install.sh` | Offline tests I01–I09 of `live/install-issuer.sh` against a throwaway git repo |
 | `live/` | Owner-run live materials: `RUNBOOK.md`, `install-issuer.sh` + `MANIFEST.sha256` (verified root install), `issuer-start.sh` (hardened systemd unit), `policy.template.json`, `run-live.sh` (L00–L17), `redact.sed` |
