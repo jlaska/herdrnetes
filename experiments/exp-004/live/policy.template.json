@@ -1,0 +1,18 @@
+{
+  "ttl_seconds": 3600,
+  "client_uids": [1000],
+  "github": {
+    "api_url": "https://api.github.com",
+    "app_id": "<APP CLIENT ID or APP ID>",
+    "owner": "<GITHUB OWNER>",
+    "installation_id": 0,
+    "private_key_file": "/var/lib/exp004-issuer/app.pem"
+  },
+  "clients": {
+    "agent-ro": {"secret_sha256": "<sha256>", "repos": {"<GITHUB OWNER>/herdrnetes-exp004-a": "read"}},
+    "agent-rw": {"secret_sha256": "<sha256>", "repos": {"<GITHUB OWNER>/herdrnetes-exp004-a": "write"}},
+    "probe-b": {"secret_sha256": "<sha256>", "repos": {"<GITHUB OWNER>/herdrnetes-exp004-b": "read"}},
+    "probe-perm": {"secret_sha256": "<sha256>",
+      "repos": {"<GITHUB OWNER>/herdrnetes-exp004-a": {"permissions": {"contents": "read", "workflows": "write"}}}}
+  }
+}
