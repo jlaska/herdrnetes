@@ -23,7 +23,7 @@ secrets are generated at test time, no real GitHub, SSH, kubectl or `~/.gitconfi
 | `tests/test_issuer_state.py` | Deterministic unit tests of the issuer's token and client state (fake GitHub client with `threading.Event` gates; classes RevocationAccounting, LeadReview, ReinstatePersistence). Run by G42u/G60u |
 | `tests/run-matrix.sh` | Self-contained matrix T01-T12; results in `$T/results.tsv` |
 | `tests/test-install.sh` | Offline tests I01–I09 of `live/install-issuer.sh` against a throwaway git repo |
-| `live/` | Owner-run live materials: `RUNBOOK.md`, `install-issuer.sh` + `MANIFEST.sha256` (verified root install), `issuer-start.sh` (hardened systemd unit), `policy.template.json`, `run-live.sh` (L00–L17), `redact.sed` |
+| `live/` | Owner-run live materials: `RUNBOOK.md`, `install-issuer.sh` + `MANIFEST.sha256` (verified root install), `issuer-start.sh` (hardened systemd unit), `policy.template.json`, `run-live.sh` (L00–L17), `redact.sed`. `quick-check.sh` (Q01–Q16) is the minimal owner-run live check that was actually run; the issuer session was not |
 
 ## Run
 

@@ -6,9 +6,11 @@ and tested **offline** against a fake API (FIND-053). The owner approved G1–G4
 ([decisions](https://github.com/jlaska/herdrnetes/issues/5)). The owner's first security review of the adapter (`9aa6ef1`)
 did **not** clear it for live credentials and listed five blocking findings. Those are now corrected and regression-tested
 offline (FIND-054). The second review (`9f66638`) found two residual fail-open cases. Both are corrected and
-regression-tested offline (FIND-056). **Not yet run:** every live GitHub test. It is waiting on the final security
-review and on owner-performed key steps, with all autonomous agents stopped
-([`live/RUNBOOK.md`](../../experiments/exp-004/live/RUNBOOK.md)). Nothing in the cluster, the running Herdr
+regression-tested offline (FIND-056), and the issuer was cleared at `4fce029`. The owner then judged the full
+issuer session too heavy for what it would show. On 2026-11-18 (run `L1`), the owner instead ran
+[`live/quick-check.sh`](../../experiments/exp-004/live/quick-check.sh) against a real GitHub App and two private test
+repos, with all agents stopped. All 16 checks passed (FIND-057). **The issuer itself has never run against GitHub.**
+Rulesets (G4), real expiry, and G6 were not tested. Nothing in the cluster, the running Herdr
 pod, GitOps, SealedSecrets, or the owner's GitHub/SSH/GPG/YubiKey identities was changed. Proposed for review; no ADR
 changes made. Tracking issue: [#5](https://github.com/jlaska/herdrnetes/issues/5). Builds on
 [EXP-003](03-remote-access.md) (FIND-023–038).
@@ -103,7 +105,8 @@ Contents write for push. Workflows is separate (needed to change `.github/workfl
 a new stateless `ghs_<appid>_<jwt>` format, so length must not be assumed. Rulesets can restrict updates to a branch
 pattern with the App excluded from bypass, and "require signed commits" rejects unsigned pushes. **Not documented in the
 pages fetched:** the status code for over-requesting permissions, revocation latency on Git HTTPS, and whether
-uninstalling or removing a repo invalidates outstanding tokens.
+uninstalling or removing a repo invalidates outstanding tokens. Run `L1` observed the first two (FIND-057); the third
+remains untested.
 
 ### Prototype
 
@@ -225,6 +228,25 @@ asked for it to be tracked separately: [#29](https://github.com/jlaska/herdrnete
 signer is reachable, Verified vs approved, further signatures, and separation and confirmation options. The third-round
 correction commit is signed the same way, at the owner's request. Its signature is **not** evidence of owner review.
 (REQ-008)
+- **FIND-057 — Real GitHub enforces the scoping the design relies on, and revocation takes effect at once.**
+  [observed, GitHub, run `L1`, 2026-11-18, owner-run `quick-check.sh` with agents stopped, git 2.56.0] The App had
+  Contents read/write and Metadata read, and was installed on test repo `a` only. Tokens were minted directly from
+  the App JWT (no issuer).
+  - A mint for repo `b` (not installed) and a mint asking for `issues: write` (not granted) were both refused with
+    **422**.
+  - A read-only token cloned `a`, and its push was refused with 403 ("Write access to repository not granted").
+  - A read-write token pushed a branch to `a`. Cloning `b` failed with "Repository not found", so the token does not
+    reveal whether `b` exists.
+  - Pushing `.github/workflows/*.yml` without the Workflows permission was rejected by the server ("refusing to
+    allow a GitHub App to create or update workflow … without `workflows` permission").
+  - The push was recorded with the actor `<app-slug>[bot]`.
+  - `DELETE /installation/token` returned 204. The very next API call returned 401, under one second later, and Git
+    over HTTPS was refused right after.
+  - **Mock vs real discrepancy:** real tokens were **390 characters** with a `ghs_` prefix. The mock and offline
+    tests assumed about 520. The helper and the redaction patterns accept any length, and include `.`/`-`, so the
+    tests still hold. Nothing should depend on token length.
+  This confirms recommendation 1 at the GitHub layer. It does **not** test the issuer, its hardened unit, or revocation
+  on exit under real GitHub. Those remain shown only offline (FIND-053, 054, 056). (REQ-008)
 
 ## 6. Commit signing (Milestone 4)
 
@@ -292,6 +314,12 @@ Every workflow shares FIND-044: within the pod, the credential belongs to the po
 
 ## 9. Credential cleanup and revocation procedure (for the live tests)
 
+**Run `L1` state:** every token was revoked (Q13 and Q16 returned 204), and the probe branch was deleted. Afterwards
+both repos held only `main` with their initial commit (checked by the lead with `gh`, 2026-11-18). The owner then
+deleted the App, which invalidates its key, and deleted the key file and both test repos. The lead confirmed that the
+repos and the key directory no longer exist. App deletion is as reported by the owner. The procedure below was written
+for the issuer session.
+
 1. Revoke each token the issuer minted (`DELETE /installation/token`) and stop the issuer.
 2. Remove the test repos from the installation, uninstall the App, then delete the App (this invalidates its keys).
 3. Delete the private key file from the workstation. Confirm none was ever copied to the pod (FIND-039 baseline
@@ -303,7 +331,7 @@ Every workflow shares FIND-044: within the pod, the credential belongs to the po
 
 | Requirement | Findings | Status |
 | --- | --- | --- |
-| REQ-008 Git access and commit signing without a YubiKey on the Herdr host | FIND-039–056 | **Partly met (mock/local).** Design shown: scoped short-lived credentials without a root secret in the pod (FIND-042–045), and human signing kept on the workstation (FIND-050). **Not yet shown against GitHub** (G1–G6). Per-agent isolation **not achievable** in the shared pod (FIND-044, 048, 051) |
+| REQ-008 Git access and commit signing without a YubiKey on the Herdr host | FIND-039–057 | **Partly met.** Design shown mock/local: scoped short-lived credentials without a root secret in the pod (FIND-042–045), and human signing kept on the workstation (FIND-050). GitHub's token scoping, workflow guard and immediate revocation observed live (FIND-057). **Not shown against GitHub:** the issuer, rulesets (G4), real expiry, Verified status (G6). Per-agent isolation **not achievable** in the shared pod (FIND-044, 048, 051) |
 | REQ-011 Agent isolation (future) | FIND-044, 051 | Input to EXP-006: per-agent Git authorization depends on per-agent execution identity |
 | REQ-007 Remote access | FIND-041 | `kubectl exec` carries no agent. Remote signing depends on #25 |
 
@@ -311,7 +339,7 @@ Every workflow shares FIND-044: within the pod, the credential belongs to the po
 
 | Item | Findings | Where |
 | --- | --- | --- |
-| Live GitHub App and test-repo matrix (G1–G6) | FIND-042–046, 050 | [#5](https://github.com/jlaska/herdrnetes/issues/5), pending owner approval |
+| Remaining live checks: rulesets (G4), 1 h expiry, uninstall/remove-repo effect on live tokens, G6, the issuer against real GitHub | FIND-057, 053 | Fold into [#26](https://github.com/jlaska/herdrnetes/issues/26), where the issuer would actually run |
 | Where the issuer runs for the cluster (separate pod and identity, egress path from Herdr, key custody) | FIND-040, 044, 045 | [#26](https://github.com/jlaska/herdrnetes/issues/26) |
 | Credentials in agent transcripts and Ovis-visible history | FIND-046 | [#27](https://github.com/jlaska/herdrnetes/issues/27) |
 | Per-agent Git authorization | FIND-044, 051 | [#7](https://github.com/jlaska/herdrnetes/issues/7) |

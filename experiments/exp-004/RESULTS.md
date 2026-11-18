@@ -84,7 +84,7 @@ Surprises recorded by the implementer and checked by the lead:
 
 | Case | Why | Gate |
 | --- | --- | --- |
-| Real installation tokens: clone/fetch/push, read-only push denial, other-repo denial, 1 h expiry, `DELETE /installation/token`, uninstall/remove-repo effect on live tokens, over-request status code, pusher attribution | Needs an owner-created App and test repos | G1–G3 |
+| Real installation tokens: 1 h expiry, uninstall/remove-repo effect on live tokens. (Clone, fetch, push, denials, revocation, over-request status and attribution were run live in `L1`, below.) | Not covered by the quick check | G1–G3 |
 | Ruleset: App cannot update `main`; "require signed commits" rejects unsigned agent pushes | Needs test repo | G4 |
 | GitHub "Verified" for an SSH signing key, owner re-signed commit, App API-created (`createCommitOnBranch`) commit | Needs test repo / key | G5, G6, G2 |
 | YubiKey touch through a forwarded/relayed agent; OpenPGP `S.gpg-agent.extra` forwarding | Real owner hardware; image has no gpg; not requested (FIND-041) | not requested |
@@ -208,3 +208,56 @@ for those counts.
   `recover_state` or an inspection of the file before any restart.
 - G22 and G50: tokens GitHub issues after the issuer has exited, and SIGKILL, crash or power loss, are not revoked.
 - The fake's status codes and timing are not GitHub's.
+
+## Live GitHub quick check (run `L1`, 2026-11-18, owner-run)
+
+This was the first and only run against real GitHub. The owner ran `live/quick-check.sh` (the committed version, sha256 `74001ff1aa6a874f410e0c4875d843139266ea06fe8af5970027a0c5ec5c9c5a`, differs from the one run only in its
+redaction filter, which now reuses `redact.sed`) in their own terminal, with every agent on
+the account stopped. The App had Contents read/write and Metadata read, and was installed on private repo
+`herdrnetes-exp004-a` only. `herdrnetes-exp004-b` exists but is not in the installation. Tokens were minted directly
+from the App JWT. **No issuer, systemd unit, or installer was involved.** git 2.56.0, Fedora workstation.
+Output, trimmed: the App slug is elided, and long error lines are shortened. The script never prints tokens:
+
+```
+Q01  PASS mint read-only token for repo a                            expected=201      observed=201
+Q02  PASS mint read-write token for repo a                           expected=201      observed=201
+     token length: ro=390 rw=390 (prefix ghs_)
+Q03  PASS mint for repo b (App not installed there) is refused       expected=422      observed=422
+Q04  PASS mint with a permission the App lacks is refused            expected=422      observed=422
+Q05  PASS read-only token clones repo a                              expected=ok       observed=ok
+Q06  PASS read-write token clones repo a                             expected=ok       observed=ok
+Q07  PASS read-write token cannot clone repo b                       expected=refused  observed=refused
+     remote: Repository not found.
+Q08  PASS read-write token pushes a probe branch to repo a           expected=ok       observed=ok
+Q09  PASS read-only token cannot push                                expected=refused  observed=refused
+     remote: Write access to repository not granted.  (HTTP 403)
+Q10  PASS read-write token cannot push a workflow file               expected=refused  observed=refused
+     ! [remote rejected] ... (refusing to allow a GitHub App to create or update workflow
+       `.github/workflows/exp004-probe.yml` without `workflows` permission)
+     Q11 info: push recorded as actor: <app-slug>[bot]
+Q12  PASS delete probe branch                                        expected=ok       observed=ok
+Q13  PASS revoke read-write token                                    expected=204      observed=204
+Q14  PASS revoked token is rejected by the API                       expected=401      observed=401
+     rejected after 0s
+Q15  PASS revoked token cannot clone repo a                          expected=refused  observed=refused
+Q16  PASS revoke read-only token                                     expected=204      observed=204
+failures: 0
+```
+
+**Mock vs real:**
+
+| Assumption in the mock/offline tests | Real GitHub (`L1`) |
+| --- | --- |
+| Stateless tokens of about 520 characters | 390 characters, `ghs_` prefix. The helper and redaction accept any length, so nothing breaks |
+| Over-requesting returns 422 (fake API's choice) | 422 for both an uninstalled repo and an ungranted permission |
+| Revoked token rejected with 401 | 401 on the first API call after the 204, under 1 s later; Git refused too |
+| Other repo returns 403/404 (mock host) | Git reports "Repository not found", so the token cannot tell whether the repo exists |
+| No workflow guard in the mock | The server rejects workflow-file pushes without the Workflows permission |
+
+**Cleanup verified by the lead (`gh`, 2026-11-18):** both repos have only `main` with their initial commit, so the
+probe branch is gone. Q13 and Q16 revoked both tokens. The repo-`b` mint was refused, so it produced no token. The owner
+then deleted the App, the key file and both repos. The lead confirmed that the repos and the key directory are gone;
+App deletion is as reported by the owner.
+
+**Not covered:** rulesets (G4), 1 h expiry, the effect of uninstalling on live tokens, G6, and the issuer and its
+hardened unit under real GitHub.

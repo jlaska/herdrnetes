@@ -1,8 +1,9 @@
 # EXP-004 live GitHub runbook (owner-run)
 
 Implements the approvals in [#5](https://github.com/jlaska/herdrnetes/issues/5) (G1–G4, optional G6; G5 declined).
-**Status:** the first review at `9aa6ef1` found five blocking issues. The corrections are awaiting a second security
-review. **Do not start phase 3 before that review clears a specific commit (`REV`).**
+**Status: superseded, not run.** The issuer was cleared for live use at `4fce029`, but the owner chose the minimal
+[`quick-check.sh`](quick-check.sh) instead (run `L1`, 2026-11-18; see RESULTS.md). The procedure below has known gaps
+(listed on #5, comment 6964621748) that were not fixed. Fix them and get a fresh review before using it.
 
 Every step that touches the App key, the admin secret or `sudo` is performed by the **owner**. Autonomous agents
 prepared these files, but never run them, and never see the key, JWTs, tokens or unredacted output.
