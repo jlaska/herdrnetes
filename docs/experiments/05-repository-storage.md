@@ -4,7 +4,11 @@
 cluster on 2026-11-18/19 (runs `m1-20261118a`, `m2-20261118a`, `m4-20261118a`). The live Herdr StatefulSet, its PVCs,
 GitOps, Longhorn and StorageClasses were not changed. The live pod's UID and restart counts were identical before and
 after every run. All scratch resources were removed with the guarded cleanup. NFS/RWX was compared on paper only.
-Recommendation proposed for owner review; **ADR-0001 is unchanged**. Tracking issue:
+**Owner decision (2026-11-19):** the recommendation in §5 is accepted as an experiment finding for the trusted MVP
+([review](https://github.com/jlaska/herdrnetes/pull/30#pullrequestreview-5978272077),
+[decisions](https://github.com/jlaska/herdrnetes/issues/6#issuecomment-7014093054)). It is not a new architecture
+decision and not approval to install `request-repo` in live Herdr. **ADR-0001 is unchanged**: it already chooses one
+shared workspace PVC and defers per-repository volumes. Tracking issue:
 [#6](https://github.com/jlaska/herdrnetes/issues/6). Harness, results and sanitized evidence:
 [`experiments/exp-005/`](../../experiments/exp-005/README.md), [`RESULTS.md`](../../experiments/exp-005/RESULTS.md).
 
@@ -20,7 +24,8 @@ the pinned image under Podman; **[docs]** established by documentation or Kubern
 ## 1. Baseline (read-only audit, 2026-11-18)
 
 Kubernetes v1.36.6, 3 schedulable nodes. Longhorn v1.13.0, default `longhorn` StorageClass: RWO, `Immediate`,
-3 replicas, ext4, reclaim `Delete`. No Longhorn RWX class, no VolumeSnapshotClass. One existing `nfs.csi.k8s.io` class
+3 replicas, ext4, reclaim `Delete`. No RWX volume in use and no VolumeSnapshotClass. (Longhorn selects RWX from the
+PVC access mode, so the existing class may serve RWX claims; that was not tested here and is #32.) One existing `nfs.csi.k8s.io` class
 backed by an external NAS (not used). Live Herdr: one StatefulSet, PSA `restricted`, uid 1000, read-only rootfs, no
 service-account token, 5Gi home + 20Gi workspace RWO PVCs. Pinned image
 `ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277`
@@ -41,8 +46,8 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
 
 - **FIND-058 — The existing shared workspace PVC supports lazy hydration with no Herdr restart.** [cluster, M1]
   The repo appeared at a stable `/workspace/<id>` in the running scratch Herdr pod. Pod UID, restartCount (0) and the
-  `herdr server` PID were unchanged across S01–S13. Repos survived pod delete/recreate on the same PVCs (Ready in 21s):
-  fsck clean, dirty state byte-identical. Home and workspace are separate Longhorn devices with no cross-writes.
+  `herdr server` PID were unchanged across S01–S10, S12 and S13. Repos survived pod delete/recreate on the same PVCs (Ready in 21s):
+  fsck clean, dirty state byte-identical (repository data only; Herdr sessions were not measured). Home and workspace are separate Longhorn devices with no cross-writes.
   Synthetic repos were small, so hydration timing is not representative (LIMITATION). REQ-004 satisfied; the REQ-010
   goal "new repository without restarting Herdr" is met **as a directory**, not as a volume.
 
@@ -57,17 +62,19 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
     - A failed clone leaves nothing at the path and retries cleanly (S08).
     - SIGKILL before promotion (S09), during the clone (F01) and a container crash mid-hydration (F02) all leave nothing
       at the path. The next request removes the stale staging and hydrates.
-  - **Local pitfalls the design avoids:** plain `rename(2)` silently replaces an *empty* target directory, and
-    `mv -T -n` exits 0 without moving.
+  - **Local pitfalls the design avoids:** plain `rename(2)` silently replaces an *empty* target directory [docs], and
+    `mv -T -n` exits 0 without moving [local, development observation, not in committed evidence]. The tool's
+    behaviour is covered by `test_conflict_empty_dir_not_replaced`.
 
 - **FIND-060 — Preserving dirty work requires avoiding Git's optional index writes.** [local, cluster]
-  Plain `git status` rewrites the index, so the first preservation test failed on the index mtime. Read paths use only
+  Plain `git status` rewrites the index, so the first preservation test failed on the index mtime [local, development
+  observation; the failing run is not in committed evidence]. Read paths use only
   `git rev-parse` / `git config --get` with `GIT_OPTIONAL_LOCKS=0`. With that, dirty, untracked and staged files, local
   commits and stashes were identical, index mtime included, across re-requests (S10), a cross-node pod move (P07) and a
   container crash (F02).
 
-- **FIND-061 — A PVC created after a pod starts cannot become visible to that pod; Kubernetes rejects every
-  non-privileged route.** [cluster, docs]
+- **FIND-061 — A PVC created after a pod starts cannot become visible to that pod; Kubernetes rejected both
+  non-privileged routes tried, and no other is known.** [cluster, docs]
   - **Volume patch:** a server-dry-run patch adding a volume to the running Herdr pod was rejected:
     `spec: Forbidden: pod updates may not change fields other than spec.containers[*].image, …`.
     `ValidatePodUpdate` lists no volume fields.
@@ -78,7 +85,8 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
     running container, and it requires a privileged container, which is incompatible with PSA `restricted` and
     ADR-0001 [docs].
   - **Observed state:** the repo PVC never appeared in the Herdr pod's `mountinfo` (P11).
-  - **Symlinks:** a symlink to a path mounted only in another pod does not provide access.
+  - **Symlinks:** a symlink to a path mounted only in another pod does not provide access; each pod resolves it in
+    its own mount namespace [docs; not separately tested].
 
   REQ-010's "PVC per repository without restarting Herdr" therefore cannot be met for the Herdr process itself.
 
@@ -124,8 +132,9 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
   - **Orphaned helpers (F01, LIMITATION):** `PR_SET_PDEATHSIG` stops only the direct `git clone` child. Its
     `upload-pack`/`index-pack`/`pack-objects` helpers outlived the killed tool by ~5s before exiting on their own. They
     only touch the abandoned staging directory, so correctness held.
-  - **Harness checks:** two checks initially reported false FAILs and were corrected after the run from unchanged raw
-    data:
+  - **Harness checks:** the M4 summary records 4 FAILs, kept unedited: F06 (real, fixed), F01-kill (the helper limit
+    above) and two false FAILs, corrected after the run from unchanged raw data
+    ([CORRECTIONS.md](../../experiments/exp-005/evidence/m4-20261118a/CORRECTIONS.md)):
     - F03 compared the wrong status string.
     - F02 compared server PIDs, which repeat (7→7) in a restarted container's new PID namespace.
 
@@ -139,9 +148,9 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
 | A2 Independent per-repo PVCs | No, needs pod replacement (FIND-061) [cluster] | Per-repo lifecycle, restore, quota, isolation primitive | 3 Longhorn replicas × N volumes; ~14–20s attach per pod; a provisioner needs `pvc/create` + `pods/create` |
 | A3 Hydrate/sync into the shared PVC | Yes, but it is A1 plus a second copy [inferred] | Bridge from a future agent-owned volume | Two sources of truth; copied worktrees carry stale absolute paths; reconcile logic. Not justified |
 | A4 Remote workspace pod (exec/SSH) | No: files are only in the remote pod; panes would have to run there [cluster P11, inferred] | Natural isolation unit for REQ-011 | `pods/exec` is cluster-sensitive, or adds sshd/keys/network path; this is execution, not storage |
-| A5 One NFS/RWX volume, repos as subdirectories | Yes, by construction [inferred, not deployed] | Multi-node sharing for future agent pods | No Longhorn RWX class today. Share-manager failover pauses IO for every repo, then up to a 90s (30s fast) lock-reclaim grace, after which unreclaimed locks return IO errors [docs, Longhorn 1.9]. git-over-NFS behaviour untested |
+| A5 One NFS/RWX volume, repos as subdirectories | Yes, by construction [inferred, not deployed] | Multi-node sharing for future agent pods | No RWX volume in use; whether the existing class serves one is untested (#32). Share-manager failover pauses IO for every repo, then up to a 90s (30s fast) lock-reclaim grace, after which unreclaimed locks return IO errors [docs; cited from the Longhorn 1.9 docs, not yet re-checked against 1.13]. git-over-NFS behaviour untested |
 
-## 5. Recommendation (proposal for owner review, not an accepted decision)
+## 5. Recommendation (accepted by the owner as an experiment finding, 2026-11-19; not an ADR change)
 
 1. **Shared PVC, lazy hydration, no restart?** Yes (FIND-058/059/060), measured in the pinned image with a real
    `herdr server`.
@@ -163,6 +172,8 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
    configured today.
 7. **Trusted MVP:** keep **one shared workspace PVC (ADR-0001 unchanged)** and adopt `request-repo`-style lazy
    hydration into it. Stable `/workspace/<id>` paths are mandatory (FIND-064). Herdr needs no Kubernetes API access.
+   The `request-repo` prototype accepts only local file sources and is **not production-ready**; hardening is
+   [#34](https://github.com/jlaska/herdrnetes/issues/34).
 8. **Wait for EXP-006:**
    - per-repo PVCs;
    - workspace/agent pods;
@@ -174,8 +185,8 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
    create; per-repo quota or backup policy; multi-tenant isolation; or RWO co-location becoming unschedulable. Even
    then, test A5 with per-repo `subPath` mounts first. Hydration itself never needed a controller.
 10. **Assumptions:**
-    - **Confirmed:** pod volumes are immutable; RWO volumes attach per node; staging plus atomic rename is safe;
-      Longhorn PVC lifecycle works.
+    - **Confirmed:** pod volumes are immutable; RWO volumes attach per node; staging plus atomic rename is safe on
+      ext4 (not tested over NFS); Longhorn PVC lifecycle works.
     - **Refuted:** that per-repo PVCs could give the running Herdr a new repository without restart.
     - **New:** RWO allows same-node multi-pod sharing; worktree directories can be mistaken for repos; Git's optional
       index writes threaten dirty-state preservation; PIDs are not restart evidence.
@@ -195,8 +206,13 @@ security context and the image's own entrypoint (real `herdr server`), with 1Gi 
 
 ## 7. Follow-ups
 
-Recorded as issues linked from #6: (a) EXP-006 hand-off covering co-located agent pods on the shared RWO PVC versus
-per-repo PVCs, plus provisioner RBAC; (b) an optional measured RWX comparison, which needs owner approval for a scratch
-RWX StorageClass (cluster-scoped); (c) workspace backup granularity and crash consistency, since no backup target or
-VolumeSnapshotClass is configured; (d) `request-repo` hardening before real use: network sources with EXP-004
-credentials, orphaned Git helpers, real repository sizes.
+Recorded as issues linked from #6:
+- [#31](https://github.com/jlaska/herdrnetes/issues/31): EXP-006 hand-off covering co-located agent pods on the shared
+  RWO PVC versus per-repo PVCs, plus provisioner RBAC.
+- [#32](https://github.com/jlaska/herdrnetes/issues/32): a measured Longhorn RWX comparison. The owner approved one
+  disposable 1Gi RWX PVC on the **existing** `longhorn` class after a read-only preflight; a new StorageClass, Longhorn
+  setting changes and failover injection are not approved. Separate from this experiment.
+- [#33](https://github.com/jlaska/herdrnetes/issues/33): workspace backup granularity and crash consistency, since no
+  backup target or VolumeSnapshotClass is configured.
+- [#34](https://github.com/jlaska/herdrnetes/issues/34): `request-repo` hardening before real use: network sources with
+  EXP-004 credentials, free-space checks, orphaned Git helpers, real repository sizes.

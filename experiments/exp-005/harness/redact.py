@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Redact cluster-identifying details from EXP-005 evidence before committing.
 
-Usage: uv run python harness/redact.py SRC DST [--map PATH]
+Usage: uv run python harness/redact.py SRC DST --cluster NAME --map PATH
 
 - Copies every file under SRC into DST with the same relative layout.
-- tallon-iv-<name> node hostnames -> stable <node-N> placeholders. The mapping
-  is persisted outside the repository (default: scratchpad) so repeated runs
-  reuse the same placeholders.
-- admin@tallon-iv and bare tallon-iv -> <cluster>.
+- <cluster>-<name> node hostnames -> stable <node-N> placeholders. The mapping
+  is persisted outside the repository (--map) so repeated runs reuse the same
+  placeholders.
+- admin@<cluster> and the bare cluster name -> <cluster>.
+The cluster name is supplied at run time (--cluster or $REDACT_CLUSTER) and is
+never stored in this public repository.
 - https://<host>:6443 API server URLs -> <apiserver>.
 - IPv4 (except 127.0.0.1 / 0.0.0.0) -> <ip>; IPv6 -> <ip6>.
 - Files containing token / password / PRIVATE KEY lines are NOT copied;
@@ -22,18 +24,9 @@ import shutil
 import sys
 from collections import Counter
 
-DEFAULT_MAP = (
-    "/tmp/claude-1000/-home-jlaska-Projects-herdrnetes/"
-    "4e33ac86-9385-4fe7-8dc6-2ee8820b89da/scratchpad/redact-map.json"
-)
-
 ENC = "utf-8"
 ERR = "surrogateescape"
 
-# Hostname: label groups joined by single hyphens; never ends in '-'.
-HOST_RE = re.compile(r"\btallon-iv(?:-[a-z0-9]+)+")
-CLUSTER_CTX_RE = re.compile(r"admin@tallon-iv")
-CLUSTER_BARE_RE = re.compile(r"tallon-iv")
 APISERVER_RE = re.compile(
     r"https?://(?:\[[0-9A-Fa-f:]+\]|[A-Za-z0-9._-]+):6443"
 )
@@ -64,7 +57,17 @@ def save_map(path, mapping):
         fh.write("\n")
 
 
-def make_redactor(mapping, counts):
+def cluster_patterns(cluster):
+    """(host, admin-context, bare) regexes for the run-time cluster name."""
+    c = re.escape(cluster)
+    # Hostname: label groups joined by single hyphens; never ends in '-'.
+    return (re.compile(r"\b" + c + r"(?:-[a-z0-9]+)+"),
+            re.compile(r"admin@" + c),
+            re.compile(c))
+
+
+def make_redactor(mapping, counts, cluster):
+    HOST_RE, CLUSTER_CTX_RE, CLUSTER_BARE_RE = cluster_patterns(cluster)
     def host_sub(m):
         name = m.group(0)
         hosts = mapping["hosts"]
@@ -120,8 +123,12 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("src")
     ap.add_argument("dst")
-    ap.add_argument("--map", default=DEFAULT_MAP, help="mapping file (outside repo)")
+    ap.add_argument("--map", required=True, help="mapping file (outside the repository)")
+    ap.add_argument("--cluster", default=os.environ.get("REDACT_CLUSTER"),
+                    help="cluster name to redact (or $REDACT_CLUSTER); never committed")
     args = ap.parse_args()
+    if not args.cluster:
+        ap.error("--cluster (or $REDACT_CLUSTER) is required")
 
     src = os.path.abspath(args.src)
     dst = os.path.abspath(args.dst)
@@ -130,7 +137,7 @@ def main():
 
     mapping = load_map(args.map)
     counts = Counter()
-    redact = make_redactor(mapping, counts)
+    redact = make_redactor(mapping, counts, args.cluster)
 
     copied = []
     skipped = []  # (relpath, reason)

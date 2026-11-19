@@ -2,7 +2,8 @@
 
 Scratch namespace `herdrnetes-exp005` on the owner-designated cluster (Kubernetes v1.36.6, Longhorn v1.13.0, class
 `longhorn`). Image `ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277`
-(Herdr 0.9.5, git 2.47.3, python 3.13.5). Node names are replaced with `<node-N>`. Raw sanitized evidence is in
+(Herdr 0.9.5, git 2.47.3, python 3.13.5; tool versions in `evidence/*/raw/tool-versions.txt`; Kubernetes and Longhorn
+versions from the read-only baseline audit in [`README.md`](README.md), re-confirmed read-only on 2026-11-19). Node names are replaced with `<node-N>`. Raw sanitized evidence is in
 [`evidence/`](evidence/), with one directory per run. Findings and recommendation are in
 [`docs/experiments/05-repository-storage.md`](../../docs/experiments/05-repository-storage.md).
 
@@ -17,7 +18,7 @@ identical before and after every run and after cleanup.
 | ID | Result | Observed |
 | --- | --- | --- |
 | S01–S03 | PASS | absent → `hydrated` at `/workspace/<id>`; `show-toplevel` = path; `fsck --strict` clean |
-| S04 | PASS | pod UID, restartCount 0, `herdr server` PID 7 unchanged across S01–S13 |
+| S04 | PASS | pod UID, restartCount 0, `herdr server` PID 7 unchanged across S01–S10, S12, S13 (checked before S11, which deliberately recreates the pod) |
 | S05 | PASS | `already_ready`; `.git` inode/mtime, index, HEAD, config unchanged |
 | S06 | PASS | two repos hydrated independently |
 | S07 | PASS | 8 concurrent: 1 `hydrated`, 7 `already_ready`, 1 clone, attempts=1 |
@@ -50,17 +51,22 @@ All P11 patches were `--dry-run=server`. The scratch Herdr pod was never modifie
 
 ## M4 — targeted failure tests (`m4-20261118a`)
 
+The harness summary (`summary-014249.json`) records **4 failed checks**, kept unedited: F06 (real defect, fixed and
+re-tested as F06r), F01-kill (helper survival above the 2s target, classified LIMITATION) and F03 and F02-ready (false
+FAILs from faulty checks). See [`evidence/m4-20261118a/CORRECTIONS.md`](evidence/m4-20261118a/CORRECTIONS.md).
+
 | ID | Result | Observed |
 | --- | --- | --- |
 | F06 | FAIL → fixed | the original tool (in the pod's M1 ConfigMap) adopted linked worktree `<id>-w1` as a repo and wrote `ready` state |
 | F06r | PASS | fixed tool piped through `kubectl exec -i … python3 -`: both worktree ids rc=4 conflict, main repo `already_ready`; snapshots unchanged |
-| F01 | PASS / LIMITATION | 200 MiB source, uninterrupted clone 26.0s. SIGKILL of `request-repo` at +0.08s during the clone: target absent, staging present; rerun hydrated, staging removed, fsck clean. Git helpers (`upload-pack`, `index-pack`, `pack-objects`) survived 4.96s (want ≤2s) |
+| F01 | PASS / LIMITATION (harness check F01-kill: FAIL) | 200 MiB source, uninterrupted clone 26.0s. SIGKILL of `request-repo` at +0.08s during the clone: target absent, staging present; rerun hydrated, staging removed, fsck clean. Git helpers (`upload-pack`, `index-pack`, `pack-objects`) survived 4.96s (want ≤2s) |
 | F03 | PASS (check corrected) | 2 pods × 4 concurrent on one RWO volume, same node: 1 `hydrated`, 7 `already_ready`, 1 clone, attempts=1, fsck clean. The harness first reported FAIL from a string mismatch (`rcs={'0': 8}` vs `rcs={'rc=0': 8}`) |
 | F04 | PASS | PVC deleted under 2 running consumers: Terminating with `pvc-protection` ≥30s, pods and repo read/write unaffected; gone 39.6s after delete, PV gone 49.0s |
 | F05 | PASS | pod on missing PVC Pending (`persistentvolumeclaim not found`); other pods unaffected |
 | F02 | PASS (check corrected) | `kill -9` of `herdr server`: container exit 137, restarted in place (same pod UID, restarts 0→1) in 1.4s, Ready 4.8s. Interrupted request left target absent, rerun hydrated; M1 repos fsck clean, dirty snapshot and worktrees identical. The harness first reported FAIL because the PID repeats (7→7) in the new container |
 
-Harness checks for F03 and F02 were corrected after the run; the raw data is unchanged. `raw/f05-pod.yaml` was withheld
+Harness checks for F03 and F02 were corrected after the run; the raw data and the original FAIL entries in
+`results-014249.tsv`/`summary-014249.json` are unchanged. `raw/f05-pod.yaml` was withheld
 by the redaction script (false positive on `automountServiceAccountToken`).
 
 ## Failure and recovery matrix
@@ -98,3 +104,10 @@ Verification (`evidence/m4-20261118a/raw/cleanup-verify.txt`):
 - No Longhorn volume with that namespace.
 - No VolumeAttachment for the scratch PVs.
 - Live `herdr-0` UID, restarts and both live PVCs (5Gi, 20Gi, Bound) unchanged.
+
+**Post-experiment observation (2026-11-19, read-only, during closeout):** the live `herdr-0` pod now has a new UID
+(`fe7cd780-…`, restarts herdr 0 / Ovis 0), created at 07:45:51Z. That is about 5¾ hours after the cleanup verification
+above (01:58Z) and the last EXP-005 cluster operation. All three nodes changed Ready state between 07:16Z and 07:48Z
+(rolling node restart). The StatefulSet, its PVCs and the image were not changed by EXP-005. The recreation is
+attributed to that node maintenance [inferred from node Ready transitions; cause not investigated], not to this
+experiment. Any later experiment must take a fresh live baseline.

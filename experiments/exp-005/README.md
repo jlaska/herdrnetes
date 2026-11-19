@@ -3,7 +3,9 @@
 Proofs of concept for [REQ-004](../../docs/requirements.md) (shared workspace PVC, separate home) and
 [REQ-010](../../docs/requirements.md) (future lazy per-repository PVCs without restarting Herdr).
 Plan: [`docs/experiments/05-repository-storage.md`](../../docs/experiments/05-repository-storage.md).
-Results go in [`RESULTS.md`](RESULTS.md). Tracking: issue #6.
+Results: [`RESULTS.md`](RESULTS.md) (M1, M2 and M4 executed 2026-11-18/19; findings FIND-058–065). Tracking: issue #6.
+The tables below are the plan as written before execution; observed outcomes are in `RESULTS.md`.
+`harness/request-repo` is a proof of concept, not production-ready (hardening: issue #34).
 
 The central distinction: **Kubernetes provisioning and mounting a PVC somewhere** is not the same as
 **an already-running Herdr process being able to read that filesystem**. Every test below records
@@ -17,7 +19,7 @@ which of the two it shows.
 | Longhorn | v1.13.0 (v1 data engine), CSI attach required |
 | StorageClass used | `longhorn` (default): RWO, `Immediate` binding, 3 replicas, `dataLocality=disabled`, ext4, reclaim `Delete` |
 | Other classes (not used unless noted) | 2 × unreplicated `WaitForFirstConsumer` Longhorn classes; one `nfs.csi.k8s.io` class backed by an external NAS (reclaim `Retain`) |
-| Longhorn RWX class | none |
+| RWX volumes | none in use (Longhorn selects RWX from the PVC access mode; not tested here, see issue #32) |
 | VolumeSnapshotClass | none defined |
 | Live Herdr (untouched) | StatefulSet `herdr`, namespace `herdrnetes-exp` (PSA `restricted`), home PVC 5Gi + workspace PVC 20Gi, both `longhorn` RWO |
 | Pinned image | `ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277` (`exp002-h095-c311`, Herdr 0.9.5) — matches the live pod's imageID |
