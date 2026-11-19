@@ -1,0 +1,174 @@
+{
+ "run_id": "m2-20261118a",
+ "failures": 0,
+ "results": [
+  {
+   "test": "P10-baseline",
+   "status": "INFO",
+   "detail": "herdr-scratch-0 uid=2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount=0 node=<node-1> herdr_pid=7"
+  },
+  {
+   "test": "P10-baseline-pid",
+   "status": "PASS",
+   "detail": "real herdr server process found (pid=7)"
+  },
+  {
+   "test": "P01",
+   "status": "PASS",
+   "detail": "PVC repo-m2r013149-a absent before request"
+  },
+  {
+   "test": "P02",
+   "status": "PASS",
+   "detail": "PVC repo-m2r013149-a created (storageClass=longhorn, 1Gi, RWO) pv=pvc-b8da138d-b808-496f-b051-f5a5ecdcb809"
+  },
+  {
+   "test": "P03",
+   "status": "PASS",
+   "detail": "Bound in 2.9s (Immediate binding) pv=pvc-b8da138d-b808-496f-b051-f5a5ecdcb809"
+  },
+  {
+   "test": "P04",
+   "status": "PASS",
+   "detail": "ws-m2r013149-a Ready in 13.9s on <node-1>; /workspace: majmin=65:128 fstype=ext4 source=/dev/longhorn/pvc-b8da138d-b808-496f-b051-f5a5ecdcb809"
+  },
+  {
+   "test": "P04-timing",
+   "status": "INFO",
+   "detail": "PodReadyToStartContainers=2026-11-19T01:32:07Z Initialized=2026-11-19T01:31:53Z Ready=2026-11-19T01:32:07Z ContainersReady=2026-11-19T01:32:07Z PodScheduled=2026-11-19T01:31:53Z scheduled_to_ready_s=14 "
+  },
+  {
+   "test": "P05",
+   "status": "PASS",
+   "detail": "request-repo rc=0 action=hydrated head=110fc8d471d465ce55599cc8c2090d23eae78001 fsck_clean=1 path=/workspace/m2r013149-a"
+  },
+  {
+   "test": "P06",
+   "status": "PASS",
+   "detail": "ws-m2r013149-a moved <node-1> -> <node-2> (new uid aefc22af-bed9-495c-876a-eaa2c0c69acd -> ebd7b1b8-d927-4472-8b6c-770633f3c414); delete 1.0s; VA old-node-gone=7.8s new-attached=17.7s; delete->Ready 20.3s; fsck_clean=1; request-repo action=already_ready"
+  },
+  {
+   "test": "P07",
+   "status": "PASS",
+   "detail": "dirty/untracked/staged/local commit/stash snapshot identical across cross-node move (index mtime included)"
+  },
+  {
+   "test": "P10-after-P06",
+   "status": "PASS",
+   "detail": "uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 node <node-1>-><node-1> herdr_pid 7->7"
+  },
+  {
+   "test": "P08",
+   "status": "PASS",
+   "detail": "repo-m2r013149-b pv=pvc-e67da97d-4e52-4a89-90ad-a71731978823 node=<node-1> (A pv=pvc-b8da138d-b808-496f-b051-f5a5ecdcb809 node=<node-2>); separate PVC+PV=yes; B fsck=1 rr_rc=0; ws-m2r013149-a sees /workspace/m2r013149-b: 0 (want 0)"
+  },
+  {
+   "test": "P11a",
+   "status": "PASS",
+   "detail": "herdr-scratch-0: /workspace/m2r013149-a absent=1; mountinfo lines naming PV pvc-b8da138d-b808-496f-b051-f5a5ecdcb809 / repo-m2r013149-a: 0 (want absent=1, 0 lines)"
+  },
+  {
+   "test": "P11b",
+   "status": "PASS",
+   "detail": "volume+mount patch on running pod REJECTED by immutability rule (H4 holds), dry-run rc=1: The Pod \"herdr-scratch-0\" is invalid: spec: Forbidden: pod updates may not change fields other than `spec.containers[*].image`,`spec.initContainers[*].image`,`spec.activeDeadlineSeconds`,`spec.tolerations` (only additions to existing tolerations),`spec.terminationGracePeriodSeconds` (allow it to be set to 1 if it was previously negative) @@ -161,6 +161,42 @@     \"ISCSI\": null,     \"Glusterfs\": nul"
+  },
+  {
+   "test": "P11d",
+   "status": "INFO",
+   "detail": "control: ephemeral container mounting EXISTING volume 'workspace' (dry-run) rc=0: pod/herdr-scratch-0 patched "
+  },
+  {
+   "test": "P11c",
+   "status": "PASS",
+   "detail": "ephemeral container mounting not-in-spec volume repo-m2r013149-a REJECTED (control accepted), rc=1: The Pod \"herdr-scratch-0\" is invalid: spec.ephemeralContainers[0].volumeMounts[0].name: Not found: \"repo-m2r013149-a\" "
+  },
+  {
+   "test": "P11-spec-unchanged",
+   "status": "INFO",
+   "detail": "herdr-scratch-0 volumes/ephemeral after dry-runs: volumes=home workspace request-repo run tmp eph="
+  },
+  {
+   "test": "P11-conclusion",
+   "status": "INFO",
+   "detail": "H6: repo-m2r013149-a is mounted only in ws-m2r013149-a; Herdr pod has no path to it. Kubernetes provisioning/mounting a PVC elsewhere is not Herdr access."
+  },
+  {
+   "test": "P10-after-P11",
+   "status": "PASS",
+   "detail": "uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 node <node-1>-><node-1> herdr_pid 7->7"
+  },
+  {
+   "test": "P12a",
+   "status": "PASS",
+   "detail": "probe pod on same node (<node-2> vs <node-2>) Running/Ready; both mount repo-m2r013149-a; cross-pod flock: holder_ready=1 probe_while_held rc=75 (want 75) probe_after_release rc=0 (want 0)"
+  },
+  {
+   "test": "P12b",
+   "status": "PASS",
+   "detail": "probe on different node (<node-1> vs <node-2>) NOT Ready after 120s: phase=Pending; Multi-Attach/FailedAttach events=1; VolumeAttachments: <node-2>:true "
+  },
+  {
+   "test": "P12-after",
+   "status": "PASS",
+   "detail": "ws-m2r013149-a uid ebd7b1b8-d927-4472-8b6c-770633f3c414->ebd7b1b8-d927-4472-8b6c-770633f3c414 restartCount=0 node=<node-2> Ready=yes; repo fsck=1; dirty snapshot unchanged; VAs: <node-2>:true "
+  },
+  {
+   "test": "P10-after-P12",
+   "status": "PASS",
+   "detail": "uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 node <node-1>-><node-1> herdr_pid 7->7"
+  },
+  {
+   "test": "P09",
+   "status": "PASS",
+   "detail": "repo B pod+PVC deleted; PV pvc-e67da97d-4e52-4a89-90ad-a71731978823 state=GONE (want GONE (reclaim Delete)) leftover VAs: none; ws-m2r013149-a uid unchanged=yes restarts=0 fsck=1"
+  },
+  {
+   "test": "P09-H8",
+   "status": "INFO",
+   "detail": "H8 partial: deleting repo-m2r013149-b (its only consumer ws-m2r013149-b removed first) left ws-m2r013149-a and herdr-scratch-0 untouched. A truly UNAVAILABLE volume under a running consumer was not induced (no Longhorn/node fault injection)."
+  },
+  {
+   "test": "P10-final",
+   "status": "PASS",
+   "detail": "uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 node <node-1>-><node-1> herdr_pid 7->7"
+  }
+ ],
+ "timings": [
+  {
+   "step": "P03-pvc-create-to-bound",
+   "seconds": "2.9"
+  },
+  {
+   "step": "P04-create-to-ws-ready",
+   "seconds": "13.9"
+  },
+  {
+   "step": "P06-pod-delete",
+   "seconds": "1.0"
+  },
+  {
+   "step": "P06-va-old-node-gone",
+   "seconds": "7.8"
+  },
+  {
+   "step": "P06-va-new-node-attached",
+   "seconds": "17.7"
+  },
+  {
+   "step": "P06-delete-to-new-pod-ready",
+   "seconds": "20.3"
+  },
+  {
+   "step": "P08-pvc-create-to-bound",
+   "seconds": "2.9"
+  },
+  {
+   "step": "P08-create-to-ws-ready",
+   "seconds": "15.1"
+  },
+  {
+   "step": "P09-delete-to-pv-state-(GONE)",
+   "seconds": "11.1"
+  }
+ ]
+}

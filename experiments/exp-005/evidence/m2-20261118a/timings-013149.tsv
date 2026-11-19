@@ -1,0 +1,10 @@
+step	seconds
+P03-pvc-create-to-bound	2.9
+P04-create-to-ws-ready	13.9
+P06-pod-delete	1.0
+P06-va-old-node-gone	7.8
+P06-va-new-node-attached	17.7
+P06-delete-to-new-pod-ready	20.3
+P08-pvc-create-to-bound	2.9
+P08-create-to-ws-ready	15.1
+P09-delete-to-pv-state-(GONE)	11.1
