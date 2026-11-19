@@ -102,9 +102,11 @@ def acquire_lock(path, timeout):
 
 
 def valid_repo(target):
-    """True if target is itself a git work tree root (read-only checks)."""
+    """True if target is a main work tree root whose git dir is target/.git (read-only checks).
+    A linked worktree (git dir under another repo's .git/worktrees/) is not a managed repo."""
     try:
-        if git(["rev-parse", "--git-dir"], cwd=target).returncode != 0:
+        gd = git(["rev-parse", "--absolute-git-dir"], cwd=target)
+        if gd.returncode != 0 or os.path.realpath(gd.stdout.strip()) != os.path.realpath(os.path.join(target, ".git")):
             return False
         top = git(["rev-parse", "--show-toplevel"], cwd=target)
         return top.returncode == 0 and os.path.realpath(top.stdout.strip()) == os.path.realpath(target)

@@ -1,0 +1,1 @@
+{"action": "recovered", "attempt": 0, "duration_ms": 17, "error": null, "git_version": "2.47.3", "head": "129f557e070379aadacd4e04373e5e32080a150b", "partial": false, "path": "/workspace/m1r010929-b-w1014249", "promotion": null, "repository_id": "m1r010929-b-w1014249", "shallow": false, "source": "file:///tmp/sources/b.git", "status": "ready", "waited": false}

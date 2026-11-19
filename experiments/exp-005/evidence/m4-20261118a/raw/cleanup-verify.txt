@@ -1,0 +1,12 @@
+ns NotFound after 21s
+last: Error from server (NotFound): namespaces "herdrnetes-exp005" not found
+PV residue empty after 0s
+Longhorn volumes empty after 1s
+== VolumeAttachments pvc-4d24897a|pvc-a3c5b19a
+va_grep_rc=1 (1 means no match)
+== live herdr pod
+a3542452-da5a-4b6e-bc12-12175e9a2f45 herdr=0 ovis=4
+== herdrnetes-exp pvc
+NAME                STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+home-herdr-0        Bound    pvc-ffb402a3-4f82-4e36-a644-212c33d908b1   5Gi        RWO            longhorn       <unset>                 3d3h
+workspace-herdr-0   Bound    pvc-fed4e2a9-2923-48ee-a3af-608e501d638b   20Gi       RWO            longhorn       <unset>                 3d3h

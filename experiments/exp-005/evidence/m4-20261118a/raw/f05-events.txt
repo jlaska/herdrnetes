@@ -1,0 +1,2 @@
+LAST SEEN   TYPE      REASON             OBJECT                     MESSAGE
+16s         Warning   FailedScheduling   pod/ws-m4r014249-missing   0/3 nodes are available: persistentvolumeclaim "repo-m4r014249-missing" not found. not found

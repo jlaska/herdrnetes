@@ -1,0 +1,1 @@
+pod "ws-m4r014249-missing" deleted from herdrnetes-exp005 namespace

@@ -1,0 +1,7 @@
+main_head=d74865988cc693291723731b0071ebd7b0dd93b4
+wt1_head=129f557e070379aadacd4e04373e5e32080a150b
+wt1_gitfile=183b2c167f3f8aa1c50fd312aed5ff9a252e922e719ca6acf89599978cfa7c8b
+wt1_status=0
+wt_count=3
+prunable=0
+wt2_ok=1

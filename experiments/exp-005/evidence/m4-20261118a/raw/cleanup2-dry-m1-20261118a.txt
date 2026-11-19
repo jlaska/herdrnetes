@@ -1,0 +1,10 @@
+live herdrnetes-exp/herdr-0 before: a3542452-da5a-4b6e-bc12-12175e9a2f45 herdr=0 ovis=4 (read-only)
+plan for run-id m1-20261118a in namespace herdrnetes-exp005:
+  delete persistentvolumeclaim/home-herdr-scratch-0
+  delete persistentvolumeclaim/workspace-herdr-scratch-0
+  delete pod/herdr-scratch-0
+  delete statefulset/herdr-scratch
+  delete configmap/request-repo
+  delete networkpolicy/deny-ingress
+  then delete Namespace/herdrnetes-exp005 (if empty and labelled experiment=exp-005)
+DRY RUN only. Re-run with: --confirm m1-20261118a

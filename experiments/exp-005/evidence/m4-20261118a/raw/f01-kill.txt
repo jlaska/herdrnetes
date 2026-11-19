@@ -1,0 +1,15 @@
+inflight_seen=1
+t_inflight_s=0.08
+n_clone=1 n_upload_pack=2 n_index_pack=1 n_unpack=0 n_pack_objects=1
+PS:    1893    1886       0 python3 /opt/exp005/bin/request-repo m4r014249-f01 /tmp/src/m4r014249-f01.git
+PS:    1898    1893       0 git clone --quiet -- file:///tmp/src/m4r014249-f01.git /workspace/.herdr-repos/staging/m4r014249-f01@1893.b0b49a
+PS:    1899    1898       0 /bin/sh -c git-upload-pack '/tmp/src/m4r014249-f01.git' git-upload-pack '/tmp/src/m4r014249-f01.git'
+PS:    1900    1899       0 git-upload-pack /tmp/src/m4r014249-f01.git
+PS:    1902    1900       0 /usr/lib/git-core/git pack-objects --revs --thin --stdout --delta-base-offset
+PS:    1903    1898       0 /usr/lib/git-core/git index-pack --stdin --fix-thin --keep=fetch-pack 1898 on herdr-scratch-0 --check-self-contained-and-connected
+STAGING_MB: 1	/workspace/.herdr-repos/staging/m4r014249-f01@1893.b0b49a
+git_children_gone_after_s=4.96
+request_alive=0
+target=absent
+staging=present
+STAGING_MB_AFTER: 1	/workspace/.herdr-repos/staging/m4r014249-f01@1893.b0b49a

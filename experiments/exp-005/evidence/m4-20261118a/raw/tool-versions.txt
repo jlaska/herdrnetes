@@ -1,0 +1,7 @@
+git version 2.47.3
+Python 3.13.5
+6.18.58-talos
+herdr=0.9.5
+claude=2.1.311
+codex=0.169.0
+herdr_sha256=14d9e8bc8b4a9e0118d77c32266f76d461f09b40342eb23752960bd89f59929d

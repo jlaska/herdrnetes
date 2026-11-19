@@ -1,0 +1,83 @@
+LAST SEEN   TYPE      REASON                   OBJECT                                            MESSAGE
+13m         Normal    Scheduled                pod/ws-m2r013149-a                                Successfully assigned herdrnetes-exp005/ws-m2r013149-a to <node-1>
+35m         Warning   FailedScheduling         pod/herdr-scratch-0                               0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. not found
+35m         Normal    Scheduled                pod/herdr-scratch-0                               Successfully assigned herdrnetes-exp005/herdr-scratch-0 to <node-1>
+12m         Normal    Scheduled                pod/ws-m2r013149-b                                Successfully assigned herdrnetes-exp005/ws-m2r013149-b to <node-1>
+12m         Normal    Scheduled                pod/probe-m2r013149-a-same                        Successfully assigned herdrnetes-exp005/probe-m2r013149-a-same to <node-2>
+35m         Warning   FailedScheduling         pod/herdr-scratch-0                               0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. not found
+11m         Normal    Scheduled                pod/probe-m2r013149-a-diff                        Successfully assigned herdrnetes-exp005/probe-m2r013149-a-diff to <node-1>
+13m         Normal    Scheduled                pod/ws-m2r013149-a                                Successfully assigned herdrnetes-exp005/ws-m2r013149-a to <node-2>
+27s         Warning   FailedScheduling         pod/ws-m4r014249-missing                          0/3 nodes are available: persistentvolumeclaim "repo-m4r014249-missing" not found. not found
+98s         Normal    Scheduled                pod/ws-m4r014249-x-a                              Successfully assigned herdrnetes-exp005/ws-m4r014249-x-a to <node-1>
+97s         Normal    Scheduled                pod/ws-m4r014249-x-b                              Successfully assigned herdrnetes-exp005/ws-m4r014249-x-b to <node-1>
+35m         Normal    Scheduled                pod/herdr-scratch-0                               Successfully assigned herdrnetes-exp005/herdr-scratch-0 to <node-1>
+35m         Normal    ExternalProvisioning     persistentvolumeclaim/home-herdr-scratch-0        Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+35m         Normal    Provisioning             persistentvolumeclaim/home-herdr-scratch-0        External provisioner is provisioning volume for claim "herdrnetes-exp005/home-herdr-scratch-0"
+35m         Normal    Provisioning             persistentvolumeclaim/workspace-herdr-scratch-0   External provisioner is provisioning volume for claim "herdrnetes-exp005/workspace-herdr-scratch-0"
+35m         Normal    ExternalProvisioning     persistentvolumeclaim/workspace-herdr-scratch-0   Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+35m         Normal    SuccessfulCreate         statefulset/herdr-scratch                         Create Claim home-herdr-scratch-0 Pod herdr-scratch-0 in StatefulSet herdr-scratch success
+35m         Normal    SuccessfulCreate         statefulset/herdr-scratch                         Create Claim workspace-herdr-scratch-0 Pod herdr-scratch-0 in StatefulSet herdr-scratch success
+35m         Normal    ProvisioningSucceeded    persistentvolumeclaim/home-herdr-scratch-0        Successfully provisioned volume pvc-4d24897a-9bec-43f7-ab86-613169618de4
+35m         Normal    ProvisioningSucceeded    persistentvolumeclaim/workspace-herdr-scratch-0   Successfully provisioned volume pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b
+35m         Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b"
+35m         Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-4d24897a-9bec-43f7-ab86-613169618de4"
+35m         Normal    Created                  pod/herdr-scratch-0                               Container created
+35m         Normal    Pulled                   pod/herdr-scratch-0                               Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+35m         Normal    AddedInterface           pod/herdr-scratch-0                               Add eth0 [<ip>/32] from cilium
+35m         Normal    Started                  pod/herdr-scratch-0                               Container started
+35m         Normal    Killing                  pod/herdr-scratch-0                               Stopping container herdr
+35m         Warning   Unhealthy                pod/herdr-scratch-0                               Readiness probe errored and resulted in unknown state: rpc error: code = Canceled desc = context canceled
+35m         Normal    SuccessfulCreate         statefulset/herdr-scratch                         Create Pod herdr-scratch-0 in StatefulSet herdr-scratch successful
+35m         Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b"
+35m         Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-4d24897a-9bec-43f7-ab86-613169618de4"
+35m         Normal    AddedInterface           pod/herdr-scratch-0                               Add eth0 [<ip>/32] from cilium
+13m         Normal    Provisioning             persistentvolumeclaim/repo-m2r013149-a            External provisioner is provisioning volume for claim "herdrnetes-exp005/repo-m2r013149-a"
+13m         Normal    ExternalProvisioning     persistentvolumeclaim/repo-m2r013149-a            Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+13m         Normal    ProvisioningSucceeded    persistentvolumeclaim/repo-m2r013149-a            Successfully provisioned volume pvc-b8da138d-b808-496f-b051-f5a5ecdcb809
+13m         Normal    SuccessfulAttachVolume   pod/ws-m2r013149-a                                AttachVolume.Attach succeeded for volume "pvc-b8da138d-b808-496f-b051-f5a5ecdcb809"
+13m         Normal    Started                  pod/ws-m2r013149-a                                Container started
+13m         Normal    Created                  pod/ws-m2r013149-a                                Container created
+13m         Normal    Pulled                   pod/ws-m2r013149-a                                Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+13m         Normal    AddedInterface           pod/ws-m2r013149-a                                Add eth0 [<ip>/32] from cilium
+13m         Normal    Killing                  pod/ws-m2r013149-a                                Stopping container ws
+13m         Warning   Unhealthy                pod/ws-m2r013149-a                                Readiness probe errored and resulted in unknown state: rpc error: code = Canceled desc = context canceled
+13m         Warning   FailedAttachVolume       pod/ws-m2r013149-a                                Waiting for detach for volume "pvc-b8da138d-b808-496f-b051-f5a5ecdcb809" Volume is already exclusively attached to one node, waiting on detach before it can be attached to another node
+12m         Normal    SuccessfulAttachVolume   pod/ws-m2r013149-a                                AttachVolume.Attach succeeded for volume "pvc-b8da138d-b808-496f-b051-f5a5ecdcb809"
+12m         Normal    AddedInterface           pod/ws-m2r013149-a                                Add eth0 [<ip>/32] from cilium
+12m         Normal    Created                  pod/ws-m2r013149-a                                Container created
+12m         Normal    Started                  pod/ws-m2r013149-a                                Container started
+12m         Normal    Pulled                   pod/ws-m2r013149-a                                Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+12m         Normal    ExternalProvisioning     persistentvolumeclaim/repo-m2r013149-b            Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+12m         Normal    Provisioning             persistentvolumeclaim/repo-m2r013149-b            External provisioner is provisioning volume for claim "herdrnetes-exp005/repo-m2r013149-b"
+12m         Normal    ProvisioningSucceeded    persistentvolumeclaim/repo-m2r013149-b            Successfully provisioned volume pvc-e67da97d-4e52-4a89-90ad-a71731978823
+12m         Normal    SuccessfulAttachVolume   pod/ws-m2r013149-b                                AttachVolume.Attach succeeded for volume "pvc-e67da97d-4e52-4a89-90ad-a71731978823"
+12m         Normal    AddedInterface           pod/ws-m2r013149-b                                Add eth0 [<ip>/32] from cilium
+12m         Normal    Pulled                   pod/ws-m2r013149-b                                Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+12m         Normal    Created                  pod/ws-m2r013149-b                                Container created
+12m         Normal    Started                  pod/ws-m2r013149-b                                Container started
+12m         Normal    Started                  pod/probe-m2r013149-a-same                        Container started
+12m         Normal    Created                  pod/probe-m2r013149-a-same                        Container created
+12m         Normal    Pulled                   pod/probe-m2r013149-a-same                        Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+12m         Normal    AddedInterface           pod/probe-m2r013149-a-same                        Add eth0 [<ip>/32] from cilium
+12m         Normal    Killing                  pod/probe-m2r013149-a-same                        Stopping container ws
+11m         Warning   FailedAttachVolume       pod/probe-m2r013149-a-diff                        Waiting for detach for volume "pvc-b8da138d-b808-496f-b051-f5a5ecdcb809" Volume is already used by pod(s) ws-m2r013149-a
+9m54s       Normal    Killing                  pod/ws-m2r013149-b                                Stopping container ws
+9m53s       Warning   Unhealthy                pod/ws-m2r013149-b                                Readiness probe errored and resulted in unknown state: rpc error: code = Canceled desc = context canceled
+101s        Normal    Provisioning             persistentvolumeclaim/repo-m4r014249-x            External provisioner is provisioning volume for claim "herdrnetes-exp005/repo-m4r014249-x"
+101s        Normal    ExternalProvisioning     persistentvolumeclaim/repo-m4r014249-x            Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+99s         Normal    ProvisioningSucceeded    persistentvolumeclaim/repo-m4r014249-x            Successfully provisioned volume pvc-42cc3ac0-da76-4654-8d1e-a7e9e10d7087
+88s         Normal    SuccessfulAttachVolume   pod/ws-m4r014249-x-a                              AttachVolume.Attach succeeded for volume "pvc-42cc3ac0-da76-4654-8d1e-a7e9e10d7087"
+86s         Normal    Started                  pod/ws-m4r014249-x-a                              Container started
+86s         Normal    AddedInterface           pod/ws-m4r014249-x-a                              Add eth0 [<ip>/32] from cilium
+86s         Normal    Pulled                   pod/ws-m4r014249-x-a                              Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+86s         Normal    Created                  pod/ws-m4r014249-x-a                              Container created
+86s         Normal    Created                  pod/ws-m4r014249-x-b                              Container created
+86s         Normal    Started                  pod/ws-m4r014249-x-b                              Container started
+86s         Normal    AddedInterface           pod/ws-m4r014249-x-b                              Add eth0 [<ip>/32] from cilium
+86s         Normal    Pulled                   pod/ws-m4r014249-x-b                              Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+41s         Normal    Killing                  pod/ws-m4r014249-x-a                              Stopping container ws
+41s         Warning   Unhealthy                pod/ws-m4r014249-x-a                              Readiness probe errored and resulted in unknown state: rpc error: code = Canceled desc = context canceled
+39s         Normal    Killing                  pod/ws-m4r014249-x-b                              Stopping container ws
+8s          Normal    Created                  pod/herdr-scratch-0                               Container created
+8s          Normal    Pulled                   pod/herdr-scratch-0                               Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+8s          Normal    Started                  pod/herdr-scratch-0                               Container started

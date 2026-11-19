@@ -252,6 +252,20 @@ class Errors(Base):
         with open(os.path.join(d, ".git"), "w") as f: f.write("gitdir: /nonexistent\n")
         self.assertEqual(self.req("fake")[0], 4)
 
+    def test_linked_worktree_never_adopted(self):
+        self.assertEqual(self.req("a")[0], 0)
+        wt = os.path.join(self.ws, "a-wt")
+        git("worktree", "add", "-q", "-b", "feat", wt, cwd=os.path.join(self.ws, "a"))
+        gitfile = sha(os.path.join(wt, ".git"))
+        head = git("rev-parse", "HEAD", cwd=wt)
+        listing = os.listdir(wt)
+        rc, j, _ = self.req("a-wt")
+        self.assertEqual(rc, 4, j)
+        self.assertEqual((gitfile, head, listing), (sha(os.path.join(wt, ".git")), git("rev-parse", "HEAD", cwd=wt), os.listdir(wt)))
+        self.assertFalse(os.path.exists(self.meta("state") + "/a-wt.json") and self.state("a-wt")["status"] == "ready")
+        git("status", "--porcelain", cwd=wt)
+        self.assertIn(wt, git("worktree", "list", cwd=os.path.join(self.ws, "a")))
+
     def test_recover_existing_repo_without_state(self):
         self.assertEqual(self.req("rec")[0], 0)
         os.unlink(os.path.join(self.meta("state"), "rec.json"))

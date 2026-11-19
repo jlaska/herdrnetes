@@ -1,0 +1,11 @@
+step	seconds
+F06-note	0
+F01-build-source	6.4
+F01-rerun-hydrate	26.3
+F03-pvc-bound	2.8
+F03-pods-ready	16.1
+F03-concurrent-hydrate	2.0
+F04-pvc-delete-to-pvc-gone	39.6
+F04-pvc-delete-to-pv-(GONE)	49.0
+F02-kill-to-restart-observed	1.4
+F02-kill-to-ready	4.8

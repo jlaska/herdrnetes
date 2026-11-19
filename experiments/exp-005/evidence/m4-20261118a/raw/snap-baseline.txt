@@ -1,0 +1,60 @@
+== m1r010929-a
+index_mtime=1795050595.148385010
+383cd618b4d8550d779fe0ecf987fe4a521aa0cc4e8084b0e417a5ed2e6e4ba1  .git/index
+9b6338ae0c1210bccc6f2aa9df009a5e24aaa7a09e5bb9f1b699e60a3d5039ca  README
+2f7373ef545ca65b52fbc7aba547aca46bc8c31d760756d396464f06c5540350  data.txt
+528eee7ba2c0adea12842fd3eab1088d4d8402d115182154b0baef559f2164f2  untracked.txt
+9ac007af3de930baf647288da0c843b26a5f046a3fe1351f1bb039b242d22cdf  staged.txt
+# branch.oid b3c9538c7aa3c6c59294639bc1f284fca7ccf1fe
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +1 -0
+1 .M N... 100644 100644 100644 c78ceaeb41462dac5ec1921c6a63657cc57af074 c78ceaeb41462dac5ec1921c6a63657cc57af074 README
+1 A. N... 000000 100644 100644 0000000000000000000000000000000000000000 19d9cc8584ac2c7dcf57d2680375e80f099dc481 staged.txt
+? untracked.txt
+b3c9538c7aa3c6c59294639bc1f284fca7ccf1fe
+stash@{0}: WIP on main: b3c9538 local commit
+b3c9538c7aa3c6c59294639bc1f284fca7ccf1fe commit	refs/heads/main
+b3c9538c7aa3c6c59294639bc1f284fca7ccf1fe commit	refs/heads/wt-feat
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/HEAD
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/main
+e504fc216da01ec18239f25afede10bc228e5c33 commit	refs/stash
+== m1r010929-c
+index_mtime=1795050591.050369759
+8f36e4fadfa28025a660df8b5a8b9a95306aafdd359e0022ab2107f92fddce23  .git/index
+032b397bdcd1c16e5ff38e72ac2ec311a41b9a98b21f48797b203e96a9359b47  README
+b7703f7bd998bf1bd1b143ad055c4bbc828d0855b5be7d662747a48ef14c437a  data.txt
+# branch.oid 232a6736a05eaa783653dda2e72da44838c98028
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +0 -0
+232a6736a05eaa783653dda2e72da44838c98028
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/heads/main
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/HEAD
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/main
+== m1r010929-d
+index_mtime=1795050592.616749011
+61d2b65d5bf76f81e12e2d64faa86e3bcdd1a4eca8b14aa2ebed1c0c6c61dca1  .git/index
+032b397bdcd1c16e5ff38e72ac2ec311a41b9a98b21f48797b203e96a9359b47  README
+b7703f7bd998bf1bd1b143ad055c4bbc828d0855b5be7d662747a48ef14c437a  data.txt
+# branch.oid 232a6736a05eaa783653dda2e72da44838c98028
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +0 -0
+232a6736a05eaa783653dda2e72da44838c98028
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/heads/main
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/HEAD
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/main
+== m1r010929-e
+index_mtime=1795050594.700084194
+a99208edb57cd60670c8c2481799fed6fa926c9e8c52a5d7427c3c217420798c  .git/index
+032b397bdcd1c16e5ff38e72ac2ec311a41b9a98b21f48797b203e96a9359b47  README
+b7703f7bd998bf1bd1b143ad055c4bbc828d0855b5be7d662747a48ef14c437a  data.txt
+# branch.oid 232a6736a05eaa783653dda2e72da44838c98028
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +0 -0
+232a6736a05eaa783653dda2e72da44838c98028
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/heads/main
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/HEAD
+232a6736a05eaa783653dda2e72da44838c98028 commit	refs/remotes/origin/main

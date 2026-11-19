@@ -59,7 +59,9 @@ if [ -z "$CONFIRM" ]; then echo "DRY RUN only. Re-run with: --confirm $RUN"; exi
 
 # Delete in dependency order: statefulset first (so pods are not recreated), then the rest, PVCs last.
 order() { local want=$1; for o in "${mine[@]:-}"; do [ -n "$o" ] && [[ "$o" == "$want"/* ]] && echo "$o"; done; true; }
-for kind in statefulset deployment job cronjob pod service networkpolicy ingress rolebinding role configmap secret serviceaccount pvc; do
+# Kind names must match inventory()'s lowercased .kind (e.g. persistentvolumeclaim, not pvc), or that kind
+# is listed in the plan but silently skipped here.
+for kind in statefulset deployment job cronjob pod service networkpolicy ingress rolebinding role configmap secret serviceaccount persistentvolumeclaim; do
   while read -r o; do
     [ -n "$o" ] || continue
     kk=${o%%/*}; nn=${o#*/}
