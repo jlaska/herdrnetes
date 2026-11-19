@@ -1,0 +1,73 @@
+# EXP-005 M2 bare workspace pod (also used for P12 probe pods). Same security context as the
+# live/scratch Herdr pod; mounts ONLY PVC repo-<id> at /workspace. Never runs herdr.
+# Rendered by harness/m2-cluster.sh with POD_NAME, REPO_ID, COMPONENT, CM_NAME, RUN_ID and
+# AFFINITY_JSON (a one-line flow-style YAML mapping; {} = no constraint).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${POD_NAME}
+  namespace: herdrnetes-exp005
+  labels:
+    herdrnetes.io/experiment: exp-005
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: ${COMPONENT}
+    herdrnetes.io/disposable: "true"
+    herdrnetes.io/repository-id: "${REPO_ID}"
+spec:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 10
+  affinity: ${AFFINITY_JSON}
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: ws
+      image: ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277
+      imagePullPolicy: IfNotPresent
+      command: ["bash", "-c", "trap 'exit 0' TERM INT; while true; do sleep 1; done"]
+      env:
+        - name: HOME
+          value: /tmp
+        - name: TMPDIR
+          value: /tmp
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      readinessProbe:
+        exec:
+          command: ["test", "-d", "/workspace"]
+        periodSeconds: 3
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 256Mi
+      volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: request-repo
+          mountPath: /opt/exp005/bin
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: workspace
+      persistentVolumeClaim:
+        claimName: repo-${REPO_ID}
+    - name: request-repo
+      configMap:
+        name: ${CM_NAME}
+        defaultMode: 0555
+    - name: tmp
+      emptyDir:
+        sizeLimit: 256Mi

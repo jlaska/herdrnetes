@@ -1,0 +1,3 @@
+home: 8:96 /dev/longhorn/pvc-4d24897a-9bec-43f7-ab86-613169618de4 rw,seclabel
+workspace: 65:112 /dev/longhorn/pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b rw,seclabel
+repo artefacts under home: 0

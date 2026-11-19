@@ -1,0 +1,3 @@
+NAME                        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+home-herdr-scratch-0        Bound    pvc-4d24897a-9bec-43f7-ab86-613169618de4   1Gi        RWO            longhorn       <unset>                 18s   Filesystem
+workspace-herdr-scratch-0   Bound    pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b   1Gi        RWO            longhorn       <unset>                 18s   Filesystem

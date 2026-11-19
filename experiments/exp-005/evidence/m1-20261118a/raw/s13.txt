@@ -1,0 +1,3 @@
+git version 2.47.3
+worktree .git file: gitdir: /workspace/m1r010929-a/.git/worktrees/m1r010929-a-wt
+admin gitdir backlink: /workspace/m1r010929-a-wt/.git

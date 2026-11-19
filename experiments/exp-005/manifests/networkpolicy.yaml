@@ -1,0 +1,15 @@
+# Same intent as the live deny-ingress policy: the only access path is `kubectl exec`.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress
+  namespace: herdrnetes-exp005
+  labels:
+    herdrnetes.io/experiment: exp-005
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: networkpolicy
+    herdrnetes.io/disposable: "true"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
