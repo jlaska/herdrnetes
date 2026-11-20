@@ -43,8 +43,9 @@ DEFAULT_HERDR_NS = "herdrnetes-exp"     # live Herdr; read-only
 DEFAULT_HERDR_POD = "herdr-0"
 HERDR_LABEL = "app.kubernetes.io/name=herdr"
 DEFAULT_EXPECT_LONGHORN = "v1.13.0"      # cluster identity guard; override with RWX_EXPECT_LONGHORN (recorded in evidence)
-MAINT_WINDOW = ((6, 30), (8, 30))         # UTC; the tuppr upgrade window is 07:00Z and node restarts followed it
-UPGRADE_IDLE_PHASES = ("", "completed", "idle", "succeeded", "ready", "healthy")
+MAINT_WINDOW = ((6, 30), (10, 30))        # UTC: tuppr window starts 07:00Z and lasts 3 h (PREFLIGHT.md), plus 30 min margin before/after
+UPGRADE_IDLE_PHASES = ("completed",)       # the only vocabulary observed (PREFLIGHT.md); empty/missing/other phases block, never idle
+EXPECTED_NFS_VERS = ("4.1",)               # owner: positively NFSv4.1 (Longhorn RWX); 4.0, 4.2, 3 or anything else stops
 UPGRADE_CRD_HINTS = ("talosupgrade", "kubernetesupgrade")   # matched against CRD names; no API group is hard-coded
 DNS_LABEL_RE = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$")
 
@@ -234,6 +235,54 @@ def subprocess_runner(argv, input=None, timeout=None):
                          f"timeout after {timeout}s")
 
 
+PRESENT, ABSENT, UNKNOWN = "PRESENT", "ABSENT", "UNKNOWN"
+Tri = namedtuple("Tri", "state data reason")
+NOTFOUND_RE = re.compile(r"Error from server \(NotFound\)")
+
+
+def classify_read(r, kind=None, name=None, is_list=False):
+    """Fail-closed interpretation of one `kubectl get ... -o json` result.
+    ABSENT only for a clear NotFound (single object) or a valid list whose `items` is empty. Everything else that is
+    not a well-formed positive answer (other errors, timeout, empty/malformed/truncated JSON, wrong schema) is UNKNOWN."""
+    if r.err == "dry-run":
+        return Tri(UNKNOWN, None, "dry-run: nothing was read")
+    if r.rc == 124:
+        return Tri(UNKNOWN, None, f"timeout: {r.err.strip()[:120]}")
+    if r.rc != 0:
+        if not is_list and NOTFOUND_RE.search(r.err or ""):
+            return Tri(ABSENT, None, "NotFound")
+        return Tri(UNKNOWN, None, f"read error rc={r.rc}: {(r.err or '').strip()[-160:]}")
+    if not (r.out or "").strip():
+        return Tri(UNKNOWN, None, "empty output")
+    try:
+        data = json.loads(r.out)
+    except ValueError:
+        return Tri(UNKNOWN, None, "malformed or truncated JSON")
+    if not isinstance(data, dict):
+        return Tri(UNKNOWN, None, "unexpected schema: not an object")
+    if is_list:
+        items = data.get("items")
+        if not isinstance(items, list) or not all(isinstance(i, dict) for i in items):
+            return Tri(UNKNOWN, None, "unexpected schema: no items list")
+        if not str(data.get("kind", "")).endswith("List"):
+            return Tri(UNKNOWN, None, f"unexpected schema: kind {data.get('kind')!r} is not a list")
+        return Tri(PRESENT if items else ABSENT, data, "empty list" if not items else "")
+    if kind and data.get("kind") != kind:
+        return Tri(UNKNOWN, None, f"unexpected schema: kind {data.get('kind')!r}, wanted {kind!r}")
+    if name and (data.get("metadata") or {}).get("name") != name:
+        return Tri(UNKNOWN, None, f"unexpected schema: metadata.name != {name!r}")
+    return Tri(PRESENT, data, "")
+
+
+def combine(*tris):
+    """PRESENT if any is PRESENT; ABSENT only if all are ABSENT; otherwise UNKNOWN (with the reasons)."""
+    if any(t.state == PRESENT for t in tris):
+        return next(t for t in tris if t.state == PRESENT)
+    if tris and all(t.state == ABSENT for t in tris):
+        return tris[0]
+    return Tri(UNKNOWN, None, "; ".join(t.reason for t in tris if t.state == UNKNOWN) or "no reads")
+
+
 class Kube:
     """kubectl pinned to one context and the scratch namespace. Mode is decided by (live, execute)."""
 
@@ -267,6 +316,13 @@ class Kube:
         self.echo(("EXEC " if mutating else "read ") + line)
         return self.runner(argv, input=input, timeout=timeout)
 
+    def _do(self, argv, mutating, input=None, timeout=None):
+        """_go with a subprocess timeout converted to rc 124 (callers treat that as a timeout, never as an answer)."""
+        try:
+            return self._go(argv, mutating, input=input, timeout=timeout)
+        except subprocess.TimeoutExpired as e:
+            return CmdResult(124, "", f"timeout after {e.timeout}s")
+
     # -- reads
     def read(self, args, ns=True, namespace=None, timeout=60):
         validate_read(args)
@@ -275,7 +331,7 @@ class Kube:
             base += ["-n", namespace]
         elif ns:
             base += ["-n", self.ns]
-        return self._go(base + list(args), False, timeout=timeout)
+        return self._do(base + list(args), False, timeout=timeout)
 
     def read_json(self, args, **kw):
         r = self.read(list(args) + ["-o", "json"], **kw)
@@ -288,6 +344,14 @@ class Kube:
         except ValueError:
             return {"__error__": "unparseable json", "__rc__": r.rc}
 
+    def read_state(self, args, kind=None, name=None, is_list=False, **kw):
+        """Tri-state read (PRESENT / ABSENT / UNKNOWN); see classify_read. Never raises on a bad answer."""
+        try:
+            r = self.read(list(args) + ["-o", "json"], **kw)
+        except subprocess.TimeoutExpired as e:
+            return Tri(UNKNOWN, None, f"timeout after {e.timeout}s")
+        return classify_read(r, kind=kind, name=name, is_list=is_list)
+
     # -- exec in a scratch pod (runs inside our own pods only)
     def _exec_argv(self, pod, cmd):
         if pod not in PODS.values():
@@ -295,7 +359,7 @@ class Kube:
         return self._base() + ["exec", "-i", pod, "-c", CONTAINER, "--"] + [str(c) for c in cmd]
 
     def exec(self, pod, cmd, stdin=None, timeout=300):
-        r = self._go(self._exec_argv(pod, cmd), False, input=stdin, timeout=timeout)
+        r = self._do(self._exec_argv(pod, cmd), False, input=stdin, timeout=timeout)
         if r.rc == 124 and r.err.startswith("timeout"):
             raise HangSuspected(f"NFS I/O hang suspected: exec in {pod} timed out after {timeout}s ({' '.join(map(str, cmd[:5]))})")
         return r
@@ -332,7 +396,7 @@ class Kube:
         validate_manifest_text(manifest_text, self.ns, self.run_id)
         validate_mutation(["apply", "-f", "-"], self.ns, self.run_id)
         argv = ["kubectl", "--context", self.ctx, "apply", "-f", "-"]
-        return self._go(argv, True, input=manifest_text, timeout=120)
+        return self._do(argv, True, input=manifest_text, timeout=120)
 
     def guard_labels(self, kind, name):
         """Object must exist with experiment=exp-005-rwx and run-id=<this run>. Dry-run: skipped."""
@@ -354,7 +418,7 @@ class Kube:
         validate_mutation(argv, self.ns, self.run_id)
         self.guard_labels(kind, name)
         base = ["kubectl", "--context", self.ctx] + ([] if kind == "namespace" else ["-n", self.ns])
-        return self._go(base + argv, True, timeout=timeout + 30)
+        return self._do(base + argv, True, timeout=timeout + 30)
 
 
 # ----------------------------------------------------------------------------- pure analysis helpers
@@ -388,10 +452,13 @@ def herdr_facts(pod_json):
 
 
 def longhorn_volume_states(volumes_json):
-    """name -> (state, robustness) from `get volumes.longhorn.io -o json`."""
+    """name -> (state, robustness) from a successfully read volume list. Raises ValueError on anything else
+    (an unreadable inventory must never look like 'zero healthy volumes')."""
+    if not isinstance(volumes_json, dict) or not isinstance(volumes_json.get("items"), list) or "__error__" in volumes_json:
+        raise ValueError("Longhorn volume inventory unreadable")
     out = {}
-    for item in (volumes_json or {}).get("items", []):
-        st = item.get("status", {})
+    for item in volumes_json["items"]:
+        st = item.get("status") or {}
         out[item["metadata"]["name"]] = (st.get("state", ""), st.get("robustness", ""))
     return out
 
@@ -399,9 +466,12 @@ def longhorn_volume_states(volumes_json):
 BAD_ROBUSTNESS = ("degraded", "faulted")
 
 
-def check_invariants(base_herdr, now_herdr, base_vols, now_vols, scratch_volume=None, nodes_a_b=None):
-    """Return (stops, infos). Each stop is a mandatory stop condition from the issue #32 owner conditions."""
+def check_invariants(base_herdr, now_herdr, base_vols, now_vols, scratch_volume=None, nodes_a_b=None, baseline_required=True):
+    """Return (stops, infos). Fail closed: a missing baseline or an unreadable current state is a STOP, never 'unchanged'.
+    now_herdr / now_vols are None when the read failed or could not be parsed."""
     stops, infos = [], []
+    if baseline_required and (base_herdr is None or base_vols is None):
+        stops.append("no Herdr/Longhorn baseline available (cannot establish 'unchanged')")
     if base_herdr is not None:
         if now_herdr is None:
             stops.append("live Herdr pod unreadable or missing")
@@ -410,46 +480,108 @@ def check_invariants(base_herdr, now_herdr, base_vols, now_vols, scratch_volume=
                 stops.append("live Herdr pod UID changed")
             if now_herdr["restarts"] != base_herdr["restarts"]:
                 stops.append(f"live Herdr restart counts changed: {base_herdr['restarts']} -> {now_herdr['restarts']}")
-    for name, (_state, rob) in (now_vols or {}).items():
-        if name == scratch_volume:
-            continue
-        b = (base_vols or {}).get(name)
-        if b is None:
-            infos.append(f"new Longhorn volume outside the scratch PVC: {name}")
-            continue
-        if b[1] != rob:
-            msg = f"volume {name} robustness {b[1]!r} -> {rob!r}"
-            (stops if rob in BAD_ROBUSTNESS else infos).append(msg)
-    for name in (base_vols or {}):
-        if name not in (now_vols or {}) and name != scratch_volume:
-            infos.append(f"Longhorn volume vanished: {name}")
+    if base_vols is not None:
+        if now_vols is None:
+            stops.append("Longhorn volume inventory unreadable")
+        elif not now_vols and base_vols:
+            stops.append("Longhorn volume inventory is empty although it had volumes at baseline (suspicious)")
+        else:
+            for name, (_state, rob) in now_vols.items():
+                if name == scratch_volume:
+                    continue
+                b = base_vols.get(name)
+                if b is None:
+                    infos.append(f"new Longhorn volume outside the scratch PVC: {name}")
+                    continue
+                if b[1] != rob:
+                    msg = f"volume {name} robustness {b[1]!r} -> {rob!r}"
+                    (stops if rob in BAD_ROBUSTNESS else infos).append(msg)
+            for name in base_vols:
+                if name not in now_vols and name != scratch_volume:
+                    infos.append(f"Longhorn volume vanished: {name}")
     if nodes_a_b and nodes_a_b[0] and nodes_a_b[0] == nodes_a_b[1]:
         stops.append("both scratch pods are on the same node")
     return stops, infos
 
 
+def _is_int(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def evaluate_mount(m):
+    """R02 positive filesystem gate for ONE pod. m is the `mountinfo` probe result. Unparseable, missing or wrongly typed data is a
+    failure (never an exception). Returns (ok, reasons, facts)."""
+    if not isinstance(m, dict) or not isinstance(m.get("mount"), dict):
+        return False, ["mountinfo probe output missing or unparseable"], {}
+    mi = m["mount"]
+    opts = m.get("nfs_options") if isinstance(m.get("nfs_options"), dict) else {}
+    vers = opts.get("vers")
+    facts = dict(mount_point=mi.get("mount_point"), fstype=mi.get("fstype"), source=mi.get("source"), vers=vers, nfs_options=opts)
+    reasons = []
+    if not isinstance(mi.get("mount_point"), str) or mi.get("mount_point") != MOUNT:
+        reasons.append(f"{MOUNT} is not a mount point of its own (found {mi.get('mount_point')!r})")
+    if not isinstance(mi.get("fstype"), str) or mi.get("fstype") != "nfs4":
+        reasons.append(f"filesystem type is {mi.get('fstype')!r}, expected nfs4")
+    if not vers:
+        reasons.append("NFS version (vers=) missing from the mount options")
+    elif not isinstance(vers, str) or vers not in EXPECTED_NFS_VERS:
+        reasons.append(f"NFS vers={vers!r}, expected exactly one of {EXPECTED_NFS_VERS}")
+    if not isinstance(mi.get("source"), str) or not mi.get("source"):
+        reasons.append("mount source missing")
+    return not reasons, reasons, facts
+
+
+def evaluate_identity(i):
+    """R02 identity/security assertions for ONE pod (the `identity` probe). Never raises on wrong types."""
+    if not isinstance(i, dict) or "uid" not in i:
+        return False, ["identity probe output missing or unparseable"]
+    reasons = []
+    if not (_is_int(i.get("uid")) and _is_int(i.get("gid"))) or i.get("uid") != 1000 or i.get("gid") != 1000:
+        reasons.append(f"uid/gid {i.get('uid')}/{i.get('gid')} != 1000/1000")
+    if i.get("no_new_privs") != "1":
+        reasons.append(f"NoNewPrivs={i.get('no_new_privs')!r}, expected '1'")
+    cap = i.get("cap_eff")
+    if not isinstance(cap, str) or not cap.strip() or cap.strip().strip("0"):
+        reasons.append(f"effective capabilities not empty/unknown: {cap!r}")
+    return not reasons, reasons
+
+
 def evaluate_gate(r):
     """R02 stop gate. r is the `writegate` probe result for UID 1000 at the mount root.
-    Returns (ok, reasons). Never suggests a remedy: the harness must stop, collect and clean up."""
+    Returns (ok, reasons); wrongly typed input yields failure reasons, never an exception. Never suggests a remedy:
+    the harness must stop, collect and clean up."""
+    if not isinstance(r, dict) or "steps" not in r or "uid" not in r:
+        return False, ["gate probe output missing or unparseable"]
     reasons = []
-    if not r:
-        return False, ["no probe output"]
-    if r.get("uid") != 1000 or r.get("gid") != 1000:
+    if not (_is_int(r.get("uid")) and _is_int(r.get("gid"))) or r.get("uid") != 1000 or r.get("gid") != 1000:
         reasons.append(f"unexpected identity uid={r.get('uid')} gid={r.get('gid')}")
-    for step, res in (r.get("steps") or {}).items():
-        if not res.get("ok"):
-            reasons.append(f"{step} failed: {res.get('errno')}" + (f" ({res['msg']})" if res.get("msg") else ""))
-    if not r.get("steps"):
-        reasons.append("no gate steps reported")
-    root = r.get("root_stat") or {}
-    if not root:
-        reasons.append("no root_stat reported")
+    steps = r.get("steps")
+    if not isinstance(steps, dict) or not steps:
+        reasons.append("no gate steps reported (missing, empty or not an object)")
+        steps = {}
+    for step, res in steps.items():
+        if not isinstance(res, dict):
+            reasons.append(f"gate step {step} malformed (not an object)")
+        elif not res.get("ok"):
+            msg = res.get("msg")
+            reasons.append(f"{step} failed: {res.get('errno')}" + (f" ({msg})" if isinstance(msg, str) and msg else ""))
+    if steps:
+        for required in ("create_write_fsync", "rename_file", "owner_is_caller", "mkdir_rename_dir", "git_smoke"):
+            if required not in steps:
+                reasons.append(f"gate step {required} missing")
+    own = steps.get("owner_is_caller")
+    if isinstance(own, dict) and own.get("ok") and (not _is_int(own.get("file_uid")) or own.get("file_uid") != 1000):
+        reasons.append(f"created file owned numerically by uid {own.get('file_uid')}, expected 1000")
+    root = r.get("root_stat")
+    if not isinstance(root, dict) or not root:
+        reasons.append("no root_stat reported (missing or not an object)")
     else:
-        if not root.get("is_dir", False):
+        if root.get("is_dir") is not True:
             reasons.append("mount root is not a directory")
-        if root.get("uid") not in (0, 1000) or root.get("gid") not in (0, 1000):
+        if root.get("uid") not in (0, 1000) or root.get("gid") not in (0, 1000) or not _is_int(root.get("uid")) or not _is_int(root.get("gid")):
+            mode = root.get("mode")
             reasons.append(f"unexpected ownership at mount root: uid={root.get('uid')} gid={root.get('gid')} "
-                           f"mode={oct(root.get('mode') or 0)}")
+                           f"mode={oct(mode) if _is_int(mode) else mode!r}")
     return not reasons, reasons
 
 
@@ -524,14 +656,26 @@ def in_maintenance_window(now, window=MAINT_WINDOW):
 
 
 def upgrade_crd_names(crd_json):
-    return sorted(i["metadata"]["name"] for i in (crd_json or {}).get("items", [])
-                  if any(h in i["metadata"]["name"].split(".")[0].lower() for h in UPGRADE_CRD_HINTS))
+    names = [(i.get("metadata") or {}).get("name") for i in (crd_json or {}).get("items", [])]
+    return sorted(n for n in names if isinstance(n, str) and any(h in n.split(".")[0].lower() for h in UPGRADE_CRD_HINTS))
+
+
+def missing_upgrade_crds(crd_json):
+    """Expected upgrade-controller kinds (talosupgrade, kubernetesupgrade) that the (successfully read) CRD list does not contain."""
+    names = [i["metadata"]["name"].split(".")[0].lower() for i in (crd_json or {}).get("items", []) if (i.get("metadata") or {}).get("name")]
+    return [h for h in UPGRADE_CRD_HINTS if not any(h in n for n in names)]
 
 
 def upgrade_stops(crs):
-    """crs: list of (crd, name, phase). Anything not clearly completed/idle blocks the run."""
-    return [f"upgrade CR {crd}/{name} phase {phase!r} is not completed/idle"
-            for crd, name, phase in crs if (phase or "").lower() not in UPGRADE_IDLE_PHASES]
+    """crs: list of (crd, name, phase). Only a positively read phase in UPGRADE_IDLE_PHASES is idle: an empty/missing phase is
+    UNKNOWN and blocks like an active one (owner decision D-10)."""
+    out = []
+    for crd, name, phase in crs:
+        if not phase:
+            out.append(f"upgrade CR {crd}/{name} has an empty/missing phase (unknown, not idle)")
+        elif phase.lower() not in UPGRADE_IDLE_PHASES:
+            out.append(f"upgrade CR {crd}/{name} phase {phase!r} is not one of {UPGRADE_IDLE_PHASES}")
+    return out
 
 
 def scratch_pod_stops(pod_json, name):
@@ -585,20 +729,29 @@ def plan_cleanup(inventory, ns_obj, run_id):
     return dict(refusals=refusals, deletes=deletes, delete_ns=not refusals, note="")
 
 
+CLEANUP_ITEMS = ("namespace", "pvc", "pv", "longhorn_volume", "share_manager_pod", "share_manager_cr", "share_manager_service",
+                 "volume_attachment")
+EXIT_REFUSED, EXIT_RESIDUE, EXIT_UNVERIFIED = 4, 5, 6   # cleanup refused / objects remain / could not be verified
+
+
 def verify_cleanup(facts):
-    """facts: dict of booleans/lists observed read-only after cleanup. Returns list of failures (empty = all gone)."""
-    fails = []
-    for key, label in (("namespace_present", "scratch namespace still present"),
-                       ("pvc_present", "scratch PVC still present"),
-                       ("pv_present", "scratch PV still present"),
-                       ("longhorn_volume_present", "Longhorn volume still present"),
-                       ("share_manager_pod_present", "share-manager pod still present"),
-                       ("share_manager_cr_present", "ShareManager CR still present"),
-                       ("share_manager_service_present", "share-manager Service still present"),
-                       ("volume_attachment_present", "VolumeAttachment still present")):
-        if facts.get(key):
-            fails.append(label)
-    return fails
+    """facts: item -> Tri. Fail closed: CLEAN only when every item in CLEANUP_ITEMS is positively ABSENT; a missing item
+    or an UNKNOWN read is never 'gone'. Returns dict(verdict, present, unknown) with (item, reason) pairs."""
+    present, unknown = [], []
+    for item in CLEANUP_ITEMS:
+        t = facts.get(item)
+        if t is None or t.state == UNKNOWN:
+            unknown.append((item, t.reason if t else "not checked"))
+        elif t.state == PRESENT:
+            present.append((item, t.reason or "still present"))
+        elif t.state != ABSENT:
+            unknown.append((item, f"bad state {t.state!r}"))
+    verdict = "RESIDUE" if present else ("UNVERIFIED" if unknown else "CLEAN")
+    return dict(verdict=verdict, present=present, unknown=unknown)
+
+
+def cleanup_exit_code(verdict):
+    return {"CLEAN": 0, "RESIDUE": EXIT_RESIDUE, "UNVERIFIED": EXIT_UNVERIFIED}[verdict]
 
 
 # ----------------------------------------------------------------------------- sanitizer

@@ -76,6 +76,7 @@ class TestGate(Tmp):
         r = run("writegate", self.d)
         self.assertTrue(r["ok"], r)
         self.assertEqual(os.listdir(self.d), [])
+        r["steps"]["owner_is_caller"]["file_uid"] = 1000      # locally the caller is not uid 1000
         ok, why = L.evaluate_gate(dict(r, uid=1000, gid=1000, root_stat=dict(r["root_stat"], uid=1000, gid=1000)))
         self.assertTrue(ok, why)
 
@@ -120,6 +121,7 @@ class TestGate(Tmp):
     def test_git_env_is_hermetic(self):
         self.assertEqual(P.GIT_ENV["GIT_CONFIG_GLOBAL"], "/dev/null")
         self.assertEqual(P.GIT_ENV["GIT_CONFIG_NOSYSTEM"], "1")   # no user signing/hook config can leak into probes
+        self.assertEqual((P.GIT_ENV["GIT_CONFIG_KEY_0"], P.GIT_ENV["GIT_CONFIG_VALUE_0"]), ("commit.gpgsign", "false"))
 
     def test_probe_source_has_no_privilege_escalation(self):
         for banned in ("os.chown", "chown(", "setuid", "sudo", "os.setgid", "os.mount", "libc.mount", "subprocess.run([\"chmod\"",

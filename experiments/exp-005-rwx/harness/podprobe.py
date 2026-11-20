@@ -22,6 +22,7 @@ import sys
 import time
 
 GIT_ENV = dict(GIT_TERMINAL_PROMPT="0", GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL="/dev/null",   # hermetic: no signing/hooks from user config
+               GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="commit.gpgsign", GIT_CONFIG_VALUE_0="false",
                GIT_AUTHOR_NAME="rwx-synthetic",
                GIT_AUTHOR_EMAIL="rwx@example.invalid", GIT_COMMITTER_NAME="rwx-synthetic",
                GIT_COMMITTER_EMAIL="rwx@example.invalid", GIT_AUTHOR_DATE="2026-01-01T00:00:00Z",

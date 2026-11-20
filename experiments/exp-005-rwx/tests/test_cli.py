@@ -80,6 +80,26 @@ class FakeKubectl(unittest.TestCase):
         r = self.rwx("plan", env=env)
         self.assertNotIn("secret-node-1", r.stdout)
 
+    def test_network_policy_is_on_by_default_with_explicit_opt_out(self):
+        on = self.rwx("plan", "--run-id", "20261120a").stdout
+        self.assertIn("1 NetworkPolicy default-deny-all", on)
+        self.assertIn("kind: NetworkPolicy", on)
+        off = self.rwx("plan", "--run-id", "20261120a", "--no-network-policy").stdout
+        self.assertIn("0 NetworkPolicy default-deny-all", off)
+        self.assertNotIn("kind: NetworkPolicy", off)
+
+    def test_cleanup_unreadable_cluster_exits_6_unverified_and_deletes_nothing(self):
+        env = dict(self.env, KCTX="ctx-test")
+        r = self.rwx("cleanup", "--run-id", "20261120a", "--live", env=env)      # the fake kubectl fails every call (rc 1)
+        self.assertEqual(r.returncode, 6, (r.stdout, r.stderr))
+        self.assertIn("UNVERIFIED", r.stderr)
+        for line in self.kubectl_calls().splitlines():
+            self.assertNotRegex(line, r"\b(apply|delete|create|patch|exec)\b")
+
+    def test_pv_name_must_look_like_a_pv(self):
+        r = self.rwx("cleanup", "--run-id", "20261120a", "--pv-name", "../x")
+        self.assertEqual(r.returncode, 2)
+
     def test_sanitize_subcommand(self):
         p = os.path.join(self.bin, "x.txt")
         open(p, "w").write("ip 10.1.2.3 host a.lab.internal\n")

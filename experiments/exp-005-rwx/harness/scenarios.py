@@ -17,7 +17,7 @@ import time
 
 import podprobe
 import rwxlib as L
-from rwxlib import PODS, StopRun, log
+from rwxlib import ABSENT, PODS, PRESENT, UNKNOWN, StopRun, Tri, log
 
 PROBE_PATH = os.path.join(L.HERE, "podprobe.py")
 REQUEST_REPO_PATH = os.path.join(L.REPO_ROOT, "experiments", "exp-005", "harness", "request-repo")
@@ -26,10 +26,6 @@ WS = f"{L.WORK}/ws"
 BIG_FILES, BIG_COMMITS, PERF_RUNS = 3000, 5, 5
 LOCAL_TMP = "/tmp"          # emptyDir inside the pods (control for R07/R11)
 HEARTBEAT_S, LOCK_HOLD_S = 150, 14
-
-
-def not_found(j):
-    return isinstance(j, dict) and "__error__" in j and ("NotFound" in j["__error__"] or "not found" in j["__error__"])
 
 
 def wait_until(fn, timeout, interval=2.0):
@@ -58,7 +54,7 @@ INV_KINDS = ("pvc,pod,statefulset,deployment,replicaset,daemonset,job,cronjob,co
 
 
 class Runner:
-    def __init__(self, kube, evidence, sanitizer, results, network_policy=False, node_selector=None,
+    def __init__(self, kube, evidence, sanitizer, results, network_policy=True, node_selector=None,
                  herdr_ns=L.DEFAULT_HERDR_NS, herdr_pod=L.DEFAULT_HERDR_POD, sleep=time.sleep,
                  expect_longhorn=L.DEFAULT_EXPECT_LONGHORN, clock=None):
         self.kube, self.ev, self.san, self.res = kube, evidence, sanitizer, results
@@ -135,35 +131,59 @@ class Runner:
         raise StopRun(f"{test}: {reason}")
 
     # ------------------------------------------------------------------ read-only observation
+    def need(self, label, what, args, kind=None, name=None, is_list=False, allow_empty=True, **kw):
+        """Fail-closed read: returns parsed data, or STOPs. An UNKNOWN answer (error, timeout, empty/malformed output, wrong
+        schema) is never treated as 'empty', 'healthy' or 'unchanged'. ABSENT is acceptable only for an empty list."""
+        t = self.kube.read_state(args, kind=kind, name=name, is_list=is_list, **kw)
+        if t.state == L.UNKNOWN:
+            self.stop(label, f"{what} unreadable: {t.reason}")
+        if t.state == L.ABSENT:
+            if is_list and allow_empty:
+                return {"items": []}
+            self.stop(label, f"{what} not found or empty ({t.reason})")
+        return t.data
+
     def herdr_now(self):
-        return L.herdr_facts(self.rj(["get", "pod", self.herdr_pod], ns=False, namespace=self.herdr_ns))
+        """UID/restarts of the live Herdr pod, or None if it could not be positively read."""
+        t = self.kube.read_state(["get", "pod", self.herdr_pod], kind="Pod", name=self.herdr_pod, ns=False, namespace=self.herdr_ns)
+        return L.herdr_facts(t.data) if t.state == L.PRESENT else None
 
     def vols_now(self):
-        return L.longhorn_volume_states(self.rj(["get", "volumes.longhorn.io"], ns=False, namespace=L.LONGHORN_NS))
+        """name -> (state, robustness) of every Longhorn volume, or None if the inventory could not be positively read."""
+        t = self.kube.read_state(["get", "volumes.longhorn.io"], is_list=True, ns=False, namespace=L.LONGHORN_NS)
+        if t.state == L.UNKNOWN:
+            return None
+        try:
+            return L.longhorn_volume_states(t.data or {"items": []})
+        except (ValueError, KeyError, TypeError):
+            return None
 
     def disk_pct(self):
         d = self.px("a", "df", L.MOUNT)
-        return d.get("used_pct")
+        pct = d.get("used_pct")
+        return pct if isinstance(pct, (int, float)) else None
 
     def check_environment(self, label):
-        """Maintenance-window, node-health and upgrade-controller guards (read-only). Returns the nodes JSON."""
+        """Maintenance-window, node-health and upgrade-controller guards (read-only, fail closed). Returns the nodes JSON."""
         now = self.clock()
         if L.in_maintenance_window(now):
             self.stop(label, f"UTC {now:%H:%M} is inside the maintenance window {L.MAINT_WINDOW[0]}-{L.MAINT_WINDOW[1]} "
                              "(upgrade controller window; node restarts expected)")
-        nodes = self.rj(["get", "nodes"], ns=False)
-        if nodes is None or "__error__" in nodes:
-            self.stop(label, "nodes unreadable")
+        nodes = self.need(label, "node list", ["get", "nodes"], is_list=True, allow_empty=False, ns=False)
         stops = L.node_health_stops(nodes)
-        crds = self.rj(["get", "crd"], ns=False)
+        # CRD absence is acceptable only when the CRD listing itself succeeded and shows it absent
+        crds = self.need(label, "CRD list", ["get", "crd"], is_list=True, ns=False)
+        missing = L.missing_upgrade_crds(crds)
+        if missing:        # PREFLIGHT.md observed both CRDs; a CRD list lacking them means upgrade state is unavailable, not idle
+            self.stop(label, f"upgrade controller state unavailable: CRD(s) for {missing} not found in a successfully read CRD list")
         crs = []
-        for crd in (L.upgrade_crd_names(crds) if crds and "__error__" not in crds else []):
-            j = self.rj(["get", crd, "-A"], ns=False)
-            if j is None or "__error__" in j:
-                self.res.rec(f"{label}/upgrade-crs", "INFO", f"{crd} not readable; skipped ({(j or {}).get('__error__', '')[:80]})")
-                continue
-            crs += [(crd, i["metadata"]["name"], (i.get("status") or {}).get("phase")) for i in j.get("items", [])]
+        for crd in L.upgrade_crd_names(crds):
+            j = self.need(label, f"upgrade CR list {crd}", ["get", crd, "-A"], is_list=True, ns=False)
+            if not j["items"]:     # PREFLIGHT.md: both upgrade objects exist (Completed); an empty list is not the observed normal state
+                self.stop(label, f"upgrade controller state unavailable: no {crd} object (expected one, observed Completed in PREFLIGHT.md)")
+            crs += [(crd, (i.get("metadata") or {}).get("name", "?"), (i.get("status") or {}).get("phase")) for i in j["items"]]
         self._upgrade_crs_seen = sorted({c[0] for c in crs})
+        self._upgrade_phases = sorted({f"{c[0].split('.')[0]}={c[2]}" for c in crs})
         stops += L.upgrade_stops(crs)
         if stops:
             self.stop(label, "; ".join(stops))
@@ -172,7 +192,8 @@ class Runner:
     def check_scratch_pods(self, label):
         for w in ("a", "b"):
             if self.nodes.get(w):
-                stops = L.scratch_pod_stops(self.rj(["get", "pod", PODS[w]]), PODS[w])
+                t = self.kube.read_state(["get", "pod", PODS[w]], kind="Pod", name=PODS[w])
+                stops = L.scratch_pod_stops(t.data if t.state == L.PRESENT else {"__error__": t.reason}, PODS[w])
                 if stops:
                     self.stop(label, "; ".join(stops))
 
@@ -187,45 +208,61 @@ class Runner:
             self.stop(label, "; ".join(stops))
         if self.created and self.nodes.get("a"):
             pct = self.disk_pct()
-            if pct is not None and pct >= L.DISK_STOP_PCT:
+            if pct is None:
+                self.stop(label, "scratch volume usage unreadable (df probe failed)")
+            if pct >= L.DISK_STOP_PCT:
                 self.stop(label, f"scratch volume {pct}% full (limit {L.DISK_STOP_PCT}%)")
 
     def share_manager_state(self):
+        """Read-only Longhorn objects of the scratch volume. `unknown` lists every read that could not be positively
+        established; callers must treat a non-empty `unknown` as a failed observation, never as 'absent'."""
         if not self.pv:
             return {}
         lh = dict(ns=False, namespace=L.LONGHORN_NS)
-        pods = self.rj(["get", "pods", "-l", f"longhorn.io/share-manager={self.pv}"], **lh) or {}
-        sm = self.rj(["get", "sharemanagers.longhorn.io", self.pv], **lh)
-        svc = self.rj(["get", "service", self.pv], **lh)
-        vol = self.rj(["get", "volumes.longhorn.io", self.pv], **lh)
-        eng = self.rj(["get", "engines.longhorn.io", "-l", f"longhornvolume={self.pv}"], **lh) or {}
-        rep = self.rj(["get", "replicas.longhorn.io", "-l", f"longhornvolume={self.pv}"], **lh) or {}
+        rs = self.kube.read_state
+        pods = rs(["get", "pods", "-l", f"longhorn.io/share-manager={self.pv}"], is_list=True, **lh)
+        sm = rs(["get", "sharemanagers.longhorn.io", self.pv], kind="ShareManager", name=self.pv, **lh)
+        svc = rs(["get", "service", self.pv], kind="Service", name=self.pv, **lh)
+        vol = rs(["get", "volumes.longhorn.io", self.pv], kind="Volume", name=self.pv, **lh)
+        eng = rs(["get", "engines.longhorn.io", "-l", f"longhornvolume={self.pv}"], is_list=True, **lh)
+        rep = rs(["get", "replicas.longhorn.io", "-l", f"longhornvolume={self.pv}"], is_list=True, **lh)
+        unknown = [f"{n}: {t.reason}" for n, t in (("share-manager pods", pods), ("ShareManager CR", sm), ("Service", svc),
+                                                   ("Longhorn volume", vol), ("engines", eng), ("replicas", rep))
+                   if t.state == L.UNKNOWN]
+        if vol.state == L.ABSENT:
+            unknown.append("Longhorn volume: absent although the PVC is bound")
+        items = lambda t: (t.data or {}).get("items", [])  # noqa: E731
         smp = [dict(name=p["metadata"]["name"], uid=p["metadata"]["uid"], phase=p["status"].get("phase"),
                     node=p["spec"].get("nodeName"), ready=pod_ready(p),
                     image=[c.get("image") for c in p["spec"].get("containers", [])],
                     image_id=[c.get("imageID") for c in p["status"].get("containerStatuses", [])],
                     restarts=sum(c.get("restartCount", 0) for c in p["status"].get("containerStatuses", [])))
-               for p in pods.get("items", [])]
-        replica_nodes = sorted(self.san.alias(r.get("spec", {}).get("nodeID") or "?") for r in rep.get("items", []))
-        vs = (vol or {}).get("status", {}) if vol and "__error__" not in vol else {}
-        return dict(share_manager_pods=smp,
-                    sharemanager_cr=None if not sm or "__error__" in sm else dict(
-                        state=sm.get("status", {}).get("state"), owner=sm.get("status", {}).get("ownerID"),
-                        endpoint_present=bool(sm.get("status", {}).get("endpoint"))),
-                    service_present=bool(svc and "__error__" not in svc),
+               for p in items(pods)]
+        replica_nodes = sorted(self.san.alias(r.get("spec", {}).get("nodeID") or "?") for r in items(rep))
+        vd = vol.data or {}
+        vs = vd.get("status", {})
+        smd = sm.data or {}
+        return dict(unknown=unknown, share_manager_pods=smp,
+                    sharemanager_cr=None if sm.state != L.PRESENT else dict(
+                        state=smd.get("status", {}).get("state"), owner=smd.get("status", {}).get("ownerID"),
+                        endpoint_present=bool(smd.get("status", {}).get("endpoint"))),
+                    service_present=svc.state == L.PRESENT,
                     volume=dict(state=vs.get("state"), robustness=vs.get("robustness"),
-                                access_mode=((vol or {}).get("spec", {}) or {}).get("accessMode"),
-                                replicas_requested=((vol or {}).get("spec", {}) or {}).get("numberOfReplicas"),
+                                access_mode=(vd.get("spec", {}) or {}).get("accessMode"),
+                                replicas_requested=(vd.get("spec", {}) or {}).get("numberOfReplicas"),
                                 kubernetes_ns=(vs.get("kubernetesStatus") or {}).get("namespace")),
-                    engines=len(eng.get("items", [])), replicas=len(rep.get("items", [])), replica_nodes=replica_nodes)
+                    engines=len(items(eng)), replicas=len(items(rep)), replica_nodes=replica_nodes)
 
     def scratch_facts(self):
         out = {}
         for w in ("a", "b"):
-            pj = self.rj(["get", "pod", PODS[w]])
-            if pj and "__error__" not in pj:
+            t = self.kube.read_state(["get", "pod", PODS[w]], kind="Pod", name=PODS[w])
+            if t.state == L.PRESENT:
+                pj = t.data
                 out[w] = dict(phase=pj["status"].get("phase"), uid=pj["metadata"].get("uid", "")[:8],
                               restarts={c["name"]: c.get("restartCount", 0) for c in pj["status"].get("containerStatuses", [])})
+            else:
+                out[w] = dict(unreadable=t.reason)
         return out
 
     def observe(self, label):
@@ -235,98 +272,121 @@ class Runner:
         o["herdr_restarts"] = (self.herdr_now() or {}).get("restarts")
         self.observations.append(o)
         self.ev.write(f"observe/{label}.json", o)
+        bad = list(o.get("unknown", [])) + [f"scratch pod {w}: {v['unreadable']}" for w, v in o["scratch_pods"].items() if "unreadable" in v]
+        if o["herdr_restarts"] is None:
+            bad.append("live Herdr pod unreadable")
+        if bad:
+            self.stop("R13", f"observation {label} incomplete (fail closed): " + "; ".join(bad))
         return o
 
     # ------------------------------------------------------------------ R00
     def r00(self):
         t = "R00"
         ctxs = self.kube.read(["config", "get-contexts", "-o", "name"], ns=False)
-        if self.kube.ctx not in ctxs.out.split():
-            self.stop(t, "kube context does not exist in kubeconfig")
-        nodes = self.check_environment(t)     # maintenance window, node health, upgrade CRs
-        ver = self.kube.read(["version", "-o", "json"], ns=False)
-        for n in (nodes or {}).get("items", []):
+        if ctxs.rc != 0 or self.kube.ctx not in ctxs.out.split():
+            self.stop(t, "kube context unreadable or does not exist in kubeconfig")
+        nodes = self.check_environment(t)     # maintenance window, node health, upgrade CRs (fail closed)
+        vr = self.kube.read(["version", "-o", "json"], ns=False)
+        ver = L.parse_probe_output(vr.out.replace("\n", " ")) if vr.rc == 0 else {}
+        if not ver.get("serverVersion", {}).get("gitVersion"):
+            self.stop(t, "kubernetes server version unreadable")
+        for n in nodes["items"]:
             self.san.add_node(n["metadata"]["name"])
         # cluster identity guard: right Longhorn, right Herdr (STOP otherwise: wrong kube context)
-        lpods = self.rj(["get", "pods"], ns=False, namespace=L.LONGHORN_NS)
+        lpods = self.need(t, "longhorn-system pod list", ["get", "pods"], is_list=True, allow_empty=False, ns=False, namespace=L.LONGHORN_NS)
         tags = L.longhorn_manager_tags(lpods)
-        herdr_ns_obj = self.rj(["get", "namespace", self.herdr_ns], ns=False)
-        herdr_pods = self.rj(["get", "pods", "-l", L.HERDR_LABEL], ns=False, namespace=self.herdr_ns)
+        herdr_ns_obj = self.need(t, f"Herdr namespace {self.herdr_ns}", ["get", "namespace", self.herdr_ns], kind="Namespace",
+                                 name=self.herdr_ns, ns=False)
+        herdr_pods = self.need(t, "Herdr pod list", ["get", "pods", "-l", L.HERDR_LABEL], is_list=True, allow_empty=False, ns=False,
+                               namespace=self.herdr_ns)
         idstops = L.identity_stops(self.expect_longhorn, tags, herdr_ns_obj, herdr_pods, self.herdr_pod)
         if idstops:
             self.stop(t, "cluster identity: " + "; ".join(idstops))
         self.herdr_node = herdr_pods["items"][0]["spec"].get("nodeName")
-        if self.herdr_node:
-            self.san.add_node(self.herdr_node)
+        if not self.herdr_node:
+            self.stop(t, "Herdr pod has no node assigned")
+        self.san.add_node(self.herdr_node)
         cand = L.candidate_nodes(nodes, self.herdr_node)
         if len(cand) < 2:
             self.stop(t, f"need >= 2 Ready schedulable untainted nodes excluding the Herdr node, found {len(cand)}")
-        sched = cand
-        if not not_found(self.rj(["get", "namespace", self.ns], ns=False)):
-            self.stop(t, f"namespace {self.ns} already exists (or is unreadable)")
-        sc = self.rj(["get", "storageclass", L.STORAGE_CLASS], ns=False)
-        if not sc or "__error__" in sc:
-            self.stop(t, f"StorageClass {L.STORAGE_CLASS} not found: creating one is NOT approved")
+        ns_state = self.kube.read_state(["get", "namespace", self.ns], kind="Namespace", name=self.ns, ns=False)
+        if ns_state.state != L.ABSENT:
+            self.stop(t, f"namespace {self.ns} must be positively absent (state {ns_state.state}: {ns_state.reason or 'exists'})")
+        sc = self.need(t, f"StorageClass {L.STORAGE_CLASS}", ["get", "storageclass", L.STORAGE_CLASS], kind="StorageClass",
+                       name=L.STORAGE_CLASS, ns=False)
         if sc.get("provisioner") != "driver.longhorn.io":
             self.stop(t, f"StorageClass provisioner is {sc.get('provisioner')!r}, expected driver.longhorn.io")
         if sc.get("reclaimPolicy") != "Delete":
             self.stop(t, f"StorageClass reclaimPolicy is {sc.get('reclaimPolicy')!r}; a PV would outlive cleanup")
-        csid = self.rj(["get", "csidriver", "driver.longhorn.io"], ns=False)
-        vols = self.rj(["get", "volumes.longhorn.io"], ns=False, namespace=L.LONGHORN_NS)
-        self.base_vols = L.longhorn_volume_states(vols)
+        csid = self.need(t, "CSIDriver driver.longhorn.io", ["get", "csidriver", "driver.longhorn.io"], kind="CSIDriver",
+                         name="driver.longhorn.io", ns=False)
+        vols = self.need(t, "Longhorn volume inventory", ["get", "volumes.longhorn.io"], is_list=True, allow_empty=False, ns=False,
+                         namespace=L.LONGHORN_NS)
+        try:
+            self.base_vols = L.longhorn_volume_states(vols)
+        except (ValueError, KeyError, TypeError) as e:
+            self.stop(t, f"Longhorn volume inventory unparseable: {e}")
         bad = [n for n, (_, r) in self.base_vols.items() if r in L.BAD_ROBUSTNESS]
         if bad:
             self.stop(t, f"unhealthy Longhorn volumes present before the run: {bad}")
-        notrun = [p["metadata"]["name"] for p in (lpods or {}).get("items", [])
-                  if p["status"].get("phase") not in ("Running", "Succeeded")]
+        notrun = [p["metadata"]["name"] for p in lpods["items"] if p.get("status", {}).get("phase") not in ("Running", "Succeeded")]
         if notrun:
             self.stop(t, f"longhorn-system pods not Running: {notrun}")
-        lnodes = self.rj(["get", "nodes.longhorn.io"], ns=False, namespace=L.LONGHORN_NS)
-        existing_sm = self.rj(["get", "sharemanagers.longhorn.io"], ns=False, namespace=L.LONGHORN_NS)
-        settings = {s: self.rj(["get", "settings.longhorn.io", s], ns=False, namespace=L.LONGHORN_NS)
-                    for s in ("rwx-volume-fast-failover", "storage-network", "storage-network-for-rwx-volume-enabled")}
-        can = {w: self.kube.read(["auth", "can-i", *w.split()], ns=False).out.strip() for w in
-               ("create namespaces", f"create persistentvolumeclaims -n {self.ns}", f"create pods -n {self.ns}",
-                "delete namespaces")}
-        if can["create namespaces"].startswith("no"):
-            self.stop(t, "not permitted to create namespaces")
+        lnodes = self.need(t, "Longhorn node list", ["get", "nodes.longhorn.io"], is_list=True, allow_empty=False, ns=False,
+                           namespace=L.LONGHORN_NS)
+        for n in lnodes["items"]:
+            for cond in ("Ready", "Schedulable"):
+                if _cond(n, cond) != "True":
+                    self.stop(t, f"Longhorn node {self.san.alias(n['metadata']['name'])} condition {cond} is {_cond(n, cond)!r}")
+            if _cond(n, "NFSClientInstalled") not in (None, "True"):
+                self.stop(t, f"Longhorn node {self.san.alias(n['metadata']['name'])} NFSClientInstalled={_cond(n, 'NFSClientInstalled')!r}")
+        existing_sm = self.need(t, "ShareManager list", ["get", "sharemanagers.longhorn.io"], is_list=True, ns=False, namespace=L.LONGHORN_NS)
+        settings = {}
+        for sname in ("rwx-volume-fast-failover", "storage-network", "storage-network-for-rwx-volume-enabled"):
+            st = self.kube.read_state(["get", "settings.longhorn.io", sname], kind="Setting", name=sname, ns=False, namespace=L.LONGHORN_NS)
+            if st.state == L.UNKNOWN or (st.state == L.ABSENT and sname == "rwx-volume-fast-failover"):
+                self.stop(t, f"Longhorn setting {sname} unreadable or missing: {st.reason}")
+            settings[sname] = (st.data or {}).get("value") if st.state == L.PRESENT else "not-present-in-this-version"
+        can = {}
+        for w in ("create namespaces", f"create persistentvolumeclaims -n {self.ns}", f"create pods -n {self.ns}", "delete namespaces"):
+            r = self.kube.read(["auth", "can-i", *w.split()], ns=False)
+            can[w] = r.out.strip()
+            if can[w] != "yes":
+                self.stop(t, f"permission check `{w}` did not return 'yes' ({can[w]!r}, rc={r.rc})")
         self.base_herdr = self.herdr_now()
         if not self.base_herdr:
             self.stop(t, "live Herdr pod baseline unreadable (read-only get failed)")
-        hp = self.rj(["get", "pod", self.herdr_pod], ns=False, namespace=self.herdr_ns)
+        hp = herdr_pods["items"][0]
         snap = dict(
-            server_version=L.parse_probe_output(ver.out.replace("\n", " ")).get("serverVersion", {}).get("gitVersion"),
+            server_version=ver["serverVersion"]["gitVersion"],
             nodes=[dict(name=self.san.alias(n["metadata"]["name"]),
                         kubelet=n["status"]["nodeInfo"].get("kubeletVersion"), os=n["status"]["nodeInfo"].get("osImage"),
                         kernel=n["status"]["nodeInfo"].get("kernelVersion")) for n in nodes["items"]],
             storageclass=dict(provisioner=sc.get("provisioner"), reclaim=sc.get("reclaimPolicy"),
                               binding=sc.get("volumeBindingMode"), parameters=sc.get("parameters"),
                               allow_expansion=sc.get("allowVolumeExpansion")),
-            csidriver=dict(fsGroupPolicy=(csid or {}).get("spec", {}).get("fsGroupPolicy"),
-                           attachRequired=(csid or {}).get("spec", {}).get("attachRequired")),
+            csidriver=dict(fsGroupPolicy=csid.get("spec", {}).get("fsGroupPolicy"), attachRequired=csid.get("spec", {}).get("attachRequired")),
             longhorn=dict(volumes=len(self.base_vols), by_robustness=_count([r for _, r in self.base_vols.values()]),
                           nodes=[dict(ready=_cond(n, "Ready"), schedulable=_cond(n, "Schedulable"),
-                                      nfs_client=_cond(n, "NFSClientInstalled"))
-                                 for n in (lnodes or {}).get("items", [])],
-                          existing_share_managers=len((existing_sm or {}).get("items", [])),
-                          settings={k: ((v or {}).get("value") if v and "__error__" not in v else "unreadable")
-                                    for k, v in settings.items()},
-                          pods=len(lpods.get("items", []))),
+                                      nfs_client=_cond(n, "NFSClientInstalled")) for n in lnodes["items"]],
+                          existing_share_managers=len(existing_sm["items"]), settings=settings, pods=len(lpods["items"])),
             auth=can,
             herdr=dict(uid_prefix=(self.base_herdr["uid"] or "")[:8], restarts=self.base_herdr["restarts"],
-                       ready=pod_ready(hp), image_id=[c.get("imageID", "") for c in (hp or {}).get("status", {})
-                                                      .get("containerStatuses", [])]),
+                       ready=pod_ready(hp), image_id=[c.get("imageID", "") for c in hp.get("status", {}).get("containerStatuses", [])]),
             identity=dict(expected_longhorn_manager_tag=self.expect_longhorn, observed_tags=tags, herdr_namespace=self.herdr_ns,
                           herdr_pod_count=len(herdr_pods["items"]), herdr_node=self.san.alias(self.herdr_node),
                           candidate_nodes_excluding_herdr=[self.san.alias(n) for n in cand],
                           utc_now=self.clock().strftime("%Y-%m-%dT%H:%MZ"),
                           maintenance_window_utc=[f"{h:02d}:{m:02d}" for h, m in L.MAINT_WINDOW],
-                          upgrade_crds_checked=getattr(self, "_upgrade_crs_seen", [])),
-            scratch=dict(namespace=self.ns, image=L.IMAGE))
+                          upgrade_crds_checked=getattr(self, "_upgrade_crs_seen", []),
+                          upgrade_cr_phases_observed=getattr(self, "_upgrade_phases", []),
+                          idle_phases_accepted=list(L.UPGRADE_IDLE_PHASES)),
+            scratch=dict(namespace=self.ns, image=L.IMAGE, network_policy=self.network_policy))
         self.ev.write("preflight.json", snap)
-        self.res.rec(t, "PASS", f"read-only baseline captured: {len(sched)} schedulable nodes, longhorn "
+        self.res.rec(t, "PASS", f"read-only baseline captured: {len(cand)} candidate nodes, longhorn "
                                 f"{snap['longhorn']['volumes']} volumes healthy, identity ok (longhorn-manager {tags}), class {L.STORAGE_CLASS} reclaim Delete, "
-                                f"fsGroupPolicy={snap['csidriver']['fsGroupPolicy']}, herdr baseline recorded")
+                                f"fsGroupPolicy={snap['csidriver']['fsGroupPolicy']}, upgrade CR phases {snap['identity']['upgrade_cr_phases_observed']}, "
+                                "herdr baseline recorded")
 
     # ------------------------------------------------------------------ R01
     def create_resources(self):
@@ -373,34 +433,44 @@ class Runner:
 
     # ------------------------------------------------------------------ R02 (stop gate)
     def r02(self):
+        """Positive filesystem/identity gate on BOTH pods. Nothing after R02 runs unless every assertion holds on both pods;
+        unparseable probe output is a failure, never a pass. No remedy is attempted (no privilege change, no class change)."""
         t = "R02"
-        per = {}
+        per, problems = {}, []
         for w in ("a", "b"):
             per[w] = dict(identity=self.px(w, "identity", label=f"r02-identity-{w}"),
                           mount=self.px(w, "mountinfo", L.MOUNT, label=f"r02-mountinfo-{w}"),
                           gate=self.px(w, "writegate", L.MOUNT, label=f"r02-gate-{w}"))
-        for w in ("a", "b"):
-            ok, reasons = L.evaluate_gate(per[w]["gate"])
-            if not ok:
-                self.res.rec(t, "FAIL", f"UID 1000 gate failed on pod {w}: {reasons}")
-                self.stop(t, f"write gate failed on pod {w}: {'; '.join(reasons)}. NOT escalating privileges")
+            i_ok, i_why = L.evaluate_identity(per[w]["identity"])
+            m_ok, m_why, mfacts = L.evaluate_mount(per[w]["mount"])
+            g_ok, g_why = L.evaluate_gate(per[w]["gate"])
+            for key, name, ok, why in (("identity", "identity/security", i_ok, i_why), ("nfsv4", "NFSv4 mount", m_ok, m_why),
+                                       ("gate", "UID 1000 write + git smoke gate", g_ok, g_why)):
+                self.res.rec(f"R02-{w}-{key}", "PASS" if ok else "FAIL", f"pod {w}: {name}: " + ("ok" if ok else "; ".join(why)))
+                if not ok:
+                    problems.append(f"pod {w} {name}: {'; '.join(why)}")
+            per[w]["mfacts"] = mfacts
+        if not problems:
+            src = {w: per[w]["mfacts"].get("source") for w in per}
+            if src["a"] != src["b"]:
+                problems.append("the two pods are not mounted from the same NFS export (sources differ)")
+        if problems:
+            self.stop(t, "positive R02 gate failed (NOT escalating privileges, no workaround): " + " | ".join(problems))
         m = per["a"]["mount"]
         fsg = m.get("fsgroup_observation", {})
-        same = (per["a"]["mount"].get("nfs_options") == per["b"]["mount"].get("nfs_options"))
-        self.res.rec("R02a", "INFO", f"mount fstype={m.get('mount', {}).get('fstype')} options={m.get('nfs_options')} "
-                                     f"same_on_both_pods={same}")
+        self.res.rec("R02a", "INFO", f"mount a={per['a']['mfacts']} b={per['b']['mfacts']}")
         self.res.rec("R02b", "INFO", f"fsGroup 1000 applied to root gid? {fsg.get('applied')} (root gid={fsg.get('root_gid')}, "
                                      f"setgid={fsg.get('setgid_bit')}); root mode={oct(m['root_stat']['mode'])} "
                                      f"uid={m['root_stat']['uid']}")
         idt = per["a"]["identity"]
-        ok = idt.get("uid") == 1000 and idt.get("no_new_privs") == "1" and set((idt.get("cap_eff") or "0").strip("0")) <= {""}
-        self.res.rec("R02c", "PASS" if ok else "FAIL", f"identity uid={idt.get('uid')} gid={idt.get('gid')} groups={idt.get('groups')} "
-                                                       f"NoNewPrivs={idt.get('no_new_privs')} CapEff={idt.get('cap_eff')} seccomp={idt.get('seccomp')}")
+        self.res.rec("R02c", "INFO", f"groups={idt.get('groups')} seccomp={idt.get('seccomp')} (2 = filter, from RuntimeDefault)")
         mk = self.px("a", "mkwork", L.MOUNT, label="r02-mkwork")
         vis = self.px("b", "statinfo", L.WORK, label="r02-work-visible-from-b")
-        self.res.rec(t, "PASS" if mk.get("ok") and vis.get(L.WORK) else "FAIL",
-                     "UID 1000 create/write/fsync/rename/mkdir/symlink/unlink at the RWX root passed on both pods "
-                     f"(gate); work tree created by A visible from B: {bool(vis.get(L.WORK))}")
+        if not (mk.get("ok") and vis.get(L.WORK)):
+            self.stop(t, f"work tree created by A not visible from B (mkwork ok={mk.get('ok')}); not the same filesystem")
+        self.res.rec(t, "PASS", "both pods: uid/gid 1000, NoNewPrivs, no capabilities; /rwx is an NFSv4.1+ mount of the same export; "
+                                "files owned numerically by 1000; create/write/fsync/rename/mkdir/symlink/unlink and the non-root git "
+                                "init/clone/commit/fsck smoke passed; work tree created by A visible from B")
 
     # ------------------------------------------------------------------ R03
     def pp(self, writer, reader, mode, kind, n, timeout):
@@ -668,7 +738,7 @@ class Runner:
         held = first.get("event") == "HELD"
         sha_b = self.px("b", "posixedges", f"{L.WORK}/scratch/r12edges", "r12").get("mmap_sha256")
         before = {w: self.px(w, "fsck", f"{WS}/h1").get("ok") for w in ("a", "b")}
-        old_uid = self.rj(["get", "pod", PODS["b"]])["metadata"]["uid"]
+        old_uid = self.need(t, "pod rwx-b", ["get", "pod", PODS["b"]], kind="Pod", name=PODS["b"])["metadata"]["uid"]
         hb = threading.Thread(target=lambda: self._hb(L.WORK + "/scratch/r12-hb-a", HEARTBEAT_S))
         hb.start()
         time.sleep(3)
@@ -720,19 +790,24 @@ class Runner:
             self.rr("a", "h1", f"file://{SRC}/h1.git")
 
     def attach(self):
-        """Rebuild state from an existing run namespace (read-only): PV, node placement; fresh Herdr/volume baseline."""
+        """Rebuild state from an existing run namespace (read-only): PV, node placement; fresh Herdr/volume baseline.
+        Fail closed: anything unreadable stops."""
         self.kube.guard_labels("namespace", self.ns)
-        pvc = self.rj(["get", "pvc", L.PVC_NAME])
-        if not pvc or "__error__" in pvc:
-            raise StopRun("attach: scratch PVC not found")
+        pvc = self.need("attach", "scratch PVC", ["get", "pvc", L.PVC_NAME], kind="PersistentVolumeClaim", name=L.PVC_NAME)
         self.pv = pvc["spec"].get("volumeName")
+        if not self.pv:
+            self.stop("attach", "scratch PVC has no bound volume")
         for w in ("a", "b"):
-            pj = self.rj(["get", "pod", PODS[w]])
-            if pj and "__error__" not in pj:
-                self.nodes[w] = pj["spec"].get("nodeName")
+            t = self.kube.read_state(["get", "pod", PODS[w]], kind="Pod", name=PODS[w])
+            if t.state == L.UNKNOWN:
+                self.stop("attach", f"pod {PODS[w]} unreadable: {t.reason}")
+            if t.state == L.PRESENT:
+                self.nodes[w] = t.data["spec"].get("nodeName")
                 self.san.add_node(self.nodes[w])
         self.created = True
         self.base_herdr, self.base_vols = self.herdr_now(), self.vols_now()
+        if self.base_herdr is None or self.base_vols is None:
+            self.stop("attach", "Herdr or Longhorn baseline unreadable")
 
     def _hb(self, path, seconds):
         self._hb_result = self.px("a", "heartbeat", path, seconds, timeout=seconds + 120)
@@ -814,15 +889,19 @@ class Runner:
                     self.collect("final")
                 except Exception as e:  # noqa: BLE001
                     log(f"collect failed: {e}")
-                cleanup_rc = self.cleanup()
+                try:
+                    cleanup_rc = self.cleanup()
+                except Exception as e:  # noqa: BLE001
+                    self.res.rec("R14", "FAIL", f"UNVERIFIED: cleanup raised {type(e).__name__}: {e}")
+                    cleanup_rc = L.EXIT_UNVERIFIED
         self.ev.write("results.tsv", self.res.tsv())
         self.ev.write("timings.tsv", "step\tseconds\n" + "".join(f"{a}\t{b}\n" for a, b in self.timings))
         self.ev.write("commands.txt", "\n".join(self.kube.trace))
         self.ev.write("summary.json", dict(run_id=self.run_id, image=L.IMAGE, stop=stop_reason, counts=self.res.counts(),
                                            failed=self.res.failed(), withheld=self.ev.withheld, cleanup_rc=cleanup_rc,
                                            request_repo_sha256=hashlib.sha256(self.rr_src.encode()).hexdigest()))
-        if cleanup_rc in (4, 5):
-            return cleanup_rc                      # cleanup refused / residue: owner action required
+        if cleanup_rc in (L.EXIT_REFUSED, L.EXIT_RESIDUE, L.EXIT_UNVERIFIED):
+            return cleanup_rc                      # cleanup refused / residue / unverified: owner action required
         return 3 if stop_reason else (1 if self.res.failed() else 0)
 
 
@@ -859,7 +938,9 @@ OFFLINE_CLEANUP_STEPS = """\
      live Herdr UID/restarts and other Longhorn volumes unchanged. Residue is reported, never deleted by the harness."""
 
 def run_cleanup(kube, ev, res, pv, base_herdr, base_vols, herdr_ns, herdr_pod, sleep=time.sleep):
-    """Plan from read-only inventory; print every command; delete only when kube.execute; verify read-only."""
+    """Plan from read-only inventory; print every command; delete only when kube.execute; verify read-only, FAIL CLOSED.
+    Exit codes: 0 clean, 4 refused (labels/kinds), 5 residue (objects remain or a delete failed/timed out),
+    6 UNVERIFIED (some object could not be positively shown absent), 7 objects gone but Herdr/other volumes changed."""
     ns, run_id = kube.ns, kube.run_id
     if not kube.live:
         text = "\n".join([f"cleanup plan (offline) for run-id {run_id}:"] + OFFLINE_CLEANUP_STEPS.format(ns=ns).splitlines())
@@ -867,17 +948,25 @@ def run_cleanup(kube, ev, res, pv, base_herdr, base_vols, herdr_ns, herdr_pod, s
         ev.write("cleanup/plan.txt", text)
         res.rec("R14", "SKIP", "offline dry run: nothing read, nothing deleted")
         return 0
-    ns_obj = kube.read_json(["get", "namespace", ns], ns=False)
-    if not_found(ns_obj):
+    ns_t = kube.read_state(["get", "namespace", ns], kind="Namespace", name=ns, ns=False)
+    unreadable = None
+    if ns_t.state == L.ABSENT:
         plan = L.plan_cleanup([], None, run_id)
-    elif ns_obj is None or "__error__" in ns_obj:
-        plan = dict(refusals=[f"namespace unreadable: {(ns_obj or {}).get('__error__')}"], deletes=[], delete_ns=False, note="")
+    elif ns_t.state == L.UNKNOWN:
+        unreadable = f"namespace unreadable: {ns_t.reason}"
     else:
-        invj = kube.read_json(["get", INV_KINDS])
-        if invj is None or "__error__" in invj:
-            plan = dict(refusals=[f"inventory unreadable: {(invj or {}).get('__error__')}"], deletes=[], delete_ns=False, note="")
-        else:
-            plan = L.plan_cleanup(inventory_from(invj), ns_obj, run_id)
+        inv_t = kube.read_state(["get", INV_KINDS], is_list=True)
+        try:
+            if inv_t.state == L.UNKNOWN:
+                unreadable = f"inventory unreadable: {inv_t.reason}"
+            else:
+                plan = L.plan_cleanup(inventory_from(inv_t.data or {"items": []}), ns_t.data, run_id)
+        except (KeyError, TypeError, AttributeError) as e:
+            unreadable = f"inventory malformed: {type(e).__name__}: {e}"
+    if unreadable:
+        ev.write("cleanup/plan.txt", f"cleanup plan for run-id {run_id}: UNVERIFIED, {unreadable}")
+        res.rec("R14", "FAIL", f"UNVERIFIED: {unreadable}; nothing deleted")
+        return L.EXIT_UNVERIFIED
     lines = ["cleanup plan for run-id " + run_id + " in " + ns + ":"]
     lines += [f"  REFUSE: {r}" for r in plan["refusals"]]
     lines += [f"  delete {k}/{n}" for k, n in plan["deletes"]]
@@ -889,14 +978,20 @@ def run_cleanup(kube, ev, res, pv, base_herdr, base_vols, herdr_ns, herdr_pod, s
     ev.write("cleanup/plan.txt", text)
     if plan["refusals"]:
         res.rec("R14", "FAIL", f"cleanup REFUSED (nothing deleted): {plan['refusals']}")
-        return 4
+        return L.EXIT_REFUSED
     if not kube.execute:
         res.rec("R14", "SKIP", "dry-run: cleanup plan printed, nothing deleted (use --execute --confirm-run-id)")
         return 0
-    # identify PV / Longhorn volume before deleting anything
-    if pv is None:
-        pvc = kube.read_json(["get", "pvc", L.PVC_NAME])
-        pv = (pvc or {}).get("spec", {}).get("volumeName") if pvc and "__error__" not in pvc else None
+    # establish the PV / Longhorn volume name BEFORE deleting anything (the PVC is the only link to it)
+    names, name_known = set(), False
+    if pv:
+        names.add(pv)
+        name_known = True
+    pvc_t = kube.read_state(["get", "pvc", L.PVC_NAME], kind="PersistentVolumeClaim", name=L.PVC_NAME)
+    if pvc_t.state == L.PRESENT:
+        name_known = True                      # a PVC that never bound has no volume: positively nothing to look for
+        if (pvc_t.data.get("spec") or {}).get("volumeName"):
+            names.add(pvc_t.data["spec"]["volumeName"])
     residue = None
     try:
         for kind, name in plan["deletes"]:
@@ -905,65 +1000,135 @@ def run_cleanup(kube, ev, res, pv, base_herdr, base_vols, herdr_ns, herdr_pod, s
                 residue = f"{kind}/{name} did not disappear within {L.TIMEOUTS['pod_delete']}s (rc={d.rc}: {d.err.strip()[-120:]})"
                 break                      # later deletes would only wait on it (pvc-protection); do not escalate
         if residue is None and plan["delete_ns"]:
-            kube.delete("namespace", ns)
+            d = kube.delete("namespace", ns)
+            if d.rc != 0:
+                residue = f"namespace/{ns} delete request failed (rc={d.rc}: {d.err.strip()[-120:]})"
     except L.Refused as e:
         residue = f"cleanup guard refused: {e}"
+    except Exception as e:  # noqa: BLE001  outcome of a delete is unknown: never report it as cleaned up
+        residue = f"delete outcome unknown: {type(e).__name__}: {e}"
     if residue:
-        left = kube.read_json(["get", INV_KINDS]) or {}
-        pending = [f"{i['kind']}/{i['metadata']['name']}" + (" (Terminating)" if i["metadata"].get("deletionTimestamp") else "")
-                   for i in left.get("items", []) if i["kind"] in ("Pod", "PersistentVolumeClaim", "NetworkPolicy")]
-        ev.write("cleanup/residue.json", dict(reason=residue, remaining=pending))
-        res.rec("R14", "FAIL", f"RESIDUE: {residue}; remaining={pending}. OWNER ACTION REQUIRED: the harness never uses --force, "
-                               "--grace-period=0 or finalizer edits, and never touches PV/Longhorn/VolumeAttachment objects")
+        facts = _cleanup_facts(kube, ns, names, name_known)
+        v = L.verify_cleanup(facts)
+        ev.write("cleanup/residue.json", dict(reason=residue, verdict=v["verdict"], present=v["present"], unknown=v["unknown"]))
+        res.rec("R14", "FAIL", f"RESIDUE: {residue}; present={v['present']} unknown={v['unknown']}. OWNER ACTION REQUIRED: the harness never "
+                               "uses --force, --grace-period=0 or finalizer edits, and never touches PV/Longhorn/VolumeAttachment objects")
         log("RESIDUE reported to the owner; nothing was forced.")
-        return 5
-    # read-only verification: never delete a PV, Longhorn object or VolumeAttachment ourselves
-    facts, waited = {}, 0
+        return L.EXIT_RESIDUE
+    try:
+        return _verify_and_conclude(kube, ev, res, ns, names, name_known, pv, base_herdr, base_vols, herdr_ns, herdr_pod, sleep)
+    except Exception as e:  # noqa: BLE001  ANY failure while verifying is UNVERIFIED (exit 6), never CLEAN and never a traceback
+        ev.write("cleanup/verify.json", dict(verdict="UNVERIFIED", exception=f"{type(e).__name__}: {e}", volume_names=sorted(names)))
+        res.rec("R14", "FAIL", f"UNVERIFIED: verification raised {type(e).__name__}: {e}; not claiming cleanup")
+        return L.EXIT_UNVERIFIED
+
+
+def _verify_and_conclude(kube, ev, res, ns, names, name_known, pv, base_herdr, base_vols, herdr_ns, herdr_pod, sleep):
+    # read-only verification: never delete a PV, Longhorn object or VolumeAttachment ourselves. The LAST poll decides:
+    # an UNKNOWN is never promoted to ABSENT by polling.
     t0 = time.monotonic()
     while True:
-        facts = _cleanup_facts(kube, ns, pv)
-        fails = L.verify_cleanup(facts)
-        if not fails or time.monotonic() - t0 > L.TIMEOUTS["cleanup"]:
+        facts = _cleanup_facts(kube, ns, names, name_known)
+        v = L.verify_cleanup(facts)
+        if v["verdict"] == "CLEAN" or time.monotonic() - t0 > L.TIMEOUTS["cleanup"]:
             break
         sleep(5)
     waited = round(time.monotonic() - t0, 1)
+    # invariants: Herdr and unrelated volumes. With a baseline they must be positively readable and unchanged.
+    inv_unknown, inv_stops, inv_infos = [], [], []
     herdr_same = None
-    if base_herdr is not None:
-        now = L.herdr_facts(kube.read_json(["get", "pod", herdr_pod], ns=False, namespace=herdr_ns))
-        herdr_same = now == base_herdr
-    vols_now = L.longhorn_volume_states(kube.read_json(["get", "volumes.longhorn.io"], ns=False, namespace=L.LONGHORN_NS))
-    stops, infos = L.check_invariants(base_herdr, L.herdr_facts(kube.read_json(["get", "pod", herdr_pod], ns=False, namespace=herdr_ns)) if base_herdr else None,
-                                      base_vols, vols_now, scratch_volume=pv)
-    ev.write("cleanup/verify.json", dict(facts=facts, failures=fails, waited_s=waited, herdr_unchanged=herdr_same,
-                                         invariant_stops=stops, invariant_infos=infos, pv=bool(pv)))
-    ok = not fails and not stops
+    if base_herdr is not None or base_vols is not None:
+        now_h, now_v = (None, None)
+        try:
+            t_h = kube.read_state(["get", "pod", herdr_pod], kind="Pod", name=herdr_pod, ns=False, namespace=herdr_ns)
+            now_h = L.herdr_facts(t_h.data) if t_h.state == L.PRESENT else None
+            t_v = kube.read_state(["get", "volumes.longhorn.io"], is_list=True, ns=False, namespace=L.LONGHORN_NS)
+            now_v = L.longhorn_volume_states(t_v.data or {"items": []}) if t_v.state != L.UNKNOWN else None
+        except (ValueError, KeyError, TypeError):
+            now_v = None
+        if base_herdr is not None and now_h is None:
+            inv_unknown.append("live Herdr pod unreadable")
+        if base_vols is not None and now_v is None:
+            inv_unknown.append("Longhorn volume inventory unreadable")
+        if not inv_unknown:
+            inv_stops, inv_infos = L.check_invariants(base_herdr, now_h, base_vols, now_v, scratch_volume=pv or next(iter(names), None))
+            herdr_same = now_h == base_herdr
+    else:
+        inv_infos.append("no baseline available (standalone cleanup): Herdr/other volumes not compared")
+    ev.write("cleanup/verify.json", dict(
+        facts={k: dict(state=t.state, reason=t.reason) for k, t in facts.items()}, verdict=v["verdict"], present=v["present"],
+        unknown=v["unknown"], waited_s=waited, herdr_unchanged=herdr_same, invariant_unknown=inv_unknown, invariant_stops=inv_stops,
+        invariant_infos=inv_infos, volume_names=sorted(names)))
+    if v["verdict"] == "RESIDUE":
+        res.rec("R14", "FAIL", f"RESIDUE after {waited}s: {v['present']} (unknown: {v['unknown']}). OWNER ACTION REQUIRED; nothing is forced")
+        return L.EXIT_RESIDUE
+    if v["verdict"] == "UNVERIFIED" or inv_unknown:
+        res.rec("R14", "FAIL", f"UNVERIFIED after {waited}s (fail closed): unknown={v['unknown']} {inv_unknown}; not claiming cleanup")
+        return L.EXIT_UNVERIFIED
+    ok = not inv_stops
     res.rec("R14", "PASS" if ok else "FAIL",
-            f"guarded cleanup; verified read-only after {waited}s: {'all scratch objects gone (namespace, PVC, PV, Longhorn volume, share-manager pod/CR/Service, VolumeAttachment)' if not fails else 'REMAINING: ' + '; '.join(fails)}; "
-            f"Herdr unchanged={herdr_same}; other volumes ok={not stops}")
-    if fails:
-        log("Residual objects were NOT deleted by this harness (PV, Longhorn and VolumeAttachment objects are never modified). Owner action required.")
-    return 5 if fails else 0       # 5 = residue only; an invariant failure is already reported in R14 and the stop reason
+            f"guarded cleanup; every scratch object positively ABSENT after {waited}s (namespace, PVC, PV, Longhorn volume, share-manager "
+            f"pod/CR/Service, VolumeAttachment); Herdr unchanged={herdr_same}; other volumes ok={not inv_stops} {inv_stops}")
+    return 0 if ok else 7
 
 
-def _cleanup_facts(kube, ns, pv):
-    def present(args, **kw):
-        j = kube.read_json(args, **kw)
-        return j is not None and not not_found(j) and "__error__" not in j
-    facts = dict(namespace_present=present(["get", "namespace", ns], ns=False))
-    facts["pvc_present"] = present(["get", "pvc", L.PVC_NAME]) if facts["namespace_present"] else False
-    lh = dict(ns=False, namespace=L.LONGHORN_NS)
-    vols = kube.read_json(["get", "volumes.longhorn.io"], **lh) or {}
-    by_ns = [i["metadata"]["name"] for i in vols.get("items", [])
-             if (i.get("status", {}).get("kubernetesStatus") or {}).get("namespace") == ns]
-    names = set(by_ns) | ({pv} if pv else set())
-    facts["pv_present"] = any(present(["get", "pv", n], ns=False) for n in names)
-    facts["longhorn_volume_present"] = any(present(["get", "volumes.longhorn.io", n], **lh) for n in names)
-    facts["share_manager_pod_present"] = any(
-        (kube.read_json(["get", "pods", "-l", f"longhorn.io/share-manager={n}"], **lh) or {}).get("items") for n in names)
-    facts["share_manager_cr_present"] = any(present(["get", "sharemanagers.longhorn.io", n], **lh) for n in names)
-    facts["share_manager_service_present"] = any(present(["get", "service", n], **lh) for n in names)
-    va = kube.read_json(["get", "volumeattachments.storage.k8s.io"], ns=False) or {}
-    facts["volume_attachment_present"] = any(i.get("spec", {}).get("source", {}).get("persistentVolumeName") in names
-                                             for i in va.get("items", []))
+def _cleanup_facts(kube, ns, names, name_known):
+    """item -> Tri for everything the scratch PVC could have left behind. Reads only; fail closed (UNKNOWN stays UNKNOWN)."""
+    rs, lh = kube.read_state, dict(ns=False, namespace=L.LONGHORN_NS)
+    facts = {"namespace": rs(["get", "namespace", ns], kind="Namespace", name=ns, ns=False),
+             "pvc": rs(["get", "pvc", L.PVC_NAME], kind="PersistentVolumeClaim", name=L.PVC_NAME)}
+    names = set(names)
+
+    def listed(args, match, **kw):
+        """List read + match. Every item must be an object with metadata.name; anything else makes the whole answer UNKNOWN."""
+        t = rs(args, is_list=True, **kw)
+        if t.state == L.UNKNOWN:
+            return t, set()
+        items = (t.data or {}).get("items", [])
+        try:
+            names_ = [(i.get("metadata") or {}).get("name") for i in items]
+            if not all(isinstance(n_, str) and n_ for n_ in names_):
+                return Tri(UNKNOWN, None, "unexpected schema: list item without metadata.name"), set()
+            hits = [n_ for i, n_ in zip(items, names_, strict=True) if match(i)]
+        except (AttributeError, KeyError, TypeError) as e:
+            return Tri(UNKNOWN, None, f"unexpected schema in list item: {type(e).__name__}: {e}"), set()
+        return (Tri(PRESENT, None, f"listed: {hits}") if hits else Tri(ABSENT, None, "no match in a readable list")), set(hits)
+
+    pv_list, pv_hits = listed(["get", "pv"], lambda i: ((i.get("spec") or {}).get("claimRef") or {}).get("namespace") == ns
+                              or i["metadata"]["name"] in names, ns=False)
+    lv_list, lv_hits = listed(["get", "volumes.longhorn.io"],
+                              lambda i: ((i.get("status") or {}).get("kubernetesStatus") or {}).get("namespace") == ns
+                              or (i.get("metadata") or {}).get("name") in names, **lh)
+    names |= pv_hits | lv_hits
+    facts["pv"] = L.combine(pv_list, *[rs(["get", "pv", n], kind="PersistentVolume", name=n, ns=False) for n in sorted(names)])
+    facts["longhorn_volume"] = L.combine(lv_list, *[rs(["get", "volumes.longhorn.io", n], kind="Volume", name=n, **lh) for n in sorted(names)])
+    va = rs(["get", "volumeattachments.storage.k8s.io"], is_list=True, ns=False)
+    if va.state == L.UNKNOWN:
+        facts["volume_attachment"] = va
+    elif not (names or name_known):
+        facts["volume_attachment"] = Tri(UNKNOWN, None, "volume name never established")
+    else:
+        try:
+            vitems = (va.data or {}).get("items", [])
+            if not all(isinstance(i.get("spec"), dict) and isinstance(i["spec"].get("source"), dict) and (i.get("metadata") or {}).get("name")
+                       for i in vitems):
+                raise ValueError("VolumeAttachment item without metadata.name/spec.source")
+            hits = [i["metadata"]["name"] for i in vitems if i["spec"]["source"].get("persistentVolumeName") in names]
+            facts["volume_attachment"] = Tri(PRESENT, None, f"listed: {hits}") if hits else Tri(ABSENT, None, "no attachment for the volume")
+        except (AttributeError, KeyError, TypeError, ValueError) as e:
+            facts["volume_attachment"] = Tri(UNKNOWN, None, f"unexpected schema: {type(e).__name__}: {e}")
+    if not names and not name_known:
+        unk = Tri(UNKNOWN, None, "volume name never established: cannot look for its share-manager objects")
+        facts.update(share_manager_pod=unk, share_manager_cr=unk, share_manager_service=unk)
+    elif not names:
+        none = Tri(ABSENT, None, "PVC never bound: no volume, nothing to look for")
+        facts.update(share_manager_pod=none, share_manager_cr=none, share_manager_service=none)
+    else:
+        pod_t, cr_t, svc_t = [], [], []
+        for n in sorted(names):
+            pod_t += [rs(["get", "pod", f"share-manager-{n}"], kind="Pod", name=f"share-manager-{n}", **lh),
+                      rs(["get", "pods", "-l", f"longhorn.io/share-manager={n}"], is_list=True, **lh)]
+            cr_t.append(rs(["get", "sharemanagers.longhorn.io", n], kind="ShareManager", name=n, **lh))
+            svc_t.append(rs(["get", "service", n], kind="Service", name=n, **lh))
+        facts.update(share_manager_pod=L.combine(*pod_t), share_manager_cr=L.combine(*cr_t), share_manager_service=L.combine(*svc_t))
     return facts
-

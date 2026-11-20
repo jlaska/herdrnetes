@@ -16,10 +16,13 @@ Environment: KCTX (required when live; no default), RWX_NODE_SELECTOR=key=value 
 RWX_REDACT_EXTRA=comma,separated,literals (cluster name, domain, ...), HERDR_NS / HERDR_POD (live Herdr, read-only),
 RWX_EXPECT_LONGHORN (expected longhorn-manager image tag, default v1.13.0; cluster identity guard).
 Exit: 0 ok, 1 test failures, 2 usage, 3 stop condition (incl. suspected NFS hang; evidence collected, cleanup attempted),
-4 cleanup refused, 5 residue (owner action; nothing is ever forced).
+4 cleanup refused (labels/kinds), 5 residue (objects remain, or a delete failed/timed out; nothing is ever forced),
+6 cleanup UNVERIFIED (an object could not be positively shown absent: read error/timeout/malformed output; fail closed),
+7 cleanup verified but Herdr or an unrelated Longhorn volume changed.
 """
 import argparse
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -32,7 +35,10 @@ def add_common(p, need_run=True):
     p.add_argument("--live", action="store_true", help="contact the cluster read-only")
     p.add_argument("--execute", action="store_true", help="allow mutations (needs --confirm-run-id)")
     p.add_argument("--confirm-run-id", default=None)
-    p.add_argument("--network-policy", action="store_true", help="also apply the optional default-deny NetworkPolicy")
+    p.add_argument("--no-network-policy", dest="network_policy", action="store_false", default=True,
+                   help="opt OUT of the namespaced default-deny NetworkPolicy (applied by default per owner decision D-2)")
+    p.add_argument("--pv-name", default=None, help="cleanup only: PV/Longhorn volume name from earlier evidence (pvc-<uuid>), "
+                                                   "needed to verify share-manager objects when the PVC is already gone")
     p.add_argument("--evidence-dir", default=L.default_evidence_dir())
 
 
@@ -75,7 +81,8 @@ def cmd_plan(args):
     print("                required podAntiAffinity on kubernetes.io/hostname (different nodes, and NOT the live Herdr node); restartPolicy Never;")
     print("                uid/gid 1000, fsGroup 1000, drop ALL, seccomp RuntimeDefault,")
     print("                no SA token, read-only rootfs, emptyDir /tmp, no hostPath/hostNetwork/privileged, no init containers")
-    print(f"  0-1 NetworkPolicy default-deny-all   ({'enabled' if args.network_policy else 'OFF; enable with --network-policy'})")
+    print(f"  {'1' if args.network_policy else '0'} NetworkPolicy default-deny-all   "
+          f"({'enabled by default (owner decision D-2); the NFS mount is made by the kubelet/CSI on the node, tests need no pod egress' if args.network_policy else 'OFF (--no-network-policy)'})")
     print("Created by Kubernetes/Longhorn as a consequence (never touched by us): PV, VolumeAttachment(s); in longhorn-system: Longhorn")
     print("  volume, engine, 3 replicas, ShareManager CR, share-manager pod, Service/Endpoints named after the PV.\n")
     print("Mode flags: (none)=offline | --live=read-only | --execute --confirm-run-id <id>=mutations\n")
@@ -85,7 +92,7 @@ def cmd_plan(args):
     print("\nTest matrix:")
     for tid, title in L.MATRIX:
         print(f"  {tid}  {title}")
-    print("\nGuards before every test: cluster identity (R00), UTC maintenance window 06:30-08:30, nodes Ready/uncordoned, upgrade CRs idle,")
+    print("\nGuards before every test: cluster identity (R00), UTC maintenance window 06:30-10:30, nodes Ready/uncordoned, upgrade CRs idle,")
     print("scratch containers running with 0 restarts, Herdr UID/restarts, other Longhorn volumes, disk < 85%; any exec timeout = suspected NFS hang.")
     print("\nSequence: preflight -> namespace -> [netpol] -> PVC (wait Bound) -> pod A (wait Ready, share-manager Running) -> pod B (Ready,")
     print("different node) -> R02 UID 1000 gate (STOP on failure) -> R03..R13 -> collect -> guarded cleanup -> verify (R14)")
@@ -146,7 +153,7 @@ def cmd_create(args):
     except L.StopRun as e:
         L.log(f"STOP CONDITION: {e}")
         r.collect("stop")
-        r.cleanup()
+        safe_cleanup(r)
         rc = 3
     return finish(r, rc)
 
@@ -183,22 +190,30 @@ def cmd_recreate(args):
     except L.StopRun as e:
         L.log(f"STOP CONDITION: {e}")
         r.collect("stop")
-        r.cleanup()
+        safe_cleanup(r)
         return finish(r, 3)
     return finish(r, 1 if r.res.failed() else 0)
 
 
+def safe_cleanup(r):
+    """Cleanup that can never end in a traceback or a false clean: any exception is UNVERIFIED (exit 6)."""
+    try:
+        return r.cleanup()
+    except L.Refused as e:
+        L.log(f"REFUSED: {e}")
+        return L.EXIT_REFUSED
+    except Exception as e:  # noqa: BLE001
+        r.res.rec("R14", "FAIL", f"UNVERIFIED: cleanup raised {type(e).__name__}: {e}")
+        L.log(f"UNVERIFIED: cleanup raised {type(e).__name__}: {e}")
+        return L.EXIT_UNVERIFIED
+
+
 def cmd_cleanup(args):
+    if args.pv_name and not re.fullmatch(r"pvc-[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}", args.pv_name):
+        raise L.Refused("--pv-name must look like pvc-<uuid>")
     r = build(args)
-    if args.live or args.execute:
-        try:
-            r.pv = None
-            rc = r.cleanup()
-        except L.Refused as e:
-            L.log(f"REFUSED: {e}")
-            rc = 4
-    else:
-        rc = r.cleanup()
+    r.pv = args.pv_name
+    rc = safe_cleanup(r)
     finish(r)
     return rc
 

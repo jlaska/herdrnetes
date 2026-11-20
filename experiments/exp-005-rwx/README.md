@@ -11,18 +11,36 @@ option A5 in [docs/experiments/05-repository-storage.md](../../docs/experiments/
 optional scratch experiment. [ADR-0001](../../docs/decisions/ADR-0001-trusted-mvp.md) is **unchanged**; the trusted MVP keeps one
 shared RWO workspace PVC. Requirements touched: REQ-004, REQ-006, REQ-009, REQ-010 (see [requirements](../../docs/requirements.md)).
 
+**Execution is NOT approved.** The owner's review of the first PREPARE commit (PR #35, 2026-11-20) put execution on hold until three
+fail-closed code paths were corrected and covered by regression tests; this revision contains those corrections. A new explicit
+authorization (run id plus window) is still required before anything is created.
+
 Companion documents: [RESEARCH.md](RESEARCH.md) (documentation/issue research and the predictions it supports) and
 [PREFLIGHT.md](PREFLIGHT.md) (read-only preflight observations).
 
 Start with [PLAN.md](PLAN.md): exact resource inventory, the R00-R14 matrix, safe creation and guarded cleanup sequences,
 security controls, expected Longhorn share-manager side effects, stop conditions and open questions.
 
+## Owner decisions recorded (PR #35 review, 2026-11-20)
+
+Planning decisions only; **not an execution grant**. Full table in [PLAN.md](PLAN.md#owner-decisions-recorded-pr-35-review-2026-11-20).
+
+- Reuse the pinned EXP-005 image digest (D-1).
+- The namespaced default-deny NetworkPolicy is **enabled by default** (D-2); `--no-network-policy` opts out.
+- Run id `20261120a` is reserved as provisional; the execution date/window is **not approved** and follows review of this corrected code (D-3, D-9).
+- A failed UID-1000 write or non-root git-clone gate is a valid negative result: stop and record, no workaround (D-4).
+- Stop on degraded/faulted unrelated volumes only; an unreadable inventory is always a stop (D-5).
+- The 4 s R05 pause hook is accepted (D-6); sanitized evidence is committed only after independent review (D-7); the 1 GiB / 30-60 minute budget is accepted and hung pods are never force-cleaned (D-8).
+- The real tuppr phase vocabulary is verified in preflight; unknown, empty or active blocks (D-10). Only `Completed` is treated as idle, and both upgrade CRDs must be present with at least one object.
+
+Still open: execution date/window, the 06:30-10:30 UTC guard (stricter than D-9's 06:30-08:30 because PREFLIGHT records a 3 h tuppr window) and confirmation of the upgrade-CR vocabulary (PLAN §14). The NFS gate is exactly `vers=4.1`.
+
 ## Hypotheses (to be measured, not assumed)
 
 | ID | Hypothesis | Tests | Falsified by |
 | --- | --- | --- | --- |
 | H-RWX-1 | The existing `longhorn` class provisions a 1Gi RWX PVC with no new class or setting change; Longhorn creates a share-manager automatically; two pods on different nodes mount it. | R00, R01 | PVC not Bound, provisioning error, share-manager not Running, pods not schedulable on two nodes |
-| H-RWX-2 | With CSIDriver `fsGroupPolicy=ReadWriteOnceWithFSType`, `fsGroup: 1000` is **not** applied to the RWX volume, yet UID 1000 can create, write and rename at the export root, files it creates are owned by uid 1000, and a non-root `git clone` onto the volume works (Longhorn #10621 regression absent). | R02 | the write gate or git smoke fails (then the run STOPS; that is a valid result) |
+| H-RWX-2 | `/rwx` is an NFSv4.1+ mount on both pods. With CSIDriver `fsGroupPolicy=ReadWriteOnceWithFSType`, `fsGroup: 1000` is **not** applied to the RWX volume, yet UID 1000 can create, write and rename at the export root, files it creates are owned by uid 1000, and a non-root `git clone` onto the volume works (Longhorn #10621 regression absent). | R02 | the NFSv4 check, write gate or git smoke fails on either pod (then the run STOPS; that is a valid negative result) |
 | H-RWX-3 | Cross-node close-to-open semantics hold for new files and in-place updates seen through `open()`/`readdir`; `stat`-only polling of an absent name may lag (attribute cache). mmap+msync data and hardlink/symlink/atomic replace work; `O_APPEND` from two clients is **not** guaranteed atomic. | R03, R10 | timeouts or stale content through `open()`; mmap mismatch |
 | H-RWX-4 | Git clone/commit/fsck are consistent across nodes in sequential hand-off, and the unmodified EXP-005 `request-repo` works on the mount (Git's ownership check passes). | R04 | a stale or corrupt repo, fsck failure, "dubious ownership" |
 | H-RWX-5 | `request-repo`'s per-repo `flock` serialises hydration across nodes: 4+4 concurrent requests give 1 `hydrated`, 7 `already_ready`, `attempts=1`; different repos hydrate independently. | R05 | more than one clone, rc 4/6, fsck failure |
@@ -40,7 +58,7 @@ security controls, expected Longhorn share-manager side effects, stop conditions
 | --- | --- |
 | [PLAN.md](PLAN.md) | inventory, R00-R14 matrix, sequences, controls, stop conditions, open questions |
 | `manifests/` | `namespace.yaml`, `pvc.yaml`, `pod.yaml` (rendered for `rwx-a` and `rwx-b`), optional `networkpolicy.yaml`; `${RUN_ID}`/`${NAMESPACE}` templates |
-| `harness/rwx` | CLI (cluster identity, Herdr-node, maintenance-window and hang guards): `plan`, `preflight`, `create`, `run`, `collect`, `recreate`, `cleanup`, `sanitize`; offline dry run by default |
+| `harness/rwx` | CLI (cluster identity, Herdr-node, maintenance-window, hang guards; fail-closed reads and cleanup verification): `plan`, `preflight`, `create`, `run`, `collect`, `recreate`, `cleanup`, `sanitize`; offline dry run by default |
 | `harness/rwxlib.py` | guarded kubectl wrapper, mutation allow-list, invariants, cleanup planner, sanitizer, evidence writer |
 | `harness/scenarios.py` | orchestration of R00-R14 |
 | `harness/podprobe.py` | stdlib in-pod probes, streamed over `kubectl exec` stdin |
@@ -57,10 +75,11 @@ experiments/exp-005-rwx/tests/run-local.sh        # uv run --with pyyaml python 
 rwx plan                                          # prints what would be created; contacts nothing
 ```
 
-Local verification (2026-11-19, no cluster): `tests/run-local.sh` ran 138 tests, all OK (unit tests for the guards, sanitizer,
+Local verification (2026-11-20, no cluster): `tests/run-local.sh` ran 274 tests, all OK (138 of them fail-closed regressions in `tests/test_failclosed.py`, run alone with `uv run --with pyyaml python -m unittest discover -s tests -p test_failclosed.py`) (unit tests for the guards, sanitizer,
 manifests, cleanup planner and in-pod probes, plus an end-to-end simulation of R00-R14 and of the stop conditions against a
 simulated kubectl backed by local processes). `uvx ruff check` and `shellcheck` are clean. The simulation is not evidence about
-Longhorn/NFS behaviour; it only checks the harness logic.
+Longhorn/NFS behaviour; it only checks the harness logic. All test git invocations are hermetic (`GIT_CONFIG_GLOBAL=/dev/null`,
+`GIT_CONFIG_NOSYSTEM=1`; no signing key, SSH agent or user git configuration is ever used).
 
 Modes of every `rwx` subcommand: no flag = offline dry run (kubectl is never executed); `--live` = read-only cluster contact;
 `--execute --confirm-run-id <same id>` = mutations. Execution requires the owner's explicit go-ahead on the PR.

@@ -208,15 +208,15 @@ class TestEnvironmentGuards(unittest.TestCase):
     def test_window(self):
         from datetime import datetime, timezone
         f = lambda h, m: L.in_maintenance_window(datetime(2026, 1, 1, h, m, tzinfo=timezone.utc))  # noqa: E731
-        self.assertEqual([f(6, 29), f(6, 30), f(7, 0), f(8, 29), f(8, 30)], [False, True, True, True, False])
+        self.assertEqual([f(6, 29), f(6, 30), f(7, 0), f(10, 29), f(10, 30)], [False, True, True, True, False])
 
     def test_upgrade_crds_and_phases(self):
         crds = {"items": [{"metadata": {"name": "talosupgrades.tuppr.example"}}, {"metadata": {"name": "kubernetesupgrades.tuppr.example"}},
                           {"metadata": {"name": "volumes.longhorn.io"}}]}
         self.assertEqual(len(L.upgrade_crd_names(crds)), 2)
         self.assertEqual(L.upgrade_crd_names({"items": []}), [])
-        self.assertEqual(L.upgrade_stops([("c", "n", "Completed"), ("c", "n", None), ("c", "n", "Idle")]), [])
-        for ph in ("InProgress", "Pending", "Failed", "Upgrading", "weird"):
+        self.assertEqual(L.upgrade_stops([("c", "n", "Completed")]), [])
+        for ph in ("InProgress", "Pending", "Failed", "Upgrading", "weird", "", None, "Idle", "Ready"):   # only the observed 'Completed' is idle
             self.assertTrue(L.upgrade_stops([("c", "n", ph)]), ph)
 
     def pod(self, **kw):
@@ -266,28 +266,28 @@ class TestInvariants(unittest.TestCase):
         self.assertEqual(stops, [])
 
     def test_herdr_uid_or_restart_change_stops(self):
-        s, _ = L.check_invariants(self.H, {"uid": "u2", "restarts": self.H["restarts"]}, {}, {})
+        s, _ = L.check_invariants(self.H, {"uid": "u2", "restarts": self.H["restarts"]}, {"v": ("a", "healthy")}, {"v": ("a", "healthy")})
         self.assertTrue(any("UID" in x for x in s))
-        s, _ = L.check_invariants(self.H, {"uid": "u1", "restarts": {"herdr": 1, "ovis": 4}}, {}, {})
+        s, _ = L.check_invariants(self.H, {"uid": "u1", "restarts": {"herdr": 1, "ovis": 4}}, {"v": ("a", "healthy")}, {"v": ("a", "healthy")})
         self.assertTrue(any("restart" in x for x in s))
-        s, _ = L.check_invariants(self.H, None, {}, {})
+        s, _ = L.check_invariants(self.H, None, {"v": ("a", "healthy")}, {"v": ("a", "healthy")})
         self.assertTrue(s)
 
     def test_other_volume_degraded_stops_but_scratch_ignored(self):
         base = {"v1": ("attached", "healthy"), "scratch": ("detached", "unknown")}
-        s, _ = L.check_invariants(None, None, base, {"v1": ("attached", "degraded"), "scratch": ("attached", "degraded")}, "scratch")
+        s, _ = L.check_invariants(None, None, base, {"v1": ("attached", "degraded"), "scratch": ("attached", "degraded")}, "scratch", baseline_required=False)
         self.assertEqual(len(s), 1)
         self.assertIn("v1", s[0])
 
     def test_benign_robustness_transition_is_info(self):
-        s, i = L.check_invariants(None, None, {"v1": ("detached", "unknown")}, {"v1": ("attached", "healthy")})
+        s, i = L.check_invariants(None, None, {"v1": ("detached", "unknown")}, {"v1": ("attached", "healthy")}, baseline_required=False)
         self.assertEqual(s, [])
         self.assertTrue(i)
 
     def test_same_node_stops(self):
-        s, _ = L.check_invariants(None, None, {}, {}, nodes_a_b=("n1", "n1"))
+        s, _ = L.check_invariants(None, None, {}, {}, nodes_a_b=("n1", "n1"), baseline_required=False)
         self.assertTrue(s)
-        s, _ = L.check_invariants(None, None, {}, {}, nodes_a_b=("n1", "n2"))
+        s, _ = L.check_invariants(None, None, {}, {}, nodes_a_b=("n1", "n2"), baseline_required=False)
         self.assertEqual(s, [])
 
     def test_helpers(self):
@@ -301,8 +301,9 @@ class TestInvariants(unittest.TestCase):
 
 class TestGate(unittest.TestCase):
     def good(self):
-        return dict(uid=1000, gid=1000, steps={s: dict(ok=True) for s in ("create_write_fsync", "rename_file")},
-                    root_stat=dict(is_dir=True, uid=0, gid=0, mode=0o777))
+        steps = {s: dict(ok=True) for s in ("create_write_fsync", "rename_file", "mkdir_rename_dir", "git_smoke")}
+        steps["owner_is_caller"] = dict(ok=True, file_uid=1000, file_gid=1000)
+        return dict(uid=1000, gid=1000, steps=steps, root_stat=dict(is_dir=True, uid=0, gid=0, mode=0o777))
 
     def test_ok(self):
         self.assertEqual(L.evaluate_gate(self.good())[0], True)
@@ -375,96 +376,6 @@ class TestCleanupPlan(unittest.TestCase):
     def test_absent_namespace_is_noop(self):
         p = L.plan_cleanup([], None, RUN)
         self.assertEqual((p["refusals"], p["deletes"], p["delete_ns"]), ([], [], False))
-
-    def test_verify_cleanup(self):
-        self.assertEqual(L.verify_cleanup({}), [])
-        self.assertEqual(len(L.verify_cleanup({"pv_present": True, "longhorn_volume_present": True})), 2)
-
-
-class FakeCluster:
-    """Canned cluster for run_cleanup / Runner paths. Records mutations; objects vanish when deleted."""
-
-    def __init__(self, labelled=True):
-        lab = {L.EXP_LABEL: L.EXPERIMENT, L.RUN_LABEL: RUN} if labelled else {}
-        self.objs = {("pod", "rwx-a"): lab, ("pod", "rwx-b"): lab, ("persistentvolumeclaim", "rwx-scratch"): lab}
-        self.ns_present, self.calls, self.deleted = True, [], []
-        self.nslabels = lab
-
-    def __call__(self, argv, input=None, timeout=None):
-        self.calls.append(argv)
-        a = " ".join(argv)
-        if "delete" in argv:
-            kind, name = argv[argv.index("delete") + 1], argv[argv.index("delete") + 2]
-            self.deleted.append((kind, name))
-            self.objs.pop((kind, name), None)
-            if kind == "namespace":
-                self.ns_present = False
-            return L.CmdResult(0, "", "")
-        if "get namespace" in a:
-            if not self.ns_present:
-                return L.CmdResult(1, "", 'Error from server (NotFound): namespaces "x" not found')
-            return L.CmdResult(0, json.dumps({"metadata": {"name": NS, "labels": self.nslabels}}), "")
-        if " get pvc,pod," in a:
-            items = [{"kind": k.capitalize() if k != "persistentvolumeclaim" else "PersistentVolumeClaim", "metadata": {"name": n, "labels": lab}}
-                     for (k, n), lab in self.objs.items()]
-            return L.CmdResult(0, json.dumps({"items": items}), "")
-        if "get pvc rwx-scratch" in a:
-            return L.CmdResult(0, json.dumps({"spec": {"volumeName": "pvc-1"}, "metadata": {}}), "")
-        if "get pod herdr-0" in a:
-            return L.CmdResult(0, json.dumps({"metadata": {"uid": "h1"}, "status": {"containerStatuses": [{"name": "herdr", "restartCount": 0}]}}), "")
-        if "volumes.longhorn.io" in a and "pvc-1" not in a:
-            return L.CmdResult(0, json.dumps({"items": []}), "")
-        if "get " in a and (" pv " in a or "pvc-1" in a or "volumeattachments" in a or "sharemanagers" in a or "service" in a or "-l longhorn" in a):
-            if "volumeattachments" in a or "-l longhorn" in a:
-                return L.CmdResult(0, json.dumps({"items": []}), "")
-            return L.CmdResult(1, "", "Error from server (NotFound): not found")
-        if "get pod rwx" in a or "get persistentvolumeclaim" in a:
-            kind, name = argv[argv.index("get") + 1], argv[argv.index("get") + 2]
-            lab = self.objs.get((kind if kind != "pod" else "pod", name))
-            if lab is None:
-                return L.CmdResult(1, "", "Error from server (NotFound)")
-            return L.CmdResult(0, json.dumps({"metadata": {"name": name, "namespace": NS, "labels": lab}}), "")
-        return L.CmdResult(0, "{}", "")
-
-
-class TestRunCleanup(unittest.TestCase):
-    def go(self, execute, labelled=True):
-        fc = FakeCluster(labelled)
-        k = L.Kube("ctx-test", RUN, live=True, execute=execute, runner=fc, echo=lambda *_: None)
-        with tempfile.TemporaryDirectory() as d:
-            san = L.Sanitizer()
-            ev = L.Evidence(d, RUN, san)
-            res = L.Results(echo=lambda *_: None)
-            rc = S.run_cleanup(k, ev, res, None, None, None, "herdrnetes-exp", "herdr-0", sleep=lambda *_: None)
-        return fc, res, rc
-
-    def test_dry_run_deletes_nothing(self):
-        fc, res, rc = self.go(execute=False)
-        self.assertEqual(fc.deleted, [])
-        self.assertEqual(rc, 0)
-        self.assertEqual(res.rows[-1][1], "SKIP")
-
-    def test_execute_deletes_in_order_then_namespace(self):
-        fc, res, rc = self.go(execute=True)
-        self.assertEqual(fc.deleted, [("pod", "rwx-a"), ("pod", "rwx-b"), ("persistentvolumeclaim", "rwx-scratch"), ("namespace", NS)])
-        self.assertEqual(res.rows[-1][1], "PASS", res.rows[-1])
-        self.assertEqual(rc, 0)
-        for c in fc.calls:
-            self.assertNotIn("--force", c)
-            self.assertFalse(any(x.startswith("--grace-period") for x in c))
-            self.assertNotIn(L.LONGHORN_NS, c[c.index("-n") + 1] if "-n" in c and "delete" in c else "")
-
-    def test_refuses_when_unlabelled(self):
-        fc, res, rc = self.go(execute=True, labelled=False)
-        self.assertEqual(fc.deleted, [])
-        self.assertEqual(rc, 4)
-        self.assertEqual(res.rows[-1][1], "FAIL")
-
-    def test_no_mutation_outside_allowlist_ever(self):
-        fc, _, _ = self.go(execute=True)
-        for c in fc.calls:
-            if "delete" in c:
-                self.assertIn(c[c.index("delete") + 1], ("pod", "persistentvolumeclaim", "namespace"))
 
 
 class TestSanitizer(unittest.TestCase):
