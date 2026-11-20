@@ -1,0 +1,213 @@
+{
+ "run_id": "m4-20261118a",
+ "failures": 4,
+ "results": [
+  {
+   "test": "M4-baseline",
+   "status": "INFO",
+   "detail": "herdr-scratch-0 uid=2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount=0 node=<node-1> herdr_pid=7; live herdrnetes-exp/herdr-0 uid=a3542452-da5a-4b6e-bc12-12175e9a2f45 restarts=0 phase=Running"
+  },
+  {
+   "test": "M4-baseline-pid",
+   "status": "PASS",
+   "detail": "real herdr server process found (pid=7)"
+  },
+  {
+   "test": "M4-baseline-m2",
+   "status": "INFO",
+   "detail": "M2 pods (read-only): ws-m2r013149-a uid=ebd7b1b8-d927-4472-8b6c-770633f3c414 restarts=0 ready=yes; "
+  },
+  {
+   "test": "F06-setup",
+   "status": "PASS",
+   "detail": "worktrees /workspace/m1r010929-b-w1014249 and m1r010929-b-w2014249 added to m1r010929-b, commit in wt1 (raw/f06-setup.txt)"
+  },
+  {
+   "test": "F06",
+   "status": "FAIL",
+   "detail": "request-repo m1r010929-b-w1014249 <origin of m1r010929-b> rc=0 status=ready (want 4/conflict); worktree untouched=yes; no state file=present; worktrees=3 (want 3) prunable=0"
+  },
+  {
+   "test": "SC-after-F06",
+   "status": "PASS",
+   "detail": "herdr-scratch-0 uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 herdr_pid 7->7"
+  },
+  {
+   "test": "F01-sizing",
+   "status": "INFO",
+   "detail": "workspace PVC free 957MiB (df before); synthetic source sized 200MiB (clone+checkout ~2x on PVC)"
+  },
+  {
+   "test": "F01-kill",
+   "status": "FAIL",
+   "detail": "in-flight at +0.08s (n_clone=1 n_upload_pack=2 n_index_pack=1 n_unpack=0 n_pack_objects=1); after SIGKILL of request-repo only: git children gone after 4.96s (want <=2), request-repo alive=0, target=absent (want absent), staging=present (want present)"
+  },
+  {
+   "test": "F01",
+   "status": "PASS",
+   "detail": "rerun rc=0 action=hydrated in 26.3s (duration_ms=26047); head matches source=yes; stale staging removed=1; staging_left=0; fsck_clean=1"
+  },
+  {
+   "test": "F01-duration",
+   "status": "INFO",
+   "detail": "uninterrupted clone duration 26047ms (>=5s)"
+  },
+  {
+   "test": "F01-space",
+   "status": "INFO",
+   "detail": "workspace free after removing F01 source+repo: 957MiB (before 957MiB)"
+  },
+  {
+   "test": "SC-after-F01",
+   "status": "PASS",
+   "detail": "herdr-scratch-0 uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 herdr_pid 7->7"
+  },
+  {
+   "test": "F03-precond",
+   "status": "PASS",
+   "detail": "both pods on node(s) '<node-1> <node-1>' (want identical); source HEAD identical A=e12abb0fa631ca5b45aa4890b5863fd617c3e3dd B=e12abb0fa631ca5b45aa4890b5863fd617c3e3dd"
+  },
+  {
+   "test": "F03-raw",
+   "status": "INFO",
+   "detail": "n=8 hydrated=1 already_ready=7 other=0 rcs={'rc=0': 8} cloning_msgs=1 (raw/f03-all.txt)"
+  },
+  {
+   "test": "F03",
+   "status": "FAIL",
+   "detail": "2 pods x 4 parallel requests on <node-1>: n=8 hydrated=1 already_ready=7 other=0 rcs={'rc=0': 8} cloning_msgs=1; state attempts=1 (want 1); staging entries=0; fsck clean (from B)=1; barrier armed=1"
+  },
+  {
+   "test": "SC-after-F03",
+   "status": "PASS",
+   "detail": "herdr-scratch-0 uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 herdr_pid 7->7"
+  },
+  {
+   "test": "F04-observe",
+   "status": "PASS",
+   "detail": "PVC delete issued with consumers running; 8 samples over >=30s, deviations=0 (want 0: PVC Terminating + kubernetes.io/pvc-protection finalizer, both pods Running, repo readable and writable); raw/f04-timeline.txt"
+  },
+  {
+   "test": "F04",
+   "status": "PASS",
+   "detail": "after graceful pod deletion (at 39.5s) PVC gone=1, PV pvc-42cc3ac0-da76-4654-8d1e-a7e9e10d7087 state=GONE (reclaim=Delete; want GONE if Delete, else Released); raw/f04-*.txt"
+  },
+  {
+   "test": "SC-after-F04",
+   "status": "PASS",
+   "detail": "herdr-scratch-0 uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 herdr_pid 7->7"
+  },
+  {
+   "test": "F05",
+   "status": "PASS",
+   "detail": "pod ws-m4r014249-missing referencing non-existent PVC repo-m4r014249-missing: phase=Pending (want Pending); first event: FailedScheduling: 0/3 nodes are available: persistentvolumeclaim \"repo-m4r014249-missing\" not found. not found (want FailedScheduling ... not found); herdr-scratch-0 ready+unchanged and M2 pods unchanged: ws-m2r013149-a uid=ebd7b1b8-d927-4472-8b6c-770633f3c414 restarts=0 ready=yes -> uid=ebd7b1b8-d927-4472-8b6c-770633f3c414 restarts=0 ready=yes; unaffected=1"
+  },
+  {
+   "test": "SC-after-F05",
+   "status": "PASS",
+   "detail": "herdr-scratch-0 uid 2cbf1884-fc48-4b05-81f7-9c5b3424a0d0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restartCount 0->0 herdr_pid 7->7"
+  },
+  {
+   "test": "F02-pre",
+   "status": "PASS",
+   "detail": "M1 snapshot unchanged going into F02"
+  },
+  {
+   "test": "F02-paused",
+   "status": "PASS",
+   "detail": "request-repo for m4r014249-f02 paused after clone, staging present, target absent"
+  },
+  {
+   "test": "F02-restart",
+   "status": "INFO",
+   "detail": "container restarted in place (same pod UID, restartCount 0->1); observed after 1.4s, Ready after 4.8s; lastState in raw/f02-container-state.txt"
+  },
+  {
+   "test": "F02-ready",
+   "status": "FAIL",
+   "detail": "pod Ready again with a new herdr server (pid 7 -> 7)"
+  },
+  {
+   "test": "F02-target",
+   "status": "PASS",
+   "detail": "after restart: target=absent (want absent), staging=present (want present if container/pod kept the PVC; stale), interrupted request process=0"
+  },
+  {
+   "test": "F02-rerun",
+   "status": "PASS",
+   "detail": "rerun rc=0 action=hydrated attempt=1; stale staging removed=1, staging_left=0; fsck=1"
+  },
+  {
+   "test": "F02-m1",
+   "status": "PASS",
+   "detail": "all M1 repos fsck clean=1; M1 dirty/untracked/staged/stash snapshot (index mtime included) identical to baseline=yes"
+  },
+  {
+   "test": "F06-after-F02",
+   "status": "PASS",
+   "detail": "worktrees after F02: identical to pre-F02 state=yes; count=3 prunable=0 wt2 status ok=1"
+  },
+  {
+   "test": "F02-classification",
+   "status": "INFO",
+   "detail": "fully restored (repo data + hydration path); the herdr server process and any agent/session processes were interrupted by the crash, session recovery is NOT measured here"
+  },
+  {
+   "test": "F02-final",
+   "status": "INFO",
+   "detail": "herdr-scratch-0 now: uid=2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 restarts=1 ready=yes herdr_pid=7"
+  },
+  {
+   "test": "M4-live-herdr",
+   "status": "PASS",
+   "detail": "live herdrnetes-exp/herdr-0 unchanged (read-only): before [uid=a3542452-da5a-4b6e-bc12-12175e9a2f45 restarts=0 phase=Running] after [uid=a3542452-da5a-4b6e-bc12-12175e9a2f45 restarts=0 phase=Running]"
+  },
+  {
+   "test": "M4-m2-ws-m2r013149-a",
+   "status": "PASS",
+   "detail": "M2 pod unchanged at end: before uid=ebd7b1b8-d927-4472-8b6c-770633f3c414 restarts=0 ready=yes after uid=ebd7b1b8-d927-4472-8b6c-770633f3c414 restarts=0 ready=yes"
+  }
+ ],
+ "timings": [
+  {
+   "step": "F06-note",
+   "seconds": "0"
+  },
+  {
+   "step": "F01-build-source",
+   "seconds": "6.4"
+  },
+  {
+   "step": "F01-rerun-hydrate",
+   "seconds": "26.3"
+  },
+  {
+   "step": "F03-pvc-bound",
+   "seconds": "2.8"
+  },
+  {
+   "step": "F03-pods-ready",
+   "seconds": "16.1"
+  },
+  {
+   "step": "F03-concurrent-hydrate",
+   "seconds": "2.0"
+  },
+  {
+   "step": "F04-pvc-delete-to-pvc-gone",
+   "seconds": "39.6"
+  },
+  {
+   "step": "F04-pvc-delete-to-pv-(GONE)",
+   "seconds": "49.0"
+  },
+  {
+   "step": "F02-kill-to-restart-observed",
+   "seconds": "1.4"
+  },
+  {
+   "step": "F02-kill-to-ready",
+   "seconds": "4.8"
+  }
+ ]
+}

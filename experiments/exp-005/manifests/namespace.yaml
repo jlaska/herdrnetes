@@ -1,0 +1,14 @@
+# EXP-005 scratch namespace. Rendered with RUN_ID by harness/lib.sh (envsubst '${RUN_ID}').
+# Never the live namespace (herdrnetes-exp).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: herdrnetes-exp005
+  labels:
+    herdrnetes.io/experiment: exp-005
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: namespace
+    herdrnetes.io/disposable: "true"
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

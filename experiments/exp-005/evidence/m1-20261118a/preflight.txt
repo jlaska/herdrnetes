@@ -1,0 +1,9 @@
+== contexts
+<cluster>
+grep_rc=0
+== ns herdrnetes-exp005
+Error from server (NotFound): namespaces "herdrnetes-exp005" not found
+rc=1
+== live herdr-0 (uid, restartCount per container)
+a3542452-da5a-4b6e-bc12-12175e9a2f45 herdr=0 ovis=4
+rc=0

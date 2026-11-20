@@ -1,0 +1,7 @@
+LAST SEEN   TYPE     REASON                   OBJECT               MESSAGE
+13s         Normal   Scheduled                pod/ws-m2r013149-a   Successfully assigned herdrnetes-exp005/ws-m2r013149-a to <node-1>
+1s          Normal   SuccessfulAttachVolume   pod/ws-m2r013149-a   AttachVolume.Attach succeeded for volume "pvc-b8da138d-b808-496f-b051-f5a5ecdcb809"
+0s          Normal   AddedInterface           pod/ws-m2r013149-a   Add eth0 [<ip>/32] from cilium
+0s          Normal   Pulled                   pod/ws-m2r013149-a   Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+0s          Normal   Created                  pod/ws-m2r013149-a   Container created
+0s          Normal   Started                  pod/ws-m2r013149-a   Container started

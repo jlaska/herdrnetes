@@ -1,0 +1,18 @@
+# EXP-005 M2 per-repository PVC (Longhorn RWO, 1Gi). Rendered with RUN_ID and REPO_ID by harness/m2-cluster.sh.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: repo-${REPO_ID}
+  namespace: herdrnetes-exp005
+  labels:
+    herdrnetes.io/experiment: exp-005
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: repo-pvc
+    herdrnetes.io/disposable: "true"
+    herdrnetes.io/repository-id: "${REPO_ID}"
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi

@@ -1,0 +1,6 @@
+NAME                  READY   STATUS    RESTARTS   AGE   IP             NODE                NOMINATED NODE   READINESS GATES   LABELS
+pod/herdr-scratch-0   1/1     Running   0          27s   <ip>   <node-1>   <none>           <none>            apps.kubernetes.io/pod-index=0,controller-revision-hash=herdr-scratch-6f94f78d78,herdrnetes.io/component=herdr-scratch,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a,statefulset.kubernetes.io/pod-name=herdr-scratch-0
+
+NAME                                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE   LABELS
+persistentvolumeclaim/home-herdr-scratch-0        Bound    pvc-4d24897a-9bec-43f7-ab86-613169618de4   1Gi        RWO            longhorn       <unset>                 55s   Filesystem   herdrnetes.io/component=herdr-scratch,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a
+persistentvolumeclaim/workspace-herdr-scratch-0   Bound    pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b   1Gi        RWO            longhorn       <unset>                 55s   Filesystem   herdrnetes.io/component=herdr-scratch,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a

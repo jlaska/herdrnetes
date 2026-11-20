@@ -1,0 +1,24 @@
+namespace/herdrnetes-exp005 created
+configmap/request-repo created
+networkpolicy.networking.k8s.io/deny-ingress created
+statefulset.apps/herdr-scratch created
+2026-11-19T01:09:48Z S04-baseline INFO pod_uid=64282901-397f-4582-a180-ff0aadd884c0 restartCount=0 node=<node-1> herdr_pid=7 imageID=ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277
+2026-11-19T01:09:48Z S04-baseline-pid PASS real herdr server process found (pid=7)
+a.git
+b.git
+2026-11-19T01:09:48Z S01 PASS /workspace/m1r010929-a absent before request
+2026-11-19T01:09:49Z S02 PASS rc=0 status=ready action=hydrated head=232a6736a05eaa783653dda2e72da44838c98028
+2026-11-19T01:09:49Z S02-fsck PASS git fsck --strict clean
+2026-11-19T01:09:49Z S03 PASS path=/workspace/m1r010929-a
+2026-11-19T01:09:49Z S03-toplevel PASS show-toplevel=/workspace/m1r010929-a
+2026-11-19T01:09:50Z S05 PASS rc=0 action=already_ready; .git inode/mtime/index/HEAD/config unchanged
+2026-11-19T01:09:50Z S06 PASS second repo hydrated rc=0; both fsck clean; contents differ
+2026-11-19T01:09:51Z S07 PASS ok=8/8 hydrated=1 already_ready=7 clone_log_lines=1 state_attempts=1 fsck_clean=1
+2026-11-19T01:09:52Z S08 PASS bad source rc=5 (want 5) target_absent=1 state=failed; retry rc=0 action=hydrated attempt=2
+2026-11-19T01:09:54Z S09 PASS staged_before_kill=1 after_kill: target=absent staging=present proc=gone (want target=absent staging=present proc=gone); rerun rc=0 action=hydrated staging_left=0
+2026-11-19T01:09:55Z S10 PASS rc=0 action=already_ready; dirty/untracked/staged/commit/stash snapshot identical
+2026-11-19T01:09:56Z S13 INFO recorded in raw/s13.txt: git version 2.47.3 worktree .git file: gitdir: /workspace/m1r010929-a/.git/worktrees/m1r010929-a-wt admin gitdir backlink: /workspace/m1r010929-a-wt/.git 
+2026-11-19T01:09:56Z S04 PASS uid 64282901-397f-4582-a180-ff0aadd884c0->64282901-397f-4582-a180-ff0aadd884c0 restartCount 0->0 herdr_pid 7->7
+2026-11-19T01:09:56Z S12 PASS home: 8:96 /dev/longhorn/pvc-4d24897a-9bec-43f7-ab86-613169618de4 rw,seclabel;workspace: 65:112 /dev/longhorn/pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b rw,seclabel;repo artefacts under home: 0;
+2026-11-19T01:10:19Z S11 PASS uid 64282901-397f-4582-a180-ff0aadd884c0->2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 (new pod, node <node-1>-><node-1>, herdr_pid 7->7); fsck_all=1; dirty snapshot identical (index mtime included); already_ready=already_ready; worktrees=2
+M1 complete: 0 failed check(s). Evidence: /tmp/claude-1000/-home-jlaska-Projects-herdrnetes/4e33ac86-9385-4fe7-8dc6-2ee8820b89da/scratchpad/evidence/m1-20261118a (results-010929.tsv). Cluster objects remain; run cleanup.sh when done.

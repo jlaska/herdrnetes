@@ -1,0 +1,6 @@
+== herdr-0 (herdrnetes-exp)
+a3542452-da5a-4b6e-bc12-12175e9a2f45 herdr=0 ovis=4
+== herdr-scratch-0 (herdrnetes-exp005)
+2cbf1884-fc48-4b05-81f7-9c5b3424a0d0 0 <node-1>
+== node count
+3

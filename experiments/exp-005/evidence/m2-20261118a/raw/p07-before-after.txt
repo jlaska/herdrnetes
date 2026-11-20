@@ -1,0 +1,39 @@
+index_mtime=1795051929.405741542
+5e8aa14a51dc8437c217250f36cebbecf0ff8d1c644caec7b367a97f4616cca1  .git/index
+398c78d1d59e8269b7aa2ecbb8796476c3ee114e996c81c6164853d03c3ed63a  README
+2f7373ef545ca65b52fbc7aba547aca46bc8c31d760756d396464f06c5540350  data.txt
+528eee7ba2c0adea12842fd3eab1088d4d8402d115182154b0baef559f2164f2  untracked.txt
+9ac007af3de930baf647288da0c843b26a5f046a3fe1351f1bb039b242d22cdf  staged.txt
+# branch.oid d8d431bf8716b6afb9b7d4d7ce3f4ec6319dd727
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +1 -0
+1 .M N... 100644 100644 100644 b6a789fe24f362c69f18ffc22a74b3ff0e56fc53 b6a789fe24f362c69f18ffc22a74b3ff0e56fc53 README
+1 A. N... 000000 100644 100644 0000000000000000000000000000000000000000 19d9cc8584ac2c7dcf57d2680375e80f099dc481 staged.txt
+? untracked.txt
+d8d431bf8716b6afb9b7d4d7ce3f4ec6319dd727
+stash@{0}: WIP on main: d8d431b local commit
+d8d431bf8716b6afb9b7d4d7ce3f4ec6319dd727 commit	refs/heads/main
+110fc8d471d465ce55599cc8c2090d23eae78001 commit	refs/remotes/origin/HEAD
+110fc8d471d465ce55599cc8c2090d23eae78001 commit	refs/remotes/origin/main
+7edbacaa10bac1ddeede44f5f957ab0663c82389 commit	refs/stash
+--
+index_mtime=1795051929.405741542
+5e8aa14a51dc8437c217250f36cebbecf0ff8d1c644caec7b367a97f4616cca1  .git/index
+398c78d1d59e8269b7aa2ecbb8796476c3ee114e996c81c6164853d03c3ed63a  README
+2f7373ef545ca65b52fbc7aba547aca46bc8c31d760756d396464f06c5540350  data.txt
+528eee7ba2c0adea12842fd3eab1088d4d8402d115182154b0baef559f2164f2  untracked.txt
+9ac007af3de930baf647288da0c843b26a5f046a3fe1351f1bb039b242d22cdf  staged.txt
+# branch.oid d8d431bf8716b6afb9b7d4d7ce3f4ec6319dd727
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +1 -0
+1 .M N... 100644 100644 100644 b6a789fe24f362c69f18ffc22a74b3ff0e56fc53 b6a789fe24f362c69f18ffc22a74b3ff0e56fc53 README
+1 A. N... 000000 100644 100644 0000000000000000000000000000000000000000 19d9cc8584ac2c7dcf57d2680375e80f099dc481 staged.txt
+? untracked.txt
+d8d431bf8716b6afb9b7d4d7ce3f4ec6319dd727
+stash@{0}: WIP on main: d8d431b local commit
+d8d431bf8716b6afb9b7d4d7ce3f4ec6319dd727 commit	refs/heads/main
+110fc8d471d465ce55599cc8c2090d23eae78001 commit	refs/remotes/origin/HEAD
+110fc8d471d465ce55599cc8c2090d23eae78001 commit	refs/remotes/origin/main
+7edbacaa10bac1ddeede44f5f957ab0663c82389 commit	refs/stash

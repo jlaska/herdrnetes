@@ -1,0 +1,19 @@
+live herdrnetes-exp/herdr-0 before: a3542452-da5a-4b6e-bc12-12175e9a2f45 herdr=0 ovis=4 (read-only)
+plan for run-id m4-20261118a in namespace herdrnetes-exp005:
+  delete configmap/request-repo-m4-20261118a
+  NOT touching other runs' objects:
+    persistentvolumeclaim/home-herdr-scratch-0 (run-id m1-20261118a)
+    persistentvolumeclaim/repo-m2r013149-a (run-id m2-20261118a)
+    persistentvolumeclaim/workspace-herdr-scratch-0 (run-id m1-20261118a)
+    pod/herdr-scratch-0 (run-id m1-20261118a)
+    pod/ws-m2r013149-a (run-id m2-20261118a)
+    statefulset/herdr-scratch (run-id m1-20261118a)
+    configmap/request-repo (run-id m1-20261118a)
+    configmap/request-repo-m2-20261118a (run-id m2-20261118a)
+    networkpolicy/deny-ingress (run-id m1-20261118a)
+  Namespace/herdrnetes-exp005 will be kept (other runs' objects present)
+configmap "request-repo-m4-20261118a" deleted from herdrnetes-exp005 namespace
+remaining objects of run m4-20261118a: 0
+namespace herdrnetes-exp005 kept (9 object(s) remain)
+live herdrnetes-exp/herdr-0 after:  a3542452-da5a-4b6e-bc12-12175e9a2f45 herdr=0 ovis=4
+live Herdr pod UNCHANGED

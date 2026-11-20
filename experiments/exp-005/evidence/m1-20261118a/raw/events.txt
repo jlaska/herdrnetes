@@ -1,0 +1,28 @@
+LAST SEEN   TYPE      REASON                   OBJECT                                            MESSAGE
+47s         Warning   FailedScheduling         pod/herdr-scratch-0                               0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. not found
+47s         Normal    Scheduled                pod/herdr-scratch-0                               Successfully assigned herdrnetes-exp005/herdr-scratch-0 to <node-1>
+21s         Normal    Scheduled                pod/herdr-scratch-0                               Successfully assigned herdrnetes-exp005/herdr-scratch-0 to <node-1>
+49s         Warning   FailedScheduling         pod/herdr-scratch-0                               0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims. not found
+50s         Normal    Provisioning             persistentvolumeclaim/home-herdr-scratch-0        External provisioner is provisioning volume for claim "herdrnetes-exp005/home-herdr-scratch-0"
+50s         Normal    SuccessfulCreate         statefulset/herdr-scratch                         Create Claim workspace-herdr-scratch-0 Pod herdr-scratch-0 in StatefulSet herdr-scratch success
+50s         Normal    ExternalProvisioning     persistentvolumeclaim/home-herdr-scratch-0        Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+50s         Normal    Provisioning             persistentvolumeclaim/workspace-herdr-scratch-0   External provisioner is provisioning volume for claim "herdrnetes-exp005/workspace-herdr-scratch-0"
+50s         Normal    ExternalProvisioning     persistentvolumeclaim/workspace-herdr-scratch-0   Waiting for a volume to be created either by the external provisioner 'driver.longhorn.io' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+50s         Normal    SuccessfulCreate         statefulset/herdr-scratch                         Create Claim home-herdr-scratch-0 Pod herdr-scratch-0 in StatefulSet herdr-scratch success
+48s         Normal    ProvisioningSucceeded    persistentvolumeclaim/home-herdr-scratch-0        Successfully provisioned volume pvc-4d24897a-9bec-43f7-ab86-613169618de4
+48s         Normal    ProvisioningSucceeded    persistentvolumeclaim/workspace-herdr-scratch-0   Successfully provisioned volume pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b
+36s         Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-4d24897a-9bec-43f7-ab86-613169618de4"
+36s         Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b"
+34s         Normal    Pulled                   pod/herdr-scratch-0                               Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+34s         Normal    Started                  pod/herdr-scratch-0                               Container started
+34s         Normal    Created                  pod/herdr-scratch-0                               Container created
+34s         Normal    AddedInterface           pod/herdr-scratch-0                               Add eth0 [<ip>/32] from cilium
+24s         Normal    Killing                  pod/herdr-scratch-0                               Stopping container herdr
+23s         Warning   Unhealthy                pod/herdr-scratch-0                               Readiness probe errored and resulted in unknown state: rpc error: code = Canceled desc = context canceled
+22s         Normal    SuccessfulCreate         statefulset/herdr-scratch                         Create Pod herdr-scratch-0 in StatefulSet herdr-scratch successful
+8s          Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b"
+7s          Normal    Pulled                   pod/herdr-scratch-0                               Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+7s          Normal    Created                  pod/herdr-scratch-0                               Container created
+7s          Normal    AddedInterface           pod/herdr-scratch-0                               Add eth0 [<ip>/32] from cilium
+7s          Normal    SuccessfulAttachVolume   pod/herdr-scratch-0                               AttachVolume.Attach succeeded for volume "pvc-4d24897a-9bec-43f7-ab86-613169618de4"
+6s          Normal    Started                  pod/herdr-scratch-0                               Container started

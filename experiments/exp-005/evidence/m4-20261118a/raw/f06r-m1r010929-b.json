@@ -1,0 +1,1 @@
+{"action": "already_ready", "attempt": 1, "duration_ms": 7, "error": null, "git_version": "2.47.3", "head": "d74865988cc693291723731b0071ebd7b0dd93b4", "partial": false, "path": "/workspace/m1r010929-b", "promotion": "renameat2", "repository_id": "m1r010929-b", "shallow": false, "source": "file:///tmp/sources/b.git", "status": "ready", "waited": false}

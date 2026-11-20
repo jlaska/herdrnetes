@@ -1,0 +1,13 @@
+NAME                  READY   STATUS    RESTARTS   AGE     IP             NODE                  NOMINATED NODE   READINESS GATES
+pod/herdr-scratch-0   1/1     Running   0          25m     <ip>   <node-1>     <none>           <none>
+pod/ws-m2r013149-a    1/1     Running   0          3m23s   <ip>    <node-2>   <none>           <none>
+
+NAME                                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE     VOLUMEMODE
+persistentvolumeclaim/home-herdr-scratch-0        Bound    pvc-4d24897a-9bec-43f7-ab86-613169618de4   1Gi        RWO            longhorn       <unset>                 26m     Filesystem
+persistentvolumeclaim/repo-m2r013149-a            Bound    pvc-b8da138d-b808-496f-b051-f5a5ecdcb809   1Gi        RWO            longhorn       <unset>                 3m44s   Filesystem
+persistentvolumeclaim/workspace-herdr-scratch-0   Bound    pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b   1Gi        RWO            longhorn       <unset>                 26m     Filesystem
+
+NAME                                  DATA   AGE
+configmap/kube-root-ca.crt            1      26m
+configmap/request-repo                1      26m
+configmap/request-repo-m2-20261118a   1      3m44s

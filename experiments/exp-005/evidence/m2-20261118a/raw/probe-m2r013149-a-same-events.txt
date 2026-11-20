@@ -1,0 +1,6 @@
+LAST SEEN   TYPE     REASON           OBJECT                       MESSAGE
+1s          Normal   Scheduled        pod/probe-m2r013149-a-same   Successfully assigned herdrnetes-exp005/probe-m2r013149-a-same to <node-2>
+1s          Normal   AddedInterface   pod/probe-m2r013149-a-same   Add eth0 [<ip>/32] from cilium
+1s          Normal   Pulled           pod/probe-m2r013149-a-same   Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+1s          Normal   Created          pod/probe-m2r013149-a-same   Container created
+1s          Normal   Started          pod/probe-m2r013149-a-same   Container started

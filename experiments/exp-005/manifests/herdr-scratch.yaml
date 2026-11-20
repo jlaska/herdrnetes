@@ -1,0 +1,127 @@
+# EXP-005 M1 scratch Herdr-equivalent pod. Mirrors the live StatefulSet's security context and
+# volume layout, with 1Gi PVCs. It runs the REAL image entrypoint (tini -> herdr-entrypoint ->
+# `herdr server`): the server needs no secrets (CLAUDE_CODE_OAUTH_TOKEN is optional and omitted)
+# and the image bakes in its default config at /etc/herdrnetes/config.toml, so no ConfigMap
+# for /etc/herdr is required. Rendered with RUN_ID by harness/lib.sh.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: herdr-scratch
+  namespace: herdrnetes-exp005
+  labels: &labels
+    herdrnetes.io/experiment: exp-005
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: herdr-scratch
+    herdrnetes.io/disposable: "true"
+spec:
+  replicas: 1
+  serviceName: herdr-scratch
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      herdrnetes.io/experiment: exp-005
+      herdrnetes.io/component: herdr-scratch
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: herdr
+          image: ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HOME
+              value: /home/herdr
+            - name: XDG_CONFIG_HOME
+              value: /home/herdr/.config
+            - name: XDG_STATE_HOME
+              value: /run/herdr/state
+            - name: XDG_CACHE_HOME
+              value: /run/herdr/cache
+            - name: TMPDIR
+              value: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          startupProbe:
+            exec:
+              command: ["herdr", "status", "server"]
+            periodSeconds: 1
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: ["herdr", "status", "server"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: home
+              mountPath: /home/herdr
+            - name: workspace
+              mountPath: /workspace
+            - name: request-repo
+              mountPath: /opt/exp005/bin
+              readOnly: true
+            - name: run
+              mountPath: /run/herdr
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: request-repo
+          configMap:
+            name: request-repo
+            defaultMode: 0555
+        - name: run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: home
+        labels:
+          <<: *labels
+          herdrnetes.io/component: herdr-scratch-home
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 1Gi
+    - metadata:
+        name: workspace
+        labels:
+          <<: *labels
+          herdrnetes.io/component: herdr-scratch-workspace
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 1Gi

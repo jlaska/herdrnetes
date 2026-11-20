@@ -1,0 +1,1 @@
+{"action": "hydrated", "attempt": 1, "duration_ms": 50, "error": null, "git_version": "2.47.3", "head": "e4c1f4e36d1600dbd2f22d6a8f2d580ea379e827", "partial": false, "path": "/workspace/m4r014249-f02", "promotion": "renameat2", "repository_id": "m4r014249-f02", "shallow": false, "source": "file:///tmp/src/m4r014249-f02.git", "status": "ready", "waited": false}

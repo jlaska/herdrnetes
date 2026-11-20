@@ -1,0 +1,14 @@
+wt1 .git file: gitdir: /workspace/m1r010929-b/.git/worktrees/m1r010929-b-w1014249
+wt1 HEAD: 129f557e070379aadacd4e04373e5e32080a150b
+worktree /workspace/m1r010929-b
+HEAD d74865988cc693291723731b0071ebd7b0dd93b4
+branch refs/heads/main
+
+worktree /workspace/m1r010929-b-w1014249
+HEAD 129f557e070379aadacd4e04373e5e32080a150b
+branch refs/heads/m4-014249-wt1
+
+worktree /workspace/m1r010929-b-w2014249
+HEAD d74865988cc693291723731b0071ebd7b0dd93b4
+branch refs/heads/m4-014249-wt2
+

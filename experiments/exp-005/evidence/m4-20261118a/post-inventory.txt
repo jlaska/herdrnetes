@@ -1,0 +1,20 @@
+NAME                  READY   STATUS    RESTARTS      AGE   IP             NODE                  NOMINATED NODE   READINESS GATES   LABELS
+pod/herdr-scratch-0   1/1     Running   1 (21s ago)   35m   <ip>   <node-1>     <none>           <none>            apps.kubernetes.io/pod-index=0,controller-revision-hash=herdr-scratch-6f94f78d78,herdrnetes.io/component=herdr-scratch,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a,statefulset.kubernetes.io/pod-name=herdr-scratch-0
+pod/ws-m2r013149-a    1/1     Running   0             13m   <ip>    <node-2>   <none>           <none>            herdrnetes.io/component=workspace,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/repository-id=m2r013149-a,herdrnetes.io/run-id=m2-20261118a
+
+NAME                             READY   AGE   CONTAINERS   IMAGES                                                                                                    LABELS
+statefulset.apps/herdr-scratch   1/1     35m   herdr        ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277   herdrnetes.io/component=herdr-scratch,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a
+
+NAME                                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE   LABELS
+persistentvolumeclaim/home-herdr-scratch-0        Bound    pvc-4d24897a-9bec-43f7-ab86-613169618de4   1Gi        RWO            longhorn       <unset>                 35m   Filesystem   herdrnetes.io/component=herdr-scratch,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a
+persistentvolumeclaim/repo-m2r013149-a            Bound    pvc-b8da138d-b808-496f-b051-f5a5ecdcb809   1Gi        RWO            longhorn       <unset>                 13m   Filesystem   herdrnetes.io/component=repo-pvc,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/repository-id=m2r013149-a,herdrnetes.io/run-id=m2-20261118a
+persistentvolumeclaim/workspace-herdr-scratch-0   Bound    pvc-a3c5b19a-233b-4529-b0fd-52f59d474d8b   1Gi        RWO            longhorn       <unset>                 35m   Filesystem   herdrnetes.io/component=herdr-scratch,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a
+
+NAME                                  DATA   AGE     LABELS
+configmap/kube-root-ca.crt            1      35m     <none>
+configmap/request-repo                1      35m     herdrnetes.io/component=request-repo,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a
+configmap/request-repo-m2-20261118a   1      13m     herdrnetes.io/component=request-repo,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m2-20261118a
+configmap/request-repo-m4-20261118a   1      2m38s   herdrnetes.io/component=request-repo,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m4-20261118a
+
+NAME                                           POD-SELECTOR   AGE   LABELS
+networkpolicy.networking.k8s.io/deny-ingress   <none>         35m   herdrnetes.io/component=networkpolicy,herdrnetes.io/disposable=true,herdrnetes.io/experiment=exp-005,herdrnetes.io/run-id=m1-20261118a

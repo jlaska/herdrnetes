@@ -1,0 +1,2 @@
+killing herdr server pid 7: /usr/local/bin/herdr server 
+pid1: /usr/bin/tini -- /usr/local/bin/herdr-entrypoint 
