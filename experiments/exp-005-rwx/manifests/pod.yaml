@@ -1,0 +1,94 @@
+# One of at most two ordinary scratch pods (rwx-a, rwx-b). No controller. Same security context as the live
+# Herdr pod and the EXP-005 scratch pods, including fsGroup 1000 (whether it is applied to an RWX volume is MEASURED in R02;
+# the CSIDriver fsGroupPolicy is expected to skip it). Mounts ONLY the scratch PVC. Never runs herdr.
+# Rendered with: POD_NAME, COMPONENT, RUN_ID, NAMESPACE, HERDR_NS, NODE_SELECTOR_JSON ({} unless injected at runtime
+# from RWX_NODE_SELECTOR; node names are never committed).
+# Required anti-affinity (1) forces the two pods onto different nodes and (2) keeps them off the node that runs the live Herdr
+# pod (blast radius of NFS client hangs/mount problems), both on topology key kubernetes.io/hostname.
+# restartPolicy Never: a container restart must not mask a failure; the harness stops if a scratch container terminates.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${POD_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    herdrnetes.io/experiment: exp-005-rwx
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: ${COMPONENT}
+    herdrnetes.io/pod-group: rwx-pair
+    herdrnetes.io/disposable: "true"
+spec:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 10
+  nodeSelector: ${NODE_SELECTOR_JSON}
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              herdrnetes.io/run-id: "${RUN_ID}"
+              herdrnetes.io/pod-group: rwx-pair
+        - topologyKey: kubernetes.io/hostname
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ${HERDR_NS}
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: herdr
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: ws
+      # Same digest as EXP-005 (Herdr 0.9.5 image; git 2.47.3, python 3.13.5, util-linux flock). Pinned by digest.
+      image: ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277
+      imagePullPolicy: IfNotPresent
+      command: ["bash", "-c", "trap 'exit 0' TERM INT; while true; do sleep 1; done"]
+      env:
+        - name: HOME
+          value: /tmp
+        - name: TMPDIR
+          value: /tmp
+      securityContext:
+        allowPrivilegeEscalation: false
+        privileged: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+      readinessProbe:
+        exec:
+          command: ["test", "-d", "/rwx"]
+        periodSeconds: 3
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+          ephemeral-storage: 64Mi
+        limits:
+          cpu: "1"
+          memory: 512Mi
+          ephemeral-storage: 512Mi
+      volumeMounts:
+        - name: rwx
+          mountPath: /rwx
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: rwx
+      persistentVolumeClaim:
+        claimName: rwx-scratch
+    - name: tmp
+      emptyDir:
+        sizeLimit: 256Mi
