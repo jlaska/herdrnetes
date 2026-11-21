@@ -1,0 +1,30 @@
+# Post-run read-only health snapshot, 2026-11-21T19:00:37Z-19:00:38Z (kubectl get only; node names aliased, IPs removed)
+
+--k8s nodes
+<node-1> unsched= NetworkUnavailable=False MemoryPressure=False DiskPressure=False PIDPressure=False Ready=True
+<node-2> unsched= NetworkUnavailable=False MemoryPressure=False DiskPressure=False PIDPressure=False Ready=True
+<node-3> unsched= NetworkUnavailable=False MemoryPressure=False DiskPressure=False PIDPressure=False Ready=True
+--longhorn nodes
+<node-1> Ready=True Schedulable=True RequiredPackages=True Multipathd=True NFSClientInstalled=True KernelModulesLoaded=True MountPropagation=True
+<node-2> Ready=True Schedulable=True RequiredPackages=True Multipathd=True NFSClientInstalled=True KernelModulesLoaded=True MountPropagation=True
+<node-3> Ready=True Schedulable=True RequiredPackages=True Multipathd=True NFSClientInstalled=True KernelModulesLoaded=True MountPropagation=True
+--longhorn disks
+<node-1> disk {'Ready': 'True', 'Schedulable': 'True'} avail_GiB 245.7 max_GiB 474.6
+<node-2> disk {'Ready': 'True', 'Schedulable': 'True'} avail_GiB 292.2 max_GiB 474.6
+<node-3> disk {'Ready': 'True', 'Schedulable': 'True'} avail_GiB 253.9 max_GiB 474.6
+--volumes (state/robustness)
+     72 attached/healthy
+      8 detached/unknown
+--sharemanagers
+0
+--longhorn-system pods not Running or with restarts (restart counts accumulated before this run; pods started 2026-10-20)
+backup-offsite-s3-<job> Succeeded 0
+daily-snapshot-<job> Succeeded 0
+engine-image-ei-<hash> Running 11
+longhorn-manager-<hash> Running 10,8
+weekly-trim-<job> Succeeded 2
+--instance-manager pods (one per node, restarts=0, started 2026-11-19, i.e. before the run)
+--live Herdr
+fe7cd780... herdr=0 ovis=0 Running
+--Warning events in longhorn-system: none
+--Warning events on Node objects: none

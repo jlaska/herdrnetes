@@ -1,0 +1,18 @@
+# OPTIONAL (harness flag --network-policy; default off, owner to decide): namespace-scoped default deny of ALL
+# ingress and egress. The pods need no network: the NFS mount is made by the kubelet from the node, not from the
+# pod network namespace, and the tests use only the shared filesystem and kubectl exec.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: ${NAMESPACE}
+  labels:
+    herdrnetes.io/experiment: exp-005-rwx
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: networkpolicy
+    herdrnetes.io/disposable: "true"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

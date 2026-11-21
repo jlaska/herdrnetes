@@ -1,0 +1,28 @@
+{
+ "reader": {
+  "_rc": 0,
+  "content_mismatch": 0,
+  "kind": "new",
+  "mode": "stat",
+  "n": 3,
+  "role": "b",
+  "rtt_ms": [],
+  "timeouts": 2,
+  "wait_ms": [
+   30002.19
+  ]
+ },
+ "writer": {
+  "_rc": 0,
+  "content_mismatch": 0,
+  "kind": "new",
+  "mode": "stat",
+  "n": 3,
+  "role": "a",
+  "rtt_ms": [
+   30011.84
+  ],
+  "timeouts": 2,
+  "wait_ms": []
+ }
+}

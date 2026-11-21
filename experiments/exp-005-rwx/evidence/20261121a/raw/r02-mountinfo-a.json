@@ -1,0 +1,46 @@
+{
+ "_rc": 0,
+ "fsgroup_observation": {
+  "applied": false,
+  "expected_fsgroup": 1000,
+  "root_gid": 0,
+  "setgid_bit": false
+ },
+ "mount": {
+  "fstype": "nfs4",
+  "mount_options": "rw,relatime",
+  "mount_point": "/rwx",
+  "source": "<ip>:/pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd",
+  "super_options": "rw,vers=4.1,rsize=1048576,wsize=1048576,namlen=255,softerr,softreval,noresvport,fatal_neterrors=none,proto=tcp,timeo=600,retrans=5,sec=sys,clientaddr=<ip>,local_lock=none,addr=<ip>"
+ },
+ "nfs_options": {
+  "fatal_neterrors": "none",
+  "local_lock": "none",
+  "namlen": "255",
+  "noresvport": true,
+  "proto": "tcp",
+  "retrans": "5",
+  "rsize": "1048576",
+  "sec": "sys",
+  "timeo": "600",
+  "vers": "4.1",
+  "wsize": "1048576"
+ },
+ "path": "/rwx",
+ "root_listing": [
+  "lost+found"
+ ],
+ "root_stat": {
+  "gid": 0,
+  "is_dir": true,
+  "mode": 511,
+  "nlink": 3,
+  "size": 4096,
+  "uid": 0
+ },
+ "statvfs": {
+  "free_mib": 958.0,
+  "namemax": 255,
+  "total_mib": 974.0
+ }
+}

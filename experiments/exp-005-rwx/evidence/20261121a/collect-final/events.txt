@@ -1,0 +1,7 @@
+LAST SEEN   TYPE     REASON           OBJECT      MESSAGE
+2m39s       Normal   Killing          pod/rwx-b   Stopping container ws
+2m37s       Normal   Scheduled        pod/rwx-b   Successfully assigned herdrnetes-exp005-rwx-20261121a/rwx-b to <node-1>
+2m32s       Normal   AddedInterface   pod/rwx-b   Add eth0 [<ip>/32] from cilium
+2m32s       Normal   Pulled           pod/rwx-b   Container image "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277" already present on machine and can be accessed by the pod
+2m32s       Normal   Created          pod/rwx-b   Container created
+2m32s       Normal   Started          pod/rwx-b   Container started

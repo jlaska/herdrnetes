@@ -1,0 +1,244 @@
+{
+ "control_mkrepo_s": 2.074,
+ "files": 3000,
+ "runs": 5,
+ "summary": {
+  "emptydir_a": {
+   "checkout_alt": {
+    "max": 0.2858,
+    "mean": 0.2692,
+    "median": 0.2707,
+    "min": 0.2518,
+    "n": 5
+   },
+   "checkout_main": {
+    "max": 0.3163,
+    "mean": 0.2825,
+    "median": 0.2899,
+    "min": 0.2458,
+    "n": 5
+   },
+   "clone": {
+    "max": 0.3241,
+    "mean": 0.31,
+    "median": 0.3085,
+    "min": 0.302,
+    "n": 5
+   },
+   "fsck": {
+    "max": 0.1511,
+    "mean": 0.1262,
+    "median": 0.1223,
+    "min": 0.1161,
+    "n": 5
+   },
+   "rm_tree": {
+    "max": 0.1163,
+    "mean": 0.1106,
+    "median": 0.1106,
+    "min": 0.1059,
+    "n": 5
+   },
+   "small_create": {
+    "max": 0.1116,
+    "mean": 0.1103,
+    "median": 0.1102,
+    "min": 0.1088,
+    "n": 5
+   },
+   "small_delete": {
+    "max": 0.0447,
+    "mean": 0.0414,
+    "median": 0.0408,
+    "min": 0.0394,
+    "n": 5
+   },
+   "small_read": {
+    "max": 0.0617,
+    "mean": 0.037,
+    "median": 0.0309,
+    "min": 0.0304,
+    "n": 5
+   },
+   "small_stat": {
+    "max": 0.0061,
+    "mean": 0.006,
+    "median": 0.006,
+    "min": 0.0059,
+    "n": 5
+   },
+   "status_after_checkout": {
+    "max": 0.0342,
+    "mean": 0.0272,
+    "median": 0.032,
+    "min": 0.0058,
+    "n": 5
+   },
+   "status_clean": {
+    "max": 0.0353,
+    "mean": 0.0281,
+    "median": 0.032,
+    "min": 0.0069,
+    "n": 5
+   }
+  },
+  "rwx_a": {
+   "checkout_alt": {
+    "max": 14.8994,
+    "mean": 14.447,
+    "median": 14.4312,
+    "min": 14.16,
+    "n": 5
+   },
+   "checkout_main": {
+    "max": 13.7512,
+    "mean": 13.6449,
+    "median": 13.6222,
+    "min": 13.5214,
+    "n": 5
+   },
+   "clone": {
+    "max": 16.3819,
+    "mean": 16.1185,
+    "median": 16.0491,
+    "min": 15.9495,
+    "n": 5
+   },
+   "fsck": {
+    "max": 1.0519,
+    "mean": 1.0274,
+    "median": 1.0217,
+    "min": 1.0113,
+    "n": 5
+   },
+   "rm_tree": {
+    "max": 2.3173,
+    "mean": 2.2777,
+    "median": 2.2686,
+    "min": 2.2298,
+    "n": 5
+   },
+   "small_create": {
+    "max": 10.9321,
+    "mean": 10.7571,
+    "median": 10.7552,
+    "min": 10.5201,
+    "n": 5
+   },
+   "small_delete": {
+    "max": 0.7665,
+    "mean": 0.7342,
+    "median": 0.7265,
+    "min": 0.7204,
+    "n": 5
+   },
+   "small_read": {
+    "max": 0.4205,
+    "mean": 0.4175,
+    "median": 0.4172,
+    "min": 0.4155,
+    "n": 5
+   },
+   "small_stat": {
+    "max": 0.2605,
+    "mean": 0.2252,
+    "median": 0.2227,
+    "min": 0.2054,
+    "n": 5
+   },
+   "status_after_checkout": {
+    "max": 0.1423,
+    "mean": 0.1226,
+    "median": 0.1189,
+    "min": 0.1148,
+    "n": 5
+   },
+   "status_clean": {
+    "max": 0.121,
+    "mean": 0.1124,
+    "median": 0.1171,
+    "min": 0.0958,
+    "n": 5
+   }
+  },
+  "rwx_b": {
+   "checkout_alt": {
+    "max": 31.2773,
+    "mean": 31.1894,
+    "median": 31.2116,
+    "min": 31.114,
+    "n": 5
+   },
+   "checkout_main": {
+    "max": 28.0254,
+    "mean": 27.6053,
+    "median": 27.7583,
+    "min": 27.1176,
+    "n": 5
+   },
+   "clone": {
+    "max": 43.8017,
+    "mean": 41.9441,
+    "median": 41.9982,
+    "min": 40.6366,
+    "n": 5
+   },
+   "fsck": {
+    "max": 5.9606,
+    "mean": 5.9199,
+    "median": 5.9427,
+    "min": 5.8347,
+    "n": 5
+   },
+   "rm_tree": {
+    "max": 12.7139,
+    "mean": 12.6761,
+    "median": 12.6828,
+    "min": 12.6345,
+    "n": 5
+   },
+   "small_create": {
+    "max": 15.4512,
+    "mean": 15.2908,
+    "median": 15.2417,
+    "min": 15.1656,
+    "n": 5
+   },
+   "small_delete": {
+    "max": 4.0792,
+    "mean": 4.0017,
+    "median": 3.9932,
+    "min": 3.9426,
+    "n": 5
+   },
+   "small_read": {
+    "max": 2.6456,
+    "mean": 2.6251,
+    "median": 2.6273,
+    "min": 2.6005,
+    "n": 5
+   },
+   "small_stat": {
+    "max": 1.3324,
+    "mean": 1.303,
+    "median": 1.3039,
+    "min": 1.2841,
+    "n": 5
+   },
+   "status_after_checkout": {
+    "max": 0.3031,
+    "mean": 0.2666,
+    "median": 0.2574,
+    "min": 0.255,
+    "n": 5
+   },
+   "status_clean": {
+    "max": 0.2639,
+    "mean": 0.2581,
+    "median": 0.2577,
+    "min": 0.2515,
+    "n": 5
+   }
+  }
+ }
+}

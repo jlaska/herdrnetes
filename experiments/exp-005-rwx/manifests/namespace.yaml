@@ -1,0 +1,15 @@
+# EXP-005-RWX (issue #32) scratch namespace. PREPARE only: nothing here has been applied.
+# Rendered by harness/rwxlib.py: ${RUN_ID} is the run id, ${NAMESPACE} = herdrnetes-exp005-rwx-<run id>.
+# Never the live namespace (herdrnetes-exp) and never the EXP-005 namespace (herdrnetes-exp005).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${NAMESPACE}
+  labels:
+    herdrnetes.io/experiment: exp-005-rwx
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: namespace
+    herdrnetes.io/disposable: "true"
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

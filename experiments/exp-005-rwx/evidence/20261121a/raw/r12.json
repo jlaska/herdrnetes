@@ -1,0 +1,53 @@
+{
+ "delete_to_gone_s": 1.6,
+ "events": [
+  {
+   "msg": "Stopping container ws",
+   "reason": "Killing",
+   "type": "Normal"
+  },
+  {
+   "msg": "Successfully assigned herdrnetes-exp005-rwx-20261121a/rwx-b to <node-1>",
+   "reason": "Scheduled",
+   "type": "Normal"
+  },
+  {
+   "msg": "Add eth0 [<ip>/32] from cilium",
+   "reason": "AddedInterface",
+   "type": "Normal"
+  },
+  {
+   "msg": "Container image \"ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277\" already present on machine and can be accessed by the pod",
+   "reason": "Pulled",
+   "type": "Normal"
+  },
+  {
+   "msg": "Container created",
+   "reason": "Created",
+   "type": "Normal"
+  },
+  {
+   "msg": "Container started",
+   "reason": "Started",
+   "type": "Normal"
+  }
+ ],
+ "gate": true,
+ "heartbeat": {
+  "_rc": 0,
+  "errors": {},
+  "max_gap_s": 0.223,
+  "seconds": 150.0,
+  "writes": 732
+ },
+ "lock_after_delete": {
+  "_rc": 0,
+  "acquired": true,
+  "errno": null,
+  "kind": "flock",
+  "timeout_s": 150.0,
+  "waited_s": 0.0
+ },
+ "recreate_ready_s": 6.3,
+ "why": []
+}

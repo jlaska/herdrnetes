@@ -1,0 +1,19 @@
+# The ONE approved claim: 1Gi ReadWriteMany on the EXISTING `longhorn` StorageClass (issue #32 owner decision).
+# No new StorageClass, no parameters, no selector, no dataSource. Never the NAS nfs.csi.k8s.io class.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rwx-scratch
+  namespace: ${NAMESPACE}
+  labels:
+    herdrnetes.io/experiment: exp-005-rwx
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: rwx-pvc
+    herdrnetes.io/disposable: "true"
+spec:
+  accessModes: ["ReadWriteMany"]
+  volumeMode: Filesystem
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi

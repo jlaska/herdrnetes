@@ -1,0 +1,30 @@
+A:
+worktree /rwx/work/ws/h1
+HEAD a76941f0ffea8ea67858c37a863fcb960acbad11
+branch refs/heads/main
+
+worktree /rwx/work/worktrees/wt-a
+HEAD 8f4e119ad01186c560be1278ae9d3a31c1740361
+branch refs/heads/wt-a
+
+worktree /rwx/work/worktrees/wt-d
+HEAD a76941f0ffea8ea67858c37a863fcb960acbad11
+branch refs/heads/wt-d
+
+
+B:
+worktree /rwx/work/ws/h1
+HEAD a76941f0ffea8ea67858c37a863fcb960acbad11
+branch refs/heads/main
+
+worktree /rwx/work/worktrees/wt-a
+HEAD 8f4e119ad01186c560be1278ae9d3a31c1740361
+branch refs/heads/wt-a
+
+worktree /rwx/work/worktrees/wt-d
+HEAD a76941f0ffea8ea67858c37a863fcb960acbad11
+branch refs/heads/wt-d
+
+
+A .git file: gitdir: /rwx/work/ws/h1/.git/worktrees/wt-a
+concurrent add: {'a': 0, 'b': 0, 'a_err': '', 'b_err': ''}

@@ -1,0 +1,250 @@
+#!/usr/bin/env python3
+"""EXP-005-RWX harness CLI (issue #32). Run it from anywhere; it needs only python3 (stdlib) and kubectl.
+
+    rwx plan [--run-id ID] [--network-policy]       print what WOULD be created (never contacts a cluster)
+    rwx preflight  --run-id ID [--live]             R00, read-only
+    rwx create     --run-id ID --execute ...        R00-R02: namespace, PVC, two pods, gate; leaves them in place
+    rwx run        --run-id ID --execute ...        R00-R14 end to end, then guarded cleanup (always)
+    rwx collect    --run-id ID --live               read-only sanitized snapshot of a run namespace
+    rwx recreate   --run-id ID --execute ...        R12 only: graceful delete + recreate of pod rwx-b
+    rwx cleanup    --run-id ID [--live] [--execute --confirm-run-id ID]
+    rwx sanitize   FILE                             apply the sanitizer to a file (stdout)
+
+Modes (all subcommands): no flag = offline dry run (kubectl is never executed); --live = read-only cluster
+contact; --execute --confirm-run-id <same id> = mutations allowed (implies --live).
+Environment: KCTX (required when live; no default), RWX_NODE_SELECTOR=key=value (optional runtime-only node selector),
+RWX_REDACT_EXTRA=comma,separated,literals (cluster name, domain, ...), HERDR_NS / HERDR_POD (live Herdr, read-only),
+RWX_EXPECT_LONGHORN (expected longhorn-manager image tag, default v1.13.0; cluster identity guard).
+Exit: 0 ok, 1 test failures, 2 usage, 3 stop condition (incl. suspected NFS hang; evidence collected, cleanup attempted),
+4 cleanup refused (labels/kinds), 5 residue (objects remain, or a delete failed/timed out; nothing is ever forced),
+6 cleanup UNVERIFIED (an object could not be positively shown absent: read error/timeout/malformed output; fail closed),
+7 cleanup verified but Herdr or an unrelated Longhorn volume changed.
+"""
+import argparse
+import os
+import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import rwxlib as L  # noqa: E402
+import scenarios as S  # noqa: E402
+
+
+def add_common(p, need_run=True):
+    p.add_argument("--run-id", required=need_run, help="e.g. 20261119a (lowercase alnum and '-', max 24 chars)")
+    p.add_argument("--live", action="store_true", help="contact the cluster read-only")
+    p.add_argument("--execute", action="store_true", help="allow mutations (needs --confirm-run-id)")
+    p.add_argument("--confirm-run-id", default=None)
+    p.add_argument("--no-network-policy", dest="network_policy", action="store_false", default=True,
+                   help="opt OUT of the namespaced default-deny NetworkPolicy (applied by default per owner decision D-2)")
+    p.add_argument("--pv-name", default=None, help="cleanup only: PV/Longhorn volume name from earlier evidence (pvc-<uuid>), "
+                                                   "needed to verify share-manager objects when the PVC is already gone")
+    p.add_argument("--evidence-dir", default=L.default_evidence_dir())
+
+
+def build(args):
+    run_id = L.valid_run_id(args.run_id)
+    if args.execute and args.confirm_run_id != run_id:
+        raise L.Refused("--execute requires --confirm-run-id equal to --run-id")
+    live = args.live or args.execute
+    ctx = os.environ.get("KCTX")
+    kube = L.Kube(ctx, run_id, live=live, execute=args.execute)
+    san = L.Sanitizer(extra_literals=[e.strip() for e in os.environ.get("RWX_REDACT_EXTRA", "").split(",")],
+                      context_name=ctx)
+    ev = L.Evidence(args.evidence_dir, run_id, san, enabled=live)
+    res = L.Results()
+    runner = S.Runner(kube, ev, san, res, network_policy=args.network_policy,
+                      node_selector=L.parse_node_selector(os.environ.get("RWX_NODE_SELECTOR", "")),
+                      herdr_ns=os.environ.get("HERDR_NS", L.DEFAULT_HERDR_NS),
+                      herdr_pod=os.environ.get("HERDR_POD", L.DEFAULT_HERDR_POD),
+                      expect_longhorn=os.environ.get("RWX_EXPECT_LONGHORN", L.DEFAULT_EXPECT_LONGHORN))
+    return runner
+
+
+def finish(runner, rc=0):
+    runner.ev.write("results.tsv", runner.res.tsv())
+    runner.ev.write("commands.txt", "\n".join(runner.kube.trace))
+    if runner.ev.withheld:
+        L.log(f"sanitizer withheld {len(runner.ev.withheld)} evidence file(s): {runner.ev.withheld}")
+    return rc
+
+
+def cmd_plan(args):
+    run_id = args.run_id or "<run-id>"
+    ns = L.namespace_for(args.run_id) if args.run_id else L.NS_PREFIX + "<run-id>"
+    print(f"EXP-005-RWX plan (offline; nothing is contacted or created)\nrun-id: {run_id}\nnamespace: {ns}\n")
+    print("Kubernetes objects this harness would create (all labelled "
+          f"{L.EXP_LABEL}={L.EXPERIMENT}, {L.RUN_LABEL}=<run-id>):")
+    print(f"  1 Namespace   {ns}   (PSA enforce=restricted)")
+    print(f"  1 PVC         {L.PVC_NAME}   ReadWriteMany 1Gi storageClassName={L.STORAGE_CLASS}")
+    print(f"  2 Pods        {PODS_TXT}   image {L.IMAGE}")
+    print("                required podAntiAffinity on kubernetes.io/hostname (different nodes, and NOT the live Herdr node); restartPolicy Never;")
+    print("                uid/gid 1000, fsGroup 1000, drop ALL, seccomp RuntimeDefault,")
+    print("                no SA token, read-only rootfs, emptyDir /tmp, no hostPath/hostNetwork/privileged, no init containers")
+    print(f"  {'1' if args.network_policy else '0'} NetworkPolicy default-deny-all   "
+          f"({'enabled by default (owner decision D-2); the NFS mount is made by the kubelet/CSI on the node, tests need no pod egress' if args.network_policy else 'OFF (--no-network-policy)'})")
+    print("Created by Kubernetes/Longhorn as a consequence (never touched by us): PV, VolumeAttachment(s); in longhorn-system: Longhorn")
+    print("  volume, engine, 3 replicas, ShareManager CR, share-manager pod, Service/Endpoints named after the PV.\n")
+    print("Mode flags: (none)=offline | --live=read-only | --execute --confirm-run-id <id>=mutations\n")
+    print("Preflight reads (R00):")
+    for r in L.PREFLIGHT_READS:
+        print("  -", r)
+    print("\nTest matrix:")
+    for tid, title in L.MATRIX:
+        print(f"  {tid}  {title}")
+    print("\nGuards before every test: cluster identity (R00), UTC maintenance window 06:30-10:30, nodes Ready/uncordoned, upgrade CRs idle,")
+    print("scratch containers running with 0 restarts, Herdr UID/restarts, other Longhorn volumes, disk < 85%; any exec timeout = suspected NFS hang.")
+    print("\nSequence: preflight -> namespace -> [netpol] -> PVC (wait Bound) -> pod A (wait Ready, share-manager Running) -> pod B (Ready,")
+    print("different node) -> R02 UID 1000 gate (STOP on failure) -> R03..R13 -> collect -> guarded cleanup -> verify (R14)")
+    print("\nRendered manifests (example run id; comments omitted):")
+    rid = args.run_id or "example"
+    L.parse_node_selector(os.environ.get("RWX_NODE_SELECTOR", ""))   # validate only
+    sel = {"injected-at-runtime": "value-not-printed"} if os.environ.get("RWX_NODE_SELECTOR") else {}
+    docs = [("namespace", L.render("namespace", rid)), ("pvc", L.render("pvc", rid)),
+            ("pod rwx-a (rwx-b differs only in name/component)", L.render_pod(rid, "a", sel, os.environ.get("HERDR_NS", L.DEFAULT_HERDR_NS)))]
+    if args.network_policy:
+        docs.append(("networkpolicy", L.render("networkpolicy", rid)))
+    for name, text in docs:
+        print(f"--- {name}")
+        print("\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith("#")))
+    if os.environ.get("RWX_NODE_SELECTOR"):
+        print("(a runtime node selector is set via RWX_NODE_SELECTOR; its value is deliberately not printed)")
+    return 0
+
+
+PODS_TXT = ", ".join(L.PODS.values())
+
+
+def cmd_preflight(args):
+    if not (args.live or args.execute):
+        print("DRY RUN (offline). Preflight is read-only and would run:")
+        for r in L.PREFLIGHT_READS:
+            print("  -", r)
+        print("Re-run with --live (and KCTX set) to execute these reads.")
+        return 0
+    r = build(args)
+    try:
+        r.r00()
+    except L.StopRun as e:
+        L.log(f"STOP: {e}")
+        return finish(r, 3)
+    return finish(r, 0)
+
+
+def cmd_create(args):
+    if not args.execute:
+        print("DRY RUN: would apply, in order (see `rwx plan`): Namespace, [NetworkPolicy], PVC, wait Bound, Pod rwx-a, wait Ready + "
+              "share-manager Running, Pod rwx-b (different node), then the R02 UID 1000 gate. Nothing was created.")
+        if args.live:
+            r = build(args)
+            try:
+                r.r00()
+            except L.StopRun as e:
+                L.log(f"STOP: {e}")
+                return finish(r, 3)
+            return finish(r, 0)
+        return 0
+    r = build(args)
+    rc = 0
+    try:
+        r.r00()
+        r.create_resources()
+        r.r02()
+    except L.StopRun as e:
+        L.log(f"STOP CONDITION: {e}")
+        r.collect("stop")
+        safe_cleanup(r)
+        rc = 3
+    return finish(r, rc)
+
+
+def cmd_run(args):
+    if not args.execute:
+        print("DRY RUN: `run` would execute R00-R14 (see `rwx plan`) and always finish with the guarded cleanup. Nothing was created.")
+        if args.live:
+            return cmd_preflight(args)
+        return 0
+    r = build(args)
+    return r.run()
+
+
+def cmd_collect(args):
+    if not args.live and not args.execute:
+        print("DRY RUN: collect is read-only; add --live. It would snapshot pods, PVC, events, describe output and Longhorn objects (sanitized).")
+        return 0
+    r = build(args)
+    r.attach()
+    r.collect("manual")
+    r.observe("manual")
+    return finish(r, 0)
+
+
+def cmd_recreate(args):
+    if not args.execute:
+        print("DRY RUN: would gracefully delete pod rwx-b (no --force), re-apply its manifest and verify data, locks and fsck (R12).")
+        return 0
+    r = build(args)
+    r.attach()
+    try:
+        r.r12()
+    except L.StopRun as e:
+        L.log(f"STOP CONDITION: {e}")
+        r.collect("stop")
+        safe_cleanup(r)
+        return finish(r, 3)
+    return finish(r, 1 if r.res.failed() else 0)
+
+
+def safe_cleanup(r):
+    """Cleanup that can never end in a traceback or a false clean: any exception is UNVERIFIED (exit 6)."""
+    try:
+        return r.cleanup()
+    except L.Refused as e:
+        L.log(f"REFUSED: {e}")
+        return L.EXIT_REFUSED
+    except Exception as e:  # noqa: BLE001
+        r.res.rec("R14", "FAIL", f"UNVERIFIED: cleanup raised {type(e).__name__}: {e}")
+        L.log(f"UNVERIFIED: cleanup raised {type(e).__name__}: {e}")
+        return L.EXIT_UNVERIFIED
+
+
+def cmd_cleanup(args):
+    if args.pv_name and not re.fullmatch(r"pvc-[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}", args.pv_name):
+        raise L.Refused("--pv-name must look like pvc-<uuid>")
+    r = build(args)
+    r.pv = args.pv_name
+    rc = safe_cleanup(r)
+    finish(r)
+    return rc
+
+
+def cmd_sanitize(args):
+    san = L.Sanitizer(extra_literals=[e.strip() for e in os.environ.get("RWX_REDACT_EXTRA", "").split(",")],
+                      context_name=os.environ.get("KCTX"))
+    sys.stdout.write(san.text(open(args.file).read()))
+    return 0
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(prog="rwx", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd")
+    for name, fn in (("plan", cmd_plan), ("preflight", cmd_preflight), ("create", cmd_create), ("run", cmd_run),
+                     ("collect", cmd_collect), ("recreate", cmd_recreate), ("cleanup", cmd_cleanup)):
+        p = sub.add_parser(name)
+        add_common(p, need_run=name != "plan")
+        p.set_defaults(fn=fn)
+    sp = sub.add_parser("sanitize")
+    sp.add_argument("file")
+    sp.set_defaults(fn=cmd_sanitize)
+    args = ap.parse_args(argv)
+    if not args.cmd:
+        args = ap.parse_args(["plan"])
+    try:
+        return args.fn(args)
+    except L.Refused as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

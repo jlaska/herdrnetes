@@ -1,0 +1,24 @@
+{
+ "a": {
+  "_rc": 0,
+  "label": "pa",
+  "n": 500,
+  "write_errors": 0
+ },
+ "b": {
+  "_rc": 0,
+  "label": "pb",
+  "n": 500,
+  "write_errors": 0
+ },
+ "verify": {
+  "_rc": 0,
+  "expected": 1000,
+  "garbled": 0,
+  "lines": 500,
+  "missing": {
+   "pa": 0,
+   "pb": 500
+  }
+ }
+}

@@ -1,0 +1,23 @@
+kubectl --context <context> config get-contexts -o name
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> version -o json
+kubectl --context <context> -n longhorn-system get pods -o json
+kubectl --context <context> get namespace herdrnetes-exp -o json
+kubectl --context <context> -n herdrnetes-exp get pods -l app.kubernetes.io/name=herdr -o json
+kubectl --context <context> get namespace herdrnetes-exp005-rwx-20261121a -o json
+kubectl --context <context> get storageclass longhorn -o json
+kubectl --context <context> get csidriver driver.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get nodes.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get settings.longhorn.io rwx-volume-fast-failover -o json
+kubectl --context <context> -n longhorn-system get settings.longhorn.io storage-network -o json
+kubectl --context <context> -n longhorn-system get settings.longhorn.io storage-network-for-rwx-volume-enabled -o json
+kubectl --context <context> auth can-i create namespaces
+kubectl --context <context> auth can-i create persistentvolumeclaims -n herdrnetes-exp005-rwx-20261121a
+kubectl --context <context> auth can-i create pods -n herdrnetes-exp005-rwx-20261121a
+kubectl --context <context> auth can-i delete namespaces
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json

@@ -1,0 +1,47 @@
+{
+ "facts": {
+  "longhorn_volume": {
+   "reason": "no match in a readable list",
+   "state": "ABSENT"
+  },
+  "namespace": {
+   "reason": "NotFound",
+   "state": "ABSENT"
+  },
+  "pv": {
+   "reason": "no match in a readable list",
+   "state": "ABSENT"
+  },
+  "pvc": {
+   "reason": "NotFound",
+   "state": "ABSENT"
+  },
+  "share_manager_cr": {
+   "reason": "NotFound",
+   "state": "ABSENT"
+  },
+  "share_manager_pod": {
+   "reason": "NotFound",
+   "state": "ABSENT"
+  },
+  "share_manager_service": {
+   "reason": "NotFound",
+   "state": "ABSENT"
+  },
+  "volume_attachment": {
+   "reason": "no attachment for the volume",
+   "state": "ABSENT"
+  }
+ },
+ "herdr_unchanged": true,
+ "invariant_infos": [],
+ "invariant_stops": [],
+ "invariant_unknown": [],
+ "present": [],
+ "unknown": [],
+ "verdict": "CLEAN",
+ "volume_names": [
+  "pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd"
+ ],
+ "waited_s": 12.4
+}

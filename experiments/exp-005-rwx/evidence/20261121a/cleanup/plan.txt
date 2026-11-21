@@ -1,0 +1,6 @@
+cleanup plan for run-id 20261121a in herdrnetes-exp005-rwx-20261121a:
+  delete pod/rwx-a
+  delete pod/rwx-b
+  delete networkpolicy/default-deny-all
+  delete persistentvolumeclaim/rwx-scratch
+  delete namespace herdrnetes-exp005-rwx-20261121a
