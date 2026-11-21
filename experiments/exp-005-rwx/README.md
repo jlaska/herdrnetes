@@ -1,8 +1,9 @@
 # EXP-005-RWX: scoped Longhorn RWX comparison (issue #32)
 
 **Status: EXECUTED once (run `20261121a`, 2026-11-21, 17:20-18:47 UTC) at the unchanged pinned commit
-`994071c0a6fcb412bceae7eb384d39f9615a54ac`.** Results and proposed findings FIND-066..070 (for owner review, not accepted) are in
-[RESULTS.md](RESULTS.md); sanitized evidence is in [`evidence/20261121a/`](evidence/20261121a/). The text below this paragraph is the PREPARE-phase
+`994071c0a6fcb412bceae7eb384d39f9615a54ac`.** Findings FIND-066..070 were **accepted by the owner as bounded, one-run experiment findings within the limits stated in
+[RESULTS.md](RESULTS.md)** (not an RWX adoption approval; ADR-0001 unchanged). FIND-070's root cause is tracked read-only in
+[#36](https://github.com/jlaska/herdrnetes/issues/36); sanitized evidence is in [`evidence/20261121a/`](evidence/20261121a/). The text below this paragraph is the PREPARE-phase
 description and is kept unchanged as the plan that was executed.
 
 Follow-up to [EXP-005](../exp-005/RESULTS.md) (issue #6, findings FIND-058..065) under issue
