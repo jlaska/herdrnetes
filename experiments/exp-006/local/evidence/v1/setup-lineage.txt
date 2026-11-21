@@ -1,0 +1,3 @@
+controller (this script) pid=927541 ppid=927540
+tmux server pid=927569, its ppid=1
+counter pid=927570, its ppid=927569

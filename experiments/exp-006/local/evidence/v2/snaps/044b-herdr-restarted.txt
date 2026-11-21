@@ -1,0 +1,12 @@
+# 044b-herdr-restarted 2026-11-21T23:08:52Z
+    PID    PPID     SID                  STARTED CMD
+ 931952       1  931952 Sat Nov 21 18:08:39 2026 tmux -S /tmp/hx6/v2/tmux.sock -f /dev/null new-session -d -s agent -x 120 -y 30 ~/Projects/herdrnetes/experiments/exp-006/local/counter.sh /tmp/hx6/v2/out
+ 931953  931952  931953 Sat Nov 21 18:08:39 2026 bash ~/Projects/herdrnetes/experiments/exp-006/local/counter.sh /tmp/hx6/v2/out
+ 933187  931922  933187 Sat Nov 21 18:08:51 2026 /home/linuxbrew/.linuxbrew/bin/herdr server
+# children of tmux server 931952
+    PID    PPID     SID                  STARTED CMD
+ 931953  931952  931953 Sat Nov 21 18:08:39 2026 bash ~/Projects/herdrnetes/experiments/exp-006/local/counter.sh /tmp/hx6/v2/out
+# children of herdr server 933187
+    PID    PPID     SID                  STARTED CMD
+ 933202  933187  933202 Sat Nov 21 18:08:51 2026 /usr/bin/bash --noprofile --rcfile /tmp/hx6/v2/pane-bashrc -i
+# tmux clients: 

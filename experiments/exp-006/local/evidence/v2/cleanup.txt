@@ -1,0 +1,6 @@
+verified gone: tmux-server pid=931952
+verified gone: counter pid=931953
+verified gone: herdr-server-initial pid=932015
+verified gone: herdr-server-restart-4a pid=932787
+verified gone: herdr-server-restart-4b pid=933187
+cleanup verified: all recorded PIDs gone, no stray processes

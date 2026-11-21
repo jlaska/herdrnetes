@@ -1,0 +1,6 @@
+pane ids before stop: ["w2:p1","w2:p2"]
+tmux clients after herdr restart (before new pane): 0
+--- restored pane w2:p1 process-info:
+{"shell_pid":933202,"fg":["/usr/bin/bash --noprofile --rcfile /tmp/hx6/v2/pane-bashrc -i"]}
+--- restored pane w2:p1 visible text (non-empty lines):
+$

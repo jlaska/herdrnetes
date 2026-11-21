@@ -1,0 +1,5 @@
+T1-attach	PASS	ACK in log and pane read: pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=1
+T2-disconnect	PASS	pane closed, clients=0, counter pid=931953 start=28203948 nonce=73d029d5d1f74fd0 unchanged; n at disconnect=2, now 7, 5 counter lines over 4.0s with no client
+T3-reconnect	PASS	ACK pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=7 (> n at disconnect 2)
+T4a	PASS	clean: old server pid 932015 gone, clients dropped to 0 (was 1), counter unchanged and advanced n=8->11 while Herdr down; after restart (new server pid 932787, restored-pane tmux clients=0) new pane ACK pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=11
+T4b	PASS	kill: old server pid 932787 gone, clients dropped to 0 (was 1), counter unchanged and advanced n=12->15 while Herdr down; after restart (new server pid 933187, restored-pane tmux clients=0) new pane ACK pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=15
