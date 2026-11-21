@@ -1,0 +1,22 @@
+{
+ "_rc": 0,
+ "listing": [
+  "locks",
+  "perf",
+  "pp",
+  "scratch",
+  "sources",
+  "worktrees",
+  "ws"
+ ],
+ "ok": true,
+ "stat": {
+  "gid": 1000,
+  "is_dir": true,
+  "mode": 493,
+  "nlink": 9,
+  "size": 4096,
+  "uid": 1000
+ },
+ "work": "/rwx/work"
+}

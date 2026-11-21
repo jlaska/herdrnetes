@@ -1,0 +1,57 @@
+{
+ "_rc": 0,
+ "atomic_replace": {
+  "content": "new",
+  "ms": 0.82,
+  "ok": true
+ },
+ "chmod_444_access_w": false,
+ "chmod_g_s_dir": {
+  "ms": 0.2,
+  "ok": true
+ },
+ "fallocate": {
+  "ms": 0.57,
+  "ok": true
+ },
+ "fsync_ms": {
+  "max": 4.79,
+  "median": 2.91,
+  "min": 2.1
+ },
+ "hardlink": {
+  "ms": 0.4,
+  "nlink": 2,
+  "ok": true
+ },
+ "mmap_file": "/rwx/work/scratch/edges-a/mmap-a.bin",
+ "mmap_sha256": "bf718b6f653bebc184e1479f1935b8da974d701b893afcf49e701f3e2f9f9c5a",
+ "symlink": {
+  "ms": 0.27,
+  "ok": true,
+  "target": "hl-a"
+ },
+ "umask_modes": {
+  "002": {
+   "dir": "0o775",
+   "file": "0o664",
+   "gid": 1000
+  },
+  "022": {
+   "dir": "0o755",
+   "file": "0o644",
+   "gid": 1000
+  },
+  "077": {
+   "dir": "0o700",
+   "file": "0o600",
+   "gid": 1000
+  }
+ },
+ "xattr_user": {
+  "errno": "ENOTSUP",
+  "ms": 0.41,
+  "msg": "Operation not supported",
+  "ok": false
+ }
+}

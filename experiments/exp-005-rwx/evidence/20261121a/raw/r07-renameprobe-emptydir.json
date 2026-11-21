@@ -1,0 +1,42 @@
+{
+ "_rc": 0,
+ "dir_to_absent": {
+  "dst_exists_after": true,
+  "errno": null,
+  "rc": 0,
+  "src_exists_after": false
+ },
+ "dir_to_existing_empty_dir": {
+  "dst_exists_after": true,
+  "errno": "EEXIST",
+  "rc": -1,
+  "src_exists_after": true
+ },
+ "file_to_absent": {
+  "dst_exists_after": true,
+  "errno": null,
+  "rc": 0,
+  "src_exists_after": false
+ },
+ "file_to_existing_file": {
+  "dst_exists_after": true,
+  "errno": "EEXIST",
+  "rc": -1,
+  "src_exists_after": true
+ },
+ "noreplace_dir_onto_nonempty_dir": {
+  "errno": "EEXIST",
+  "rc": -1
+ },
+ "noreplace_einval_or_enosys": false,
+ "noreplace_supported": true,
+ "plain_rename_dir_onto_empty_dir": {
+  "replaced": true,
+  "src_exists_after": false
+ },
+ "plain_rename_dir_onto_nonempty_dir": {
+  "errno": "EEXIST",
+  "replaced": false,
+  "src_exists_after": true
+ }
+}

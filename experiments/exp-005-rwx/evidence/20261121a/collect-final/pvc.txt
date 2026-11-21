@@ -1,0 +1,42 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"annotations":{},"labels":{"herdrnetes.io/component":"rwx-pvc","herdrnetes.io/disposable":"true","herdrnetes.io/experiment":"exp-005-rwx","herdrnetes.io/run-id":"20261121a"},"name":"rwx-scratch","namespace":"herdrnetes-exp005-rwx-20261121a"},"spec":{"accessModes":["ReadWriteMany"],"resources":{"requests":{"storage":"1Gi"}},"storageClassName":"longhorn","volumeMode":"Filesystem"}}
+      pv.kubernetes.io/bind-completed: "yes"
+      pv.kubernetes.io/bound-by-controller: "yes"
+      volume.beta.kubernetes.io/storage-provisioner: driver.longhorn.io
+      volume.kubernetes.io/storage-provisioner: driver.longhorn.io
+    creationTimestamp: "2026-11-21T17:20:06Z"
+    finalizers:
+    - kubernetes.io/pvc-protection
+    labels:
+      herdrnetes.io/component: rwx-pvc
+      herdrnetes.io/disposable: "true"
+      herdrnetes.io/experiment: exp-005-rwx
+      herdrnetes.io/run-id: 20261121a
+    name: rwx-scratch
+    namespace: herdrnetes-exp005-rwx-20261121a
+    resourceVersion: "80335338"
+    uid: 99f1fb06-bb34-4170-8c35-b10ba31713fd
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Gi
+    storageClassName: longhorn
+    volumeMode: Filesystem
+    volumeName: pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd
+  status:
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: 1Gi
+    phase: Bound
+kind: List
+metadata:
+  resourceVersion: ""

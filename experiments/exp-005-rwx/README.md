@@ -1,8 +1,9 @@
 # EXP-005-RWX: scoped Longhorn RWX comparison (issue #32)
 
-**Status: PREPARE, not executed.** **No Kubernetes resources were created, no cluster was contacted, and no kubectl command
-was run to produce this directory.** Everything here is a proposal for owner review; there is no observed evidence yet and
-there is no `evidence/` directory.
+**Status: EXECUTED once (run `20261121a`, 2026-11-21, 17:20-18:47 UTC) at the unchanged pinned commit
+`994071c0a6fcb412bceae7eb384d39f9615a54ac`.** Results and proposed findings FIND-066..070 (for owner review, not accepted) are in
+[RESULTS.md](RESULTS.md); sanitized evidence is in [`evidence/20261121a/`](evidence/20261121a/). The text below this paragraph is the PREPARE-phase
+description and is kept unchanged as the plan that was executed.
 
 Follow-up to [EXP-005](../exp-005/RESULTS.md) (issue #6, findings FIND-058..065) under issue
 [#32](https://github.com/jlaska/herdrnetes/issues/32): measure whether one disposable 1Gi `ReadWriteMany` PVC on the
@@ -11,9 +12,9 @@ option A5 in [docs/experiments/05-repository-storage.md](../../docs/experiments/
 optional scratch experiment. [ADR-0001](../../docs/decisions/ADR-0001-trusted-mvp.md) is **unchanged**; the trusted MVP keeps one
 shared RWO workspace PVC. Requirements touched: REQ-004, REQ-006, REQ-009, REQ-010 (see [requirements](../../docs/requirements.md)).
 
-**Execution is NOT approved.** The owner's review of the first PREPARE commit (PR #35, 2026-11-20) put execution on hold until three
-fail-closed code paths were corrected and covered by regression tests; this revision contains those corrections. A new explicit
-authorization (run id plus window) is still required before anything is created.
+**Execution history.** The owner's review of the first PREPARE commit (PR #35, 2026-11-20) put execution on hold until three
+fail-closed code paths were corrected; this revision contains those corrections. Execution was then authorized for 2026-11-21
+([#32 comment 7066214683](https://github.com/jlaska/herdrnetes/issues/32#issuecomment-7066214683)) and run once. No further run is authorized.
 
 Companion documents: [RESEARCH.md](RESEARCH.md) (documentation/issue research and the predictions it supports) and
 [PREFLIGHT.md](PREFLIGHT.md) (read-only preflight observations).
@@ -63,7 +64,7 @@ Still open: execution date/window, the 06:30-10:30 UTC guard (stricter than D-9'
 | `harness/scenarios.py` | orchestration of R00-R14 |
 | `harness/podprobe.py` | stdlib in-pod probes, streamed over `kubectl exec` stdin |
 | `tests/` | local unit tests (no cluster); `tests/run-local.sh` |
-| `evidence/<run-id>/` | **does not exist yet**; written, sanitized, at execution time |
+| `evidence/20261121a/` | sanitized evidence of the executed run (see [RESULTS.md](RESULTS.md)) |
 
 The harness reuses, without copying, `experiments/exp-005/harness/request-repo` and the EXP-005 image digest
 (`ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277`).

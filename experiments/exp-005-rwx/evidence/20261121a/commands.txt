@@ -1,0 +1,610 @@
+kubectl --context <context> config get-contexts -o name
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> version -o json
+kubectl --context <context> -n longhorn-system get pods -o json
+kubectl --context <context> get namespace herdrnetes-exp -o json
+kubectl --context <context> -n herdrnetes-exp get pods -l app.kubernetes.io/name=herdr -o json
+kubectl --context <context> get namespace herdrnetes-exp005-rwx-20261121a -o json
+kubectl --context <context> get storageclass longhorn -o json
+kubectl --context <context> get csidriver driver.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get nodes.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io -o json
+kubectl --context <context> -n longhorn-system get settings.longhorn.io rwx-volume-fast-failover -o json
+kubectl --context <context> -n longhorn-system get settings.longhorn.io storage-network -o json
+kubectl --context <context> -n longhorn-system get settings.longhorn.io storage-network-for-rwx-volume-enabled -o json
+kubectl --context <context> auth can-i create namespaces
+kubectl --context <context> auth can-i create persistentvolumeclaims -n herdrnetes-exp005-rwx-20261121a
+kubectl --context <context> auth can-i create pods -n herdrnetes-exp005-rwx-20261121a
+kubectl --context <context> auth can-i delete namespaces
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> apply -f -
+kubectl --context <context> apply -f -
+kubectl --context <context> apply -f -
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc rwx-scratch -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc rwx-scratch -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc rwx-scratch -o json
+kubectl --context <context> apply -f -
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> apply -f -
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - identity
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - mountinfo /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - writegate /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - identity
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - mountinfo /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - writegate /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - mkwork /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - statinfo /rwx/work
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong b /rwx/work/pp/ab-new-open 20 open new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong a /rwx/work/pp/ab-new-open 20 open new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong b /rwx/work/pp/ba-new-open 20 open new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong a /rwx/work/pp/ba-new-open 20 open new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong b /rwx/work/pp/ab-new-listdir 20 listdir new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong a /rwx/work/pp/ab-new-listdir 20 listdir new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong b /rwx/work/pp/ba-new-listdir 20 listdir new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong a /rwx/work/pp/ba-new-listdir 20 listdir new 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong b /rwx/work/pp/ab-inplace-open 20 open inplace 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong a /rwx/work/pp/ab-inplace-open 20 open inplace 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong b /rwx/work/pp/ba-inplace-open 20 open inplace 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong a /rwx/work/pp/ba-inplace-open 20 open inplace 30
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong b /rwx/work/pp/ab-new-stat 3 stat new 75
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong a /rwx/work/pp/ab-new-stat 3 stat new 75
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - pingpong b /rwx/work/pp/ba-new-stat 3 stat new 75
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - pingpong a /rwx/work/pp/ba-new-stat 3 stat new 75
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - mkrepo /rwx/work/sources h1 300 5
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - statinfo /rwx/work/sources/h1.git/HEAD
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 h1 file:///rwx/work/sources/h1.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 h1 file:///rwx/work/sources/h1.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitcommit /rwx/work/ws/h1 b 0
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitcommit /rwx/work/ws/h1 a 0
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitcommit /rwx/work/ws/h1 b 1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitcommit /rwx/work/ws/h1 a 1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitcommit /rwx/work/ws/h1 b 2
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitcommit /rwx/work/ws/h1 a 2
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitinfo /rwx/work/ws/h1
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - mkrepo /rwx/work/sources big 3000 5
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws REQUEST_REPO_TEST_PAUSE_AFTER_CLONE=4 python3 -I - --timeout 600 c1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/c1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/c1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 c2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/c2
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/c2
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 d1 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 d2 file:///rwx/work/sources/big.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/d1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/d2
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - lockhold /rwx/work/locks/r06-flock-a.lock 14 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - locktry /rwx/work/locks/r06-flock-a.lock 3 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - locktry /rwx/work/locks/r06-flock-a.lock 60 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - lockhold /rwx/work/locks/r06-flock-b.lock 14 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - locktry /rwx/work/locks/r06-flock-b.lock 3 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - locktry /rwx/work/locks/r06-flock-b.lock 60 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - lockhold /rwx/work/locks/r06-fcntl-a.lock 14 fcntl
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - locktry /rwx/work/locks/r06-fcntl-a.lock 3 fcntl
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - locktry /rwx/work/locks/r06-fcntl-a.lock 60 fcntl
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - renameprobe /rwx/work/scratch
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - renameprobe /rwx/work/scratch
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - renameprobe /tmp
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - mkrepo /rwx/work/scratch race 20 2
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 race file:///rwx/work/scratch/race.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitinfo /rwx/work/ws/race
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - clock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - clock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitrace /rwx/work/ws/race 25 ga 1795285588.9177248
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitrace /rwx/work/ws/race 25 gb 1795285588.9177248
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/race
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/race
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitinfo /rwx/work/ws/race
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - clock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - oexcl /rwx/work/scratch/oexcl 300 oa 1795285602.3824902
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - oexcl /rwx/work/scratch/oexcl 300 ob 1795285602.3824902
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - oexcl_verify /rwx/work/scratch/oexcl 300 oa,ob
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree add -q -b wt-a /rwx/work/worktrees/wt-a
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree list --porcelain
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/worktrees/wt-a status --porcelain
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - gitcommit /rwx/work/worktrees/wt-a wtb 0
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - gitinfo /rwx/work/worktrees/wt-a
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree add -q -b wt-c /rwx/work/worktrees/wt-c
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree add -q -b wt-d /rwx/work/worktrees/wt-d
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree remove /rwx/work/worktrees/wt-c
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree prune
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree list --porcelain
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/h1 worktree list --porcelain
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env WORKSPACE_ROOT=/rwx/work/ws python3 -I - --timeout 600 mv1 file:///rwx/work/sources/h1.git
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/mv1 worktree add -q -b wt-m /rwx/work/worktrees/wt-m
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - rename /rwx/work/ws/mv1 /rwx/work/ws/mv1-moved
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/worktrees/wt-m status --porcelain
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/ws/mv1-moved worktree repair /rwx/work/worktrees/wt-m
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- env GIT_TERMINAL_PROMPT=0 GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=commit.gpgsign GIT_CONFIG_VALUE_0=false GIT_AUTHOR_NAME=rwx-synthetic GIT_AUTHOR_EMAIL=rwx@example.invalid GIT_COMMITTER_NAME=rwx-synthetic GIT_COMMITTER_EMAIL=rwx@example.invalid GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z git -C /rwx/work/worktrees/wt-m status --porcelain
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - posixedges /rwx/work/scratch/edges-a a
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - posixedges /rwx/work/scratch/edges-b b
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - readsha /rwx/work/scratch/edges-a/mmap-a.bin
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - readsha /rwx/work/scratch/edges-b/mmap-b.bin
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - clock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - appendrace /rwx/work/scratch/append.log 500 pa 1795285636.3841891
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - appendrace /rwx/work/scratch/append.log 500 pb 1795285636.3841891
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - appendverify /rwx/work/scratch/append.log 500 pa,pb
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - perf /rwx/work/sources/big.git /rwx/work/perf 3000 5 a
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - perf /rwx/work/sources/big.git /rwx/work/perf 3000 5 b
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - mkrepo /tmp ctl 3000 5
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - perf /tmp/ctl.git /tmp 3000 5 c
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - statinfo /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - lockhold /rwx/work/locks/r12.lock 900 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - posixedges /rwx/work/scratch/r12edges r12
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - heartbeat /rwx/work/scratch/r12-hb-a 150
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a delete pod rwx-b --wait=true --timeout=120s
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - locktry /rwx/work/locks/r12.lock 150 flock
+kubectl --context <context> apply -f -
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - writegate /rwx
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - readsha /rwx/work/scratch/r12edges/mmap-r12.bin
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - fsck /rwx/work/ws/h1
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-b -c ws -- python3 -I - locktry /rwx/work/locks/r12.lock 5 flock
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get events --field-selector involvedObject.name=rwx-b -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> get nodes -o json
+kubectl --context <context> get crd -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> get <internal-host>-operations.com -A -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a exec -i rwx-a -c ws -- python3 -I - df /rwx
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pods -o wide
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc -o yaml
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get events --sort-by=.metadata.creationTimestamp
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a describe pods
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a describe pvc
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get engines.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get replicas.longhorn.io -l longhornvolume=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> get pv pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o yaml
+kubectl --context <context> get namespace herdrnetes-exp005-rwx-20261121a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc,pod,statefulset,deployment,replicaset,daemonset,job,cronjob,configmap,networkpolicy,service,serviceaccount,role,rolebinding,ingress,resourcequota,limitrange -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc rwx-scratch -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a delete pod rwx-a --wait=true --timeout=120s
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pod rwx-b -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a delete pod rwx-b --wait=true --timeout=120s
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get networkpolicy default-deny-all -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a delete networkpolicy default-deny-all --wait=true --timeout=120s
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get persistentvolumeclaim rwx-scratch -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a delete persistentvolumeclaim rwx-scratch --wait=true --timeout=120s
+kubectl --context <context> get namespace herdrnetes-exp005-rwx-20261121a -o json
+kubectl --context <context> delete namespace herdrnetes-exp005-rwx-20261121a --wait=false
+kubectl --context <context> get namespace herdrnetes-exp005-rwx-20261121a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc rwx-scratch -o json
+kubectl --context <context> get pv -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> get pv pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> get volumeattachments.storage.k8s.io -o json
+kubectl --context <context> -n longhorn-system get pod share-manager-pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> get namespace herdrnetes-exp005-rwx-20261121a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc rwx-scratch -o json
+kubectl --context <context> get pv -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> get pv pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> get volumeattachments.storage.k8s.io -o json
+kubectl --context <context> -n longhorn-system get pod share-manager-pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> get namespace herdrnetes-exp005-rwx-20261121a -o json
+kubectl --context <context> -n herdrnetes-exp005-rwx-20261121a get pvc rwx-scratch -o json
+kubectl --context <context> get pv -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json
+kubectl --context <context> get pv pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> get volumeattachments.storage.k8s.io -o json
+kubectl --context <context> -n longhorn-system get pod share-manager-pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get pods -l longhorn.io/share-manager=pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get sharemanagers.longhorn.io pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n longhorn-system get service pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd -o json
+kubectl --context <context> -n herdrnetes-exp get pod herdr-0 -o json
+kubectl --context <context> -n longhorn-system get volumes.longhorn.io -o json

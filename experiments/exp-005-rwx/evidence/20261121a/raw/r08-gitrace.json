@@ -1,0 +1,32 @@
+{
+ "a": {
+  "_rc": 0,
+  "commits_ok": 9,
+  "failures": {
+   "index.lock": 16
+  },
+  "label": "ga",
+  "n": 25,
+  "samples": {
+   "index.lock": "fatal: Unable to create '/rwx/work/ws/race/.git/index.lock': File exists.  Another git process seems to be running in this repository, e.g. an editor opened by 'git commit'. Please make sure all proce"
+  }
+ },
+ "b": {
+  "_rc": 0,
+  "commits_ok": 15,
+  "failures": {
+   "index.lock": 9,
+   "nothing-to-commit": 1
+  },
+  "label": "gb",
+  "n": 25,
+  "samples": {
+   "index.lock": "fatal: Unable to create '/rwx/work/ws/race/.git/index.lock': File exists.  Another git process seems to be running in this repository, e.g. an editor opened by 'git commit'. Please make sure all proce",
+   "nothing-to-commit": "On branch main Your branch is ahead of 'origin/main' by 3 commits.   (use \"git push\" to publish your local commits)  Untracked files:   (use \"git add <file>...\" to include in what will be committed) \t"
+  }
+ },
+ "clock_a_then_b": [
+  1795285578.9177248,
+  1795285579.0688858
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "_rc": 0,
+ "gid": 1000,
+ "ok": true,
+ "root": "/rwx",
+ "root_stat": {
+  "gid": 0,
+  "is_dir": true,
+  "mode": 511,
+  "nlink": 3,
+  "size": 4096,
+  "uid": 0
+ },
+ "steps": {
+  "create_in_subdir": {
+   "ms": 0.51,
+   "ok": true
+  },
+  "create_write_fsync": {
+   "ms": 12.09,
+   "ok": true
+  },
+  "git_smoke": {
+   "ms": 481.48,
+   "ok": true,
+   "steps": "init,commit,clone,commit,fsck"
+  },
+  "mkdir_rename_dir": {
+   "ms": 0.52,
+   "ok": true
+  },
+  "owner_is_caller": {
+   "file_gid": 1000,
+   "file_mode": 420,
+   "file_uid": 1000,
+   "ms": 0.17,
+   "ok": true
+  },
+  "read_back": {
+   "ms": 0.44,
+   "ok": true
+  },
+  "rename_file": {
+   "ms": 0.21,
+   "ok": true
+  },
+  "symlink": {
+   "ms": 0.23,
+   "ok": true
+  },
+  "unlink_rmdir": {
+   "ms": 31.44,
+   "ok": true
+  }
+ },
+ "uid": 1000
+}

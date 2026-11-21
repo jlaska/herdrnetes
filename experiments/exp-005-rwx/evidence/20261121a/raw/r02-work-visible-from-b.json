@@ -1,0 +1,11 @@
+{
+ "/rwx/work": {
+  "gid": 1000,
+  "is_dir": true,
+  "mode": 493,
+  "nlink": 9,
+  "size": 4096,
+  "uid": 1000
+ },
+ "_rc": 0
+}

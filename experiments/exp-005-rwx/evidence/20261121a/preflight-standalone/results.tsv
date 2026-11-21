@@ -1,0 +1,2 @@
+test	status	detail
+R00	PASS	read-only baseline captured: 2 candidate nodes, longhorn 80 volumes healthy, identity ok (longhorn-manager ['v1.13.0']), class longhorn reclaim Delete, fsGroupPolicy=ReadWriteOnceWithFSType, upgrade CR phases ['kubernetesupgrades=Completed', 'talosupgrades=Completed'], herdr baseline recorded

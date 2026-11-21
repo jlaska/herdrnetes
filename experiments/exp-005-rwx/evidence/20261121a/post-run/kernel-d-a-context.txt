@@ -1,0 +1,11 @@
+# D-A context: unrelated Longhorn devices attached/mounted on <node-2> before the run (Loki kernel log, read-only)
+# entries=9 (limit 50)
+17:09:16.756 <node-2>/kernel kern:  notice: [2026-11-21T17:09:15.147038785Z]: sd 26:0:0:1: [sdw] 10485760 512-byte logical blocks: (5.37 GB/5.00 GiB)
+17:09:16.812 <node-2>/kernel kern:  notice: [2026-11-21T17:09:14.257440902Z]: sd 26:0:0:1: [sdw] Attached SCSI disk
+17:09:16.852 <node-2>/kernel kern:  notice: [2026-11-21T17:09:14.338265698Z]: sd 27:0:0:1: [sdx] 8388608 512-byte logical blocks: (4.29 GB/4.00 GiB)
+17:09:16.919 <node-2>/kernel kern:  notice: [2026-11-21T17:09:14.472843179Z]: sd 27:0:0:1: [sdx] Attached SCSI disk
+17:09:25.283 <node-2>/kernel kern:    info: [2026-11-21T17:09:23.20336935Z]: EXT4-fs (sdw): mounted filesystem 943d03d0-dc60-4863-bbce-4ceb46e9a3c1 r/w with ordered data mode. Quota mode: none.
+17:09:25.483 <node-2>/kernel kern:    info: [2026-11-21T17:09:23.602940676Z]: EXT4-fs (sdx): mounted filesystem 57f3c452-7a30-4e1d-a34b-a4632a1d7347 r/w with ordered data mode. Quota mode: none.
+17:14:23.628 <node-2>/kernel kern:  notice: [2026-11-21T17:14:21.889596044Z]: sd 28:0:0:1: [sdy] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
+17:14:23.691 <node-2>/kernel kern:  notice: [2026-11-21T17:14:22.01455951Z]: sd 28:0:0:1: [sdy] Attached SCSI disk
+17:14:31.811 <node-2>/kernel kern:    info: [2026-11-21T17:14:29.254513571Z]: EXT4-fs (sdy): mounted filesystem db427ef9-387f-4b44-adb7-4e203ce2074f r/w with ordered data mode. Quota mode: none.

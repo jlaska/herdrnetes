@@ -1,0 +1,60 @@
+{
+ "engines": 1,
+ "herdr_restarts": {
+  "herdr": 0,
+  "ovis": 0
+ },
+ "label": "after-r08",
+ "replica_nodes": [
+  "<node-1>",
+  "<node-2>",
+  "<node-3>"
+ ],
+ "replicas": 3,
+ "scratch_pods": {
+  "a": {
+   "phase": "Running",
+   "restarts": {
+    "ws": 0
+   },
+   "uid": "1471a9a3"
+  },
+  "b": {
+   "phase": "Running",
+   "restarts": {
+    "ws": 0
+   },
+   "uid": "99077060"
+  }
+ },
+ "service_present": true,
+ "share_manager_pods": [
+  {
+   "image": [
+    "docker.io/longhornio/longhorn-share-manager:v1.13.0"
+   ],
+   "image_id": [
+    "docker.io/longhornio/longhorn-share-manager@sha256:53950f78b7af38b8a943c298cd3020622191a4661a13036f69d83c154cc8690d"
+   ],
+   "name": "share-manager-pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd",
+   "node": "<node-2>",
+   "phase": "Running",
+   "ready": true,
+   "restarts": 0,
+   "uid": "7187ea69-9b08-4fa1-980b-3335fdd4f3bb"
+  }
+ ],
+ "sharemanager_cr": {
+  "endpoint_present": true,
+  "owner": "<node-2>",
+  "state": "running"
+ },
+ "unknown": [],
+ "volume": {
+  "access_mode": "rwx",
+  "kubernetes_ns": "herdrnetes-exp005-rwx-20261121a",
+  "replicas_requested": 3,
+  "robustness": "healthy",
+  "state": "attached"
+ }
+}

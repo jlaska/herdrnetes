@@ -1,10 +1,10 @@
-# EXP-005-RWX plan: Longhorn RWX comparison (PREPARE, not executed)
+# EXP-005-RWX plan: Longhorn RWX comparison (PREPARE; executed once as run `20261121a`)
 
-**Status: PREPARE. No Kubernetes resource has been created and no cluster has been contacted by anything in this
-directory.** Tracking issue: [#32](https://github.com/jlaska/herdrnetes/issues/32) (follow-up to EXP-005 / #6, findings
+**Status: PREPARE plan, executed unchanged once on 2026-11-21 as run `20261121a`; results in [RESULTS.md](RESULTS.md).** The plan text below is kept as
+reviewed. Tracking issue: [#32](https://github.com/jlaska/herdrnetes/issues/32) (follow-up to EXP-005 / #6, findings
 FIND-058..065). [ADR-0001](../../docs/decisions/ADR-0001-trusted-mvp.md) is unchanged; nothing here proposes changing it.
 Distinction used throughout: **accepted decision** (ADR-0001), **owner-approved conditions** (issue #32), **hypotheses**
-(README), **observed evidence** (none yet), **proposals** (this plan, for owner review).
+(README), **observed evidence** ([RESULTS.md](RESULTS.md), run `20261121a`), **proposals** (this plan, for owner review).
 
 Execution requires the owner's explicit go-ahead on the PR that carries this directory.
 

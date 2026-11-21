@@ -1,0 +1,62 @@
+test	status	detail
+R00	PASS	read-only baseline captured: 2 candidate nodes, longhorn 80 volumes healthy, identity ok (longhorn-manager ['v1.13.0']), class longhorn reclaim Delete, fsGroupPolicy=ReadWriteOnceWithFSType, upgrade CR phases ['kubernetesupgrades=Completed', 'talosupgrades=Completed'], herdr baseline recorded
+R01	PASS	PVC Bound in 4.23s (RWX), pods on different nodes (<node-2>, <node-1>), share-manager Running, Longhorn volume accessMode=rwx robustness=healthy
+R02-a-identity	PASS	pod a: identity/security: ok
+R02-a-nfsv4	PASS	pod a: NFSv4 mount: ok
+R02-a-gate	PASS	pod a: UID 1000 write + git smoke gate: ok
+R02-b-identity	PASS	pod b: identity/security: ok
+R02-b-nfsv4	PASS	pod b: NFSv4 mount: ok
+R02-b-gate	PASS	pod b: UID 1000 write + git smoke gate: ok
+R02a	INFO	mount a={'mount_point': '/rwx', 'fstype': 'nfs4', 'source': '<ip>:/pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd', 'vers': '4.1', 'nfs_options': {'fatal_neterrors': 'none', 'local_lock': 'none', 'namlen': '255', 'noresvport': True, 'proto': 'tcp', 'retrans': '5', 'rsize': '1048576', 'sec': 'sys', 'timeo': '600', 'vers': '4.1', 'wsize': '1048576'}} b={'mount_point': '/rwx', 'fstype': 'nfs4', 'source': '<ip>:/pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd', 'vers': '4.1', 'nfs_options': {'fatal_neterrors': 'none', 'local_lock': 'none', 'namlen': '255', 'noresvport': True, 'proto': 'tcp', 'retrans': '5', 'rsize': '1048576', 'sec': 'sys', 'timeo': '600', 'vers': '4.1', 'wsize': '1048576'}}
+R02b	INFO	fsGroup 1000 applied to root gid? False (root gid=0, setgid=False); root mode=0o777 uid=0
+R02c	INFO	groups=[1000] seccomp=2 (2 = filter, from RuntimeDefault)
+R02	PASS	both pods: uid/gid 1000, NoNewPrivs, no capabilities; /rwx is an NFSv4.1+ mount of the same export; files owned numerically by 1000; create/write/fsync/rename/mkdir/symlink/unlink and the non-root git init/clone/commit/fsck smoke passed; work tree created by A visible from B
+R03-new-open-atob	FAIL	rtt_ms median=None max=None n=0 timeouts=20/20 content_mismatch=0
+R03-new-open-btoa	PASS	rtt_ms median=30007.36 max=30014.03 n=20 timeouts=0/0 content_mismatch=0
+R03-new-listdir-atob	PASS	rtt_ms median=30004.21 max=30012.34 n=20 timeouts=0/0 content_mismatch=0
+R03-new-listdir-btoa	PASS	rtt_ms median=21.96 max=30015.59 n=20 timeouts=0/0 content_mismatch=0
+R03-inplace-open-atob	FAIL	rtt_ms median=29999.95 max=30008.13 n=19 timeouts=1/1 content_mismatch=0
+R03-inplace-open-btoa	PASS	rtt_ms median=29994.25 max=30008.32 n=20 timeouts=0/0 content_mismatch=0
+R03-new-stat-atob	INFO	rtt_ms median=30011.84 max=30011.84 n=1 timeouts=2/2 content_mismatch=0
+R03-new-stat-btoa	INFO	rtt_ms median=None max=None n=0 timeouts=3/3 content_mismatch=0
+R03	INFO	close-to-open visibility measured in both directions; see R03-* rows
+R04a	PASS	source from A visible to B after 0.2s (incl. exec overhead); B first request=hydrated (promotion=rename-fallback, 4774ms); A second request=already_ready
+R04b	PASS	6 alternating commits visible on the other node (poll latencies s=[0.18, 0.25, 0.2, 0.25, 0.18, 0.21]); heads agree=True
+R04	PASS	fsck --strict clean on A=True B=True; mkrepo 8.679s
+R05-c1	PASS	4+4 concurrent (pause=4): actions={'already_ready': 7, 'hydrated': 1} rcs={0: 8} attempts=[1] fsck A=True B=True
+R05-c2	PASS	4+4 concurrent (pause=None): actions={'hydrated': 1, 'already_ready': 7} rcs={0: 8} attempts=[1] fsck A=True B=True
+R05-diff	PASS	different repos concurrently: A d1=hydrated B d2=hydrated; cross-node fsck clean=True
+R05	INFO	see R05-c1/c2/diff rows
+R06-flock-atob	PASS	holder on a: held=True; contender on b: 3s try acquired=False (EWOULDBLOCK), then blocking try acquired=True after 10.403s (holder released at ~14s; elapsed 14.1s)
+R06-flock-btoa	PASS	holder on b: held=True; contender on a: 3s try acquired=False (EWOULDBLOCK), then blocking try acquired=True after 10.721s (holder released at ~14s; elapsed 14.1s)
+R06-fcntl-atob	PASS	holder on a: held=True; contender on b: 3s try acquired=False (EWOULDBLOCK), then blocking try acquired=True after 10.65s (holder released at ~14s; elapsed 14.0s)
+R06	INFO	cross-node flock/fcntl exclusion measured; see R06-* rows
+R07-a	INFO	RENAME_NOREPLACE supported=False errnos={'dir_to_absent': 'EINVAL', 'dir_to_existing_empty_dir': 'EEXIST', 'file_to_absent': 'EINVAL', 'file_to_existing_file': 'EEXIST', 'noreplace_dir_onto_nonempty_dir': 'EEXIST', 'plain_rename_dir_onto_nonempty_dir': 'ENOTEMPTY'} plain rename onto empty dir: {'replaced': True, 'src_exists_after': False}
+R07-b	INFO	RENAME_NOREPLACE supported=False errnos={'dir_to_absent': 'EINVAL', 'dir_to_existing_empty_dir': 'EEXIST', 'file_to_absent': 'EINVAL', 'file_to_existing_file': 'EEXIST', 'noreplace_dir_onto_nonempty_dir': 'EEXIST', 'plain_rename_dir_onto_nonempty_dir': 'ENOTEMPTY'} plain rename onto empty dir: {'replaced': True, 'src_exists_after': False}
+R07-control	INFO	emptyDir control supported=True
+R07-nonempty	PASS	plain rename(2) of a dir onto an existing NON-empty dir refused with ENOTEMPTY/EEXIST: {'a': {'errno': 'ENOTEMPTY', 'replaced': False, 'src_exists_after': True}, 'b': {'errno': 'ENOTEMPTY', 'replaced': False, 'src_exists_after': True}}; RENAME_NOREPLACE onto non-empty dir: {'a': {'errno': 'EEXIST', 'rc': -1}, 'b': {'errno': 'EEXIST', 'rc': -1}}
+R07	PASS	supported={'a': False, 'b': False} (research predicts EINVAL for any renameat2 flag on the Linux NFS client); request-repo promotion methods observed in R04/R05: ['rename-fallback']; no probe silently replaced an existing file under RENAME_NOREPLACE. request-repo's rename-fallback is `lexists(target)` then `os.rename` while holding the per-repo flock: its guarantee rests on that lock alone (TOCTOU window; rename onto an EMPTY directory would silently replace it, so an empty target must never be pre-created). Not tested here: lock loss after a share-manager restart
+R08-git	PASS	concurrent commits on ONE repo: ok A=9 B=15 failures A={'index.lock': 16} B={'index.lock': 9, 'nothing-to-commit': 1}; commits found=26 expected=26; fsck clean=True
+R08-oexcl	PASS	O_EXCL race over 300 names: A won 197, B won 103, overlap 0, missing 0
+R08	INFO	lock behaviour recorded in R08-git failures (index.lock / ref lock classification)
+R09-move	INFO	worktree add rc=0; parent renamed within the volume ok=True; worktree status after rename rc=128 (expected non-zero: absolute gitdir link broken); `git worktree repair` rc=0; status after repair rc=0 ('fatal: not a git repository: /rwx/work/ws/mv1/.git/worktrees/wt-m\ncommand termin')
+R09	PASS	steps(rc/diff)={'add_a': 0, 'list_b_sees_wt_a': 0, 'status_b': 0, 'commit_in_wt_visible': 0, 'remove_c_from_b': 0, 'prune_a': 0}; worktree lists identical on both nodes=True; linked .git file absolute path=True (gitdir: /rwx/work/ws/h1/.git/worktrees/wt-a); concurrent add rc=0/0; fsck clean=True (FIND-064)
+R10-mmap	PASS	mmap+msync content identical when read on the other node: True
+R10-basics	PASS	hardlink=True symlink=True atomic replace=True xattr=False (ENOTSUP)
+R10-umask	INFO	modes by umask (A): {'002': {'dir': '0o775', 'file': '0o664', 'gid': 1000}, '022': {'dir': '0o755', 'file': '0o644', 'gid': 1000}, '077': {'dir': '0o700', 'file': '0o600', 'gid': 1000}}; chmod 444 then access(W)=False; chmod g+s dir: True
+R10-fsync	INFO	fsync 4KiB ms A={'max': 4.79, 'median': 2.91, 'min': 2.1} B={'max': 15.19, 'median': 3.47, 'min': 2.81}
+R10-append	INFO	O_APPEND from two nodes: expected lines 1000, found 500, garbled 0, missing per writer {'pa': 0, 'pb': 500} (NFS append is not atomic across clients [hypothesis])
+R10	INFO	POSIX edge semantics recorded
+R11-clone	INFO	median s rwx_a=16.0491 rwx_b=41.9982 emptydir=0.3085 (rwx_a/emptydir=52.0x)
+R11-status_clean	INFO	median s rwx_a=0.1171 rwx_b=0.2577 emptydir=0.032 (rwx_a/emptydir=3.7x)
+R11-checkout_alt	INFO	median s rwx_a=14.4312 rwx_b=31.2116 emptydir=0.2707 (rwx_a/emptydir=53.3x)
+R11-checkout_main	INFO	median s rwx_a=13.6222 rwx_b=27.7583 emptydir=0.2899 (rwx_a/emptydir=47.0x)
+R11-fsck	INFO	median s rwx_a=1.0217 rwx_b=5.9427 emptydir=0.1223 (rwx_a/emptydir=8.4x)
+R11-small_create	INFO	median s rwx_a=10.7552 rwx_b=15.2417 emptydir=0.1102 (rwx_a/emptydir=97.6x)
+R11-small_stat	INFO	median s rwx_a=0.2227 rwx_b=1.3039 emptydir=0.006 (rwx_a/emptydir=37.1x)
+R11-small_read	INFO	median s rwx_a=0.4172 rwx_b=2.6273 emptydir=0.0309 (rwx_a/emptydir=13.5x)
+R11-small_delete	INFO	median s rwx_a=0.7265 rwx_b=3.9932 emptydir=0.0408 (rwx_a/emptydir=17.8x)
+R11	LIMITATION	3000 files x 5 runs; no RWO control PVC (only one PVC approved) and EXP-005 recorded no small-file Git timings, so RWX is compared with an emptyDir control only. The emptyDir is node-local ephemeral storage, not Longhorn ext4, so it bounds (lower limit) rather than measures the RWO gap; synthetic size, shared Longhorn cluster
+R12	PASS	graceful delete of rwx-b gone in 1.6s; B's flock free for A after 0.0s; recreated pod Ready in 6.3s (new UID=True); data sha equal=True; fsck before/after={'a': True, 'b': True}/{'a': True, 'b': True}; UID1000 gate on new pod=True; A heartbeat max gap 0.223s errors={}
+R13	PASS	share-manager pod(s) unchanged UID/restarts and Running at 13 checkpoints=True; Service present=True; ShareManager CR present=True; engines=1 replicas=3; share-manager node(s)=['<node-2>']; share-manager image=['docker.io/longhornio/longhorn-share-manager:v1.13.0'] ['docker.io/longhornio/longhorn-share-manager@sha256:53950f78b7af38b8a943c298cd3020622191a4661a13036f69d83c154cc8690d']; Longhorn replica nodes=['<node-1>', '<node-2>', '<node-3>']; scratch pods on <node-2>/<node-1>, Herdr node <node-3> (read-only observation; share-manager placement is Longhorn-controlled and may be the Herdr node)
+R14	PASS	guarded cleanup; every scratch object positively ABSENT after 12.4s (namespace, PVC, PV, Longhorn volume, share-manager pod/CR/Service, VolumeAttachment); Herdr unchanged=True; other volumes ok=True []

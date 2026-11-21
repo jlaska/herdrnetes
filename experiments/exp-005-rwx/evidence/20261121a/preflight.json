@@ -1,0 +1,127 @@
+{
+ "auth": {
+  "create namespaces": "yes",
+  "create persistentvolumeclaims -n herdrnetes-exp005-rwx-20261121a": "yes",
+  "create pods -n herdrnetes-exp005-rwx-20261121a": "yes",
+  "delete namespaces": "yes"
+ },
+ "csidriver": {
+  "attachRequired": true,
+  "fsGroupPolicy": "ReadWriteOnceWithFSType"
+ },
+ "herdr": {
+  "image_id": [
+   "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277",
+   "ghcr.io/jlaska/herdrnetes-ovis@sha256:8e31cc27ca866dc47f9cb0f519abce844db8a75974c5d147b91fdbcff46ef0db"
+  ],
+  "ready": true,
+  "restarts": {
+   "herdr": 0,
+   "ovis": 0
+  },
+  "uid_prefix": "fe7cd780"
+ },
+ "identity": {
+  "candidate_nodes_excluding_herdr": [
+   "<node-1>",
+   "<node-2>"
+  ],
+  "expected_longhorn_manager_tag": "v1.13.0",
+  "herdr_namespace": "herdrnetes-exp",
+  "herdr_node": "<node-3>",
+  "herdr_pod_count": 1,
+  "idle_phases_accepted": [
+   "completed"
+  ],
+  "maintenance_window_utc": [
+   "06:30",
+   "10:30"
+  ],
+  "observed_tags": [
+   "v1.13.0"
+  ],
+  "upgrade_cr_phases_observed": [
+   "kubernetesupgrades=Completed",
+   "talosupgrades=Completed"
+  ],
+  "upgrade_crds_checked": [
+   "<internal-host>-operations.com",
+   "<internal-host>-operations.com"
+  ],
+  "utc_now": "2026-11-21T17:20Z"
+ },
+ "longhorn": {
+  "by_robustness": {
+   "healthy": 72,
+   "unknown": 8
+  },
+  "existing_share_managers": 0,
+  "nodes": [
+   {
+    "nfs_client": "True",
+    "ready": "True",
+    "schedulable": "True"
+   },
+   {
+    "nfs_client": "True",
+    "ready": "True",
+    "schedulable": "True"
+   },
+   {
+    "nfs_client": "True",
+    "ready": "True",
+    "schedulable": "True"
+   }
+  ],
+  "pods": 32,
+  "settings": {
+   "rwx-volume-fast-failover": "false",
+   "storage-network": "",
+   "storage-network-for-rwx-volume-enabled": "not-present-in-this-version"
+  },
+  "volumes": 80
+ },
+ "nodes": [
+  {
+   "kernel": "6.18.63-talos",
+   "kubelet": "v1.36.6",
+   "name": "<node-1>",
+   "os": "Talos (v1.14.6)"
+  },
+  {
+   "kernel": "6.18.63-talos",
+   "kubelet": "v1.36.6",
+   "name": "<node-2>",
+   "os": "Talos (v1.14.6)"
+  },
+  {
+   "kernel": "6.18.63-talos",
+   "kubelet": "v1.36.6",
+   "name": "<node-3>",
+   "os": "Talos (v1.14.6)"
+  }
+ ],
+ "scratch": {
+  "image": "ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277",
+  "namespace": "herdrnetes-exp005-rwx-20261121a",
+  "network_policy": true
+ },
+ "server_version": "v1.36.6",
+ "storageclass": {
+  "allow_expansion": true,
+  "binding": "Immediate",
+  "parameters": {
+   "backupTargetName": "default",
+   "dataEngine": "v1",
+   "dataLocality": "disabled",
+   "disableRevisionCounter": "true",
+   "fromBackup": "",
+   "fsType": "ext4",
+   "numberOfReplicas": "3",
+   "staleReplicaTimeout": "30",
+   "unmapMarkSnapChainRemoved": "ignored"
+  },
+  "provisioner": "driver.longhorn.io",
+  "reclaim": "Delete"
+ }
+}

@@ -1,0 +1,7 @@
+step	seconds
+pvc_bound	4.23
+pod_a_ready	35.46
+share_manager_running_after_pod_a	0.43
+pod_b_ready	10.53
+mkrepo_big_on_rwx	70.68
+r12_pod_b_recreate_ready	6.41

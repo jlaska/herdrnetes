@@ -1,0 +1,9 @@
+# Kernel storage-error lines, all three nodes (Loki, read-only)
+## run + teardown 17:15Z-18:47:40Z (excluding the scratch device lines above and an unrelated memcg OOM burst)
+# entries=0 (limit 300)
+## after teardown 18:47:40Z-19:00Z
+# entries=0 (limit 300)
+## 7-day history 2026-11-14Z-2026-11-21T17:15Z
+# entries=2 (limit 200)
+07:25:38.287 <node-3>/kernel kern:     err: [2026-11-19T07:25:34.955073978Z]: device offline error, dev sdz, sector 0 op 0x0:(READ) flags 0x0 phys_seg 32 prio class 2
+00:15:03.147 <node-2>/kernel kern:     err: [2026-11-20T00:15:01.808138747Z]: device offline error, dev sdm, sector 0 op 0x0:(READ) flags 0x800 phys_seg 32 prio class 2

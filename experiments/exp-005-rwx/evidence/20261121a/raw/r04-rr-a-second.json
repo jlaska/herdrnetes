@@ -1,0 +1,17 @@
+{
+ "_rc": 0,
+ "action": "already_ready",
+ "attempt": 1,
+ "duration_ms": 13,
+ "error": null,
+ "git_version": "2.47.3",
+ "head": "44d91634bdb04be227dd1c2b70d12f5e0357eda4",
+ "partial": false,
+ "path": "/rwx/work/ws/h1",
+ "promotion": "rename-fallback",
+ "repository_id": "h1",
+ "shallow": false,
+ "source": "file:///rwx/work/sources/h1.git",
+ "status": "ready",
+ "waited": false
+}

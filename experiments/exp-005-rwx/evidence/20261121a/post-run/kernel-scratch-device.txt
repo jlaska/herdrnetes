@@ -1,0 +1,22 @@
+# Kernel log, share-manager node <node-2>, scratch device lifecycle (Loki, read-only; ingest time first, kernel stamp in brackets)
+# query: {talos_service="kernel",hostname=<node-2>} |~ "sdz|EXT4-fs \(sdz|JBD2|device offline|Buffer I/O"
+# entries=19 (limit 200)
+17:20:33.528 <node-2>/kernel kern:  notice: [2026-11-21T17:20:31.684631668Z]: sd 29:0:0:1: [sdz] 2097152 512-byte logical blocks: (1.07 GB/1.00 GiB)
+17:20:33.528 <node-2>/kernel kern:  notice: [2026-11-21T17:20:31.684686546Z]: sd 29:0:0:1: [sdz] Write Protect is off
+17:20:33.528 <node-2>/kernel kern:   debug: [2026-11-21T17:20:31.684697839Z]: sd 29:0:0:1: [sdz] Mode Sense: 69 00 10 08
+17:20:33.528 <node-2>/kernel kern:  notice: [2026-11-21T17:20:31.684790065Z]: sd 29:0:0:1: [sdz] Write cache: disabled, read cache: enabled, supports DPO and FUA
+17:20:33.587 <node-2>/kernel kern:  notice: [2026-11-21T17:20:31.806113017Z]: sd 29:0:0:1: [sdz] Attached SCSI disk
+17:20:36.879 <node-2>/kernel kern:    info: [2026-11-21T17:20:34.388998965Z]: EXT4-fs (sdz): mounted filesystem a229bc87-857b-4527-a87e-15d079f41e9b r/w with ordered data mode. Quota mode: none.
+18:47:28.812 <node-2>/kernel kern:    info: [2026-11-21T18:47:26.220734337Z]: EXT4-fs (sdz): unmounting filesystem a229bc87-857b-4527-a87e-15d079f41e9b.
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220822219Z]: device offline error, dev sdz, sector 1048576 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220845283Z]: Buffer I/O error on dev sdz, logical block 131072, lost sync page write
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220852936Z]: JBD2: I/O error when updating journal superblock for sdz-8.
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220861949Z]: Aborting journal on device sdz-8.
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220868378Z]: device offline error, dev sdz, sector 1048576 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220878826Z]: Buffer I/O error on dev sdz, logical block 131072, lost sync page write
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220885354Z]: JBD2: I/O error when updating journal superblock for sdz-8.
+18:47:28.812 <node-2>/kernel kern:    crit: [2026-11-21T18:47:26.220905129Z]: EXT4-fs error (device sdz): ext4_put_super:1312: comm umount: Couldn't clean up the journal
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220915743Z]: device offline error, dev sdz, sector 0 op 0x1:(WRITE) flags 0x3800 phys_seg 1 prio class 2
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.220925541Z]: Buffer I/O error on dev sdz, logical block 0, lost sync page write
+18:47:28.812 <node-2>/kernel kern:     err: [2026-11-21T18:47:26.22093127Z]: EXT4-fs (sdz): I/O error while writing superblock
+18:47:28.812 <node-2>/kernel kern:    crit: [2026-11-21T18:47:26.22094008Z]: EXT4-fs (sdz): Remounting filesystem read-only

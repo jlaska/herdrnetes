@@ -1,0 +1,20 @@
+Name:          rwx-scratch
+Namespace:     herdrnetes-exp005-rwx-20261121a
+StorageClass:  longhorn
+Status:        Bound
+Volume:        pvc-99f1fb06-bb34-4170-8c35-b10ba31713fd
+Labels:        herdrnetes.io/component=rwx-pvc
+               herdrnetes.io/disposable=true
+               herdrnetes.io/experiment=exp-005-rwx
+               herdrnetes.io/run-id=20261121a
+Annotations:   pv.kubernetes.io/bind-completed: yes
+               pv.kubernetes.io/bound-by-controller: yes
+               volume.beta.kubernetes.io/storage-provisioner: driver.longhorn.io
+               volume.kubernetes.io/storage-provisioner: driver.longhorn.io
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      1Gi
+Access Modes:  RWX
+VolumeMode:    Filesystem
+Used By:       rwx-a
+               rwx-b
+Events:        <none>

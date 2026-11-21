@@ -1,0 +1,16 @@
+{
+ "_rc": 0,
+ "cap_eff": "0000000000000000",
+ "flock": "flock from util-linux 2.41.5",
+ "gid": 1000,
+ "git": "git version 2.47.3",
+ "groups": [
+  1000
+ ],
+ "kernel": "6.18.63-talos",
+ "no_new_privs": "1",
+ "python": "3.13.5",
+ "seccomp": "2",
+ "uid": 1000,
+ "umask": "0o22"
+}
