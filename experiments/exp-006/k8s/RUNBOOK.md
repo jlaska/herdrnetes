@@ -86,8 +86,11 @@ MN() { ctx_ok && live_ok && run_ok && ns_ok && $K -n "$NS" "$@"; }   # every nam
 X() { ctx_ok && run_ok && ns_ok && $K -n "$NS" exec exp006-exec -- "$@"; }   # exec into this run's pods only
 H() { ctx_ok && run_ok && ns_ok && $K -n "$NS" exec exp006-herdr -c herdr -- herdr "$@"; }
 ```
-A failed guard therefore cannot fall through to a write, even if a whole block is pasted: each `M`/`MN` line refuses on
-its own, and so does each `X`/`H` exec. Writes use `create`, never `apply`, so an existing object is an error, not a patch; and `-n "$NS"` makes
+A failed guard blocks only the operation it wraps: each `M`/`MN` write and each `X`/`H` exec re-checks its guards and
+does not call kubectl if one fails. The guards do not stop the shell. A command that fails for another reason, such as
+a `create` returning `AlreadyExists`, a `wait` timing out or a local `ssh-keygen` error, does not stop the next line,
+and a later line whose own guards pass will still run. Do not paste blocks unchecked. Run one command at a time, check
+its exit status and output against the Expected text, and stop on any non-zero or unexpected result. Writes use `create`, never `apply`, so an existing object is an error, not a patch; and `-n "$NS"` makes
 kubectl reject a manifest naming any other namespace. The only unwrapped write is the K06 namespace delete, which
 sits on the same line as its guard. `baseline` output names nodes: it stays in `$WORK/ev` and is sanitized before
 anything is committed.
@@ -159,7 +162,7 @@ This was captured with `kubectl get`/`version`/`auth can-i` only. K00 must re-ca
 
 ## Stop conditions
 
-Stop and report (do not continue) on: any guard printing `FAILED` (`ctx_ok`, `live_ok`, `run_ok`, `ns_ok`; the write on that line has not run, and later lines must not be worked around by hand); any `create` failing with `AlreadyExists`; any K00 baseline change; a rendered manifest whose namespace is not the run namespace; a pod not Ready within 5 min; a pod scheduled onto the live Herdr node; PSA rejection; the K02 attach failing twice; any ssh prompt for a password or passphrase. If the K06 guard fails, the namespace is left in place and reported as **RESIDUE**; the owner deletes it only after re-establishing the cluster identity.
+Stop and report (do not continue) on: any command exiting non-zero or printing something other than its Expected result (except the K00/K06 NotFound checks, where NotFound is expected); any guard printing `FAILED` (`ctx_ok`, `live_ok`, `run_ok`, `ns_ok`; the write on that line has not run, and later lines must not be worked around by hand); any `create` failing with `AlreadyExists`; any K00 baseline change; a rendered manifest whose namespace is not the run namespace; a pod not Ready within 5 min; a pod scheduled onto the live Herdr node; PSA rejection; the K02 attach failing twice; any ssh prompt for a password or passphrase. If the K06 guard fails, the namespace is left in place and reported as **RESIDUE**; the owner deletes it only after re-establishing the cluster identity.
 
 ## Safety
 
