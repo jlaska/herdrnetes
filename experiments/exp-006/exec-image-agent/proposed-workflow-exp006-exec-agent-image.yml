@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SOURCE_SHA: __SOURCE_SHA__
+  SOURCE_SHA: b6e3c92418a5cc03689cc475d9245a33b000a662
   IMAGE: ghcr.io/jlaska/herdrnetes-exec
   TAG: exp006-s3
   CONTEXT: experiments/exp-006
