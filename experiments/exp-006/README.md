@@ -132,6 +132,7 @@ repository ([`local/agent-task/`](local/agent-task/)). It checks:
   `progress.log`;
 - conversation continuity, via a codeword that exists only in the first prompt, asked back after each reattach.
 
-Procedure, PASS criteria and credential handling are in [`local/STAGE3.md`](local/STAGE3.md). The harness and the
-synthetic task are statically validated: shellcheck passes and the task self-test passes. Nothing has been run with
-a credential.
+Procedure, PASS criteria and credential handling are in [`local/STAGE3.md`](local/STAGE3.md). Claude and every harness
+read or execution of agent-written content run under bubblewrap ([`local/sandbox.sh`](local/sandbox.sh), tested without
+a credential by `local/agent-task/sandbox-test.sh`; residual risks are in STAGE3.md). The harness and the synthetic task
+are statically validated: shellcheck passes and the task self-test passes. Nothing has been run with a credential.
