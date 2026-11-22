@@ -1,5 +1,5 @@
 # Execution pod: tmux server (dedicated socket) owning counter.sh, plus non-root sshd on 2222.
-# Image digest is a placeholder until the owner-dispatched build produces it (RUNBOOK, Image).
+# Image: owner-dispatched CI build of source 35369c2db4daa6d241aa6b08e9ddf3e751143490 (RUNBOOK, Image).
 # restartPolicy Never: a container restart must not mask a failure (K05 checks restartCount 0).
 # Required anti-affinity: (1) not with the herdr pod of this run, (2) not on the node of the live Herdr pod.
 apiVersion: v1
@@ -45,7 +45,7 @@ spec:
       type: RuntimeDefault
   containers:
     - name: exec
-      image: ghcr.io/jlaska/herdrnetes-exec@sha256:<DIGEST-FROM-G1-BUILD>
+      image: ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16
       imagePullPolicy: IfNotPresent
       ports:
         - name: ssh

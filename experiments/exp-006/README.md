@@ -69,15 +69,18 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
 - Only the tmux server's lifetime was tested. A tmux server crash would still lose the process. Survival of the
   execution host or pod itself is out of scope.
 
-## Stage 2: Kubernetes slice (G1 package prepared, NOT TESTED)
+## Stage 2: Kubernetes slice (image built; G1 package ready for review, NOT TESTED)
 
 The review package is [`k8s/RUNBOOK.md`](k8s/RUNBOOK.md), with [`k8s/manifests/`](k8s/manifests/), the execution image
 [`exec-image/`](exec-image/), and a proposed build workflow kept as an inactive copy at
 [`exec-image/proposed-workflow-exp006-exec-image.yml`](exec-image/proposed-workflow-exp006-exec-image.yml). The owner
 installs it under `.github/workflows/`, because the agent token cannot write workflows.
 
-Nothing has been built, rehearsed, published or applied. The manifests pass `kubeconform -strict` for 1.36, and
-`entrypoint.sh` passes shellcheck. The scratch Herdr pod uses the EXP-002 image unchanged. The image survey found no
+The execution image is built and public:
+`ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16`, from source
+`35369c2`. It came from owner-dispatched [CI run 45033107115](https://github.com/jlaska/herdrnetes/actions/runs/45033107115),
+in which the four docker-based SSH/PTY smoke tests passed. Nothing has been applied to Kubernetes. The manifests pass
+`kubeconform -strict` for 1.36. The scratch Herdr pod uses the EXP-002 image unchanged. The image survey found no
 existing pinned image with tmux and a non-root sshd, so the execution image is new.
 
 The summary below is the original design.
