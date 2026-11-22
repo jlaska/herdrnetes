@@ -1,0 +1,81 @@
+# Default deny of all ingress and egress in the namespace, then three narrow allows.
+# Applies after Service DNAT, so the herdr->exec rule matches the exec pod, not the ClusterIP.
+# CNI-dependent (untested): kubelet readiness probes (tcpSocket 2222) are node-originated and are
+# normally not subject to NetworkPolicy; if the CNI blocks them, the exec pod never becomes Ready.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: networkpolicy
+    herdrnetes.io/disposable: "true"
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: herdr-egress
+  namespace: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: networkpolicy
+    herdrnetes.io/disposable: "true"
+spec:
+  podSelector:
+    matchLabels:
+      herdrnetes.io/component: herdr
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              herdrnetes.io/component: exec
+      ports:
+        - protocol: TCP
+          port: 2222
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: exec-ingress
+  namespace: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: networkpolicy
+    herdrnetes.io/disposable: "true"
+spec:
+  podSelector:
+    matchLabels:
+      herdrnetes.io/component: exec
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              herdrnetes.io/component: herdr
+      ports:
+        - protocol: TCP
+          port: 2222

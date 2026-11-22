@@ -1,0 +1,102 @@
+# EXP-006 stage 3 execution pod: tmux server (dedicated socket) owning one Claude Code process, plus non-root sshd on 2222.
+# Image: owner-dispatched CI build of exec-image-agent/ (RUNBOOK, Image). The digest below is a placeholder that is
+# replaced in a reviewed commit after that build; the RUNBOOK run_ok guard stops while it is still a placeholder.
+# The API key is the Secret exp006-anthropic, mounted as a file; the Herdr pod gets no key.
+# restartPolicy Never: a container restart must not mask a failure (K05 checks restartCount 0).
+# Required anti-affinity: (1) not with the herdr pod of this run, (2) not on the node of the live Herdr pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: exp006-exec
+  namespace: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: exec
+    herdrnetes.io/pod-group: exp006-pair
+    herdrnetes.io/disposable: "true"
+spec:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 10
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              herdrnetes.io/run-id: "${RUN_ID}"
+              herdrnetes.io/pod-group: exp006-pair
+        - topologyKey: kubernetes.io/hostname
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: herdrnetes-exp
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: herdr
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: exec
+      image: ghcr.io/jlaska/herdrnetes-exec@sha256:<DIGEST-FROM-S3-BUILD>
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: EXP006_MODEL
+          value: claude-sonnet-5-5
+        - name: EXP006_EFFORT
+          value: medium
+      ports:
+        - name: ssh
+          containerPort: 2222
+          protocol: TCP
+      securityContext:
+        allowPrivilegeEscalation: false
+        privileged: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+      readinessProbe:
+        tcpSocket:
+          port: 2222
+        periodSeconds: 3
+        failureThreshold: 10
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+          ephemeral-storage: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+          ephemeral-storage: 1Gi
+      volumeMounts:
+        - name: ssh-secret
+          mountPath: /run/exp006/ssh
+          readOnly: true
+        - name: anthropic-secret
+          mountPath: /run/exp006/anthropic
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: ssh-secret
+      secret:
+        secretName: exp006-exec-ssh
+        defaultMode: 0440
+    - name: anthropic-secret
+      secret:
+        secretName: exp006-anthropic
+        defaultMode: 0440
+    - name: tmp
+      emptyDir:
+        sizeLimit: 1Gi

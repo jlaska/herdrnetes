@@ -1,0 +1,66 @@
+# EXP-006 stage 3 execution image: the stage-2 exec image plus the Claude Code binary, a Python interpreter for the
+# task, and the agent entrypoint. PROPOSED for owner review; not built, not pushed, not run. See ../k8s/stage3/RUNBOOK.md.
+# Build context is experiments/exp-006 (it needs local/agent-task/repo):
+#   docker build -f experiments/exp-006/exec-image-agent/Containerfile experiments/exp-006
+#
+# Base: the published, public stage-2 image, by digest (Debian trixie-slim, tini, tmux, openssh-server, procps;
+# user herdr uid 1000 with home /tmp/home).
+# Claude Code 2.1.323 linux-x64 is fetched from the official release host and verified against a sha256 recorded
+# from the same URL; a mismatch fails the build. It is a glibc-only ELF (librt, libc, libpthread, libdl, libm).
+# Debian packages are pinned to exact amd64 binary versions read from the live indexes on 2026-11-22 (UTC): the
+# trixie 13.8 Release of 2026-11-21 09:15 UTC and trixie-security of 2026-11-21 00:53 UTC:
+#   python3-minimal  3.13.5-1             suite trixie (trixie-updates and trixie-security carry no newer one)
+#   ca-certificates  20250419+deb13u1     suite trixie and trixie-security (same version in both)
+# Not pinned here, resolved by apt from the same suite: python3.13-minimal and libpython3.13-minimal
+# (3.13.5-2+deb13u5 in trixie), openssl (3.5.9-1~deb13u1 in trixie; 3.5.7-1~deb13u3 in trixie-security),
+# libssl3t64 and debconf. Their installed versions are appended to /usr/share/exp006-manifest.txt.
+# Sources:
+#   https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz
+#   https://deb.debian.org/debian/dists/trixie-updates/main/binary-amd64/Packages.xz
+#   https://security.debian.org/debian-security/dists/trixie-security/main/binary-amd64/Packages.xz
+# `apt-get update` reads the LIVE archive, so a pin goes stale when a point release or security update replaces
+# it. A stale pin fails the build: re-verify and re-review; do not float to latest. The RUN below prints
+# `apt-cache policy` first so a mismatch is diagnosable from the CI log.
+ARG EXEC_BASE=ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16
+
+FROM ${EXEC_BASE} AS fetch
+ARG CLAUDE_VERSION=2.1.323
+ARG CLAUDE_SHA256=604d29a6869409106b6a1110bdadcc8b72e8654a5a865d23258f938a696e348e
+USER root
+ADD https://downloads.claude.ai/claude-code-releases/2.1.323/linux-x64/claude /claude
+RUN echo "${CLAUDE_SHA256}  /claude" | sha256sum -c - && chmod 0755 /claude
+
+FROM ${EXEC_BASE}
+ARG CLAUDE_VERSION=2.1.323
+ARG PYTHON3_MINIMAL_VERSION=3.13.5-1
+ARG CA_CERTIFICATES_VERSION=20250419+deb13u1
+USER root
+
+# python3-minimal runs check.py and exp006-status (stdlib only). ca-certificates lets the claude binary verify TLS.
+RUN apt-get update \
+ && apt-cache policy python3-minimal ca-certificates \
+ && apt-get install -y --no-install-recommends \
+      "python3-minimal=${PYTHON3_MINIMAL_VERSION}" \
+      "ca-certificates=${CA_CERTIFICATES_VERSION}" \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=fetch /claude /usr/local/bin/claude
+# The pristine task repo: root-owned and read-only. The entrypoint copies it to /tmp/work/repo; exp006-status
+# compares check.py and README.md of the copy against these.
+COPY local/agent-task/repo /usr/share/exp006/agent-task/repo
+COPY exec-image-agent/entrypoint-agent.sh /usr/local/bin/exp006-agent-entrypoint
+COPY exec-image-agent/exp006-status /usr/local/bin/exp006-status
+RUN rm -rf /usr/share/exp006/agent-task/repo/__pycache__ \
+ && chmod -R go-w,a+rX /usr/share/exp006/agent-task \
+ && chmod 0755 /usr/local/bin/claude /usr/local/bin/exp006-agent-entrypoint /usr/local/bin/exp006-status \
+ && { printf 'claude version=%s sha256=%s\n' "${CLAUDE_VERSION}" "$(sha256sum /usr/local/bin/claude | cut -d' ' -f1)"; \
+      dpkg-query -W -f='deb ${Package}=${Version}\n' python3-minimal ca-certificates python3.13-minimal openssl; \
+    } >>/usr/share/exp006-manifest.txt \
+ && python3 --version && cat /usr/share/exp006-manifest.txt
+
+LABEL org.opencontainers.image.source="https://github.com/jlaska/herdrnetes" \
+      org.opencontainers.image.description="EXP-006 stage 3 execution image: stage-2 exec image + Claude Code under tmux (experiment, not production)"
+
+USER 1000:1000
+EXPOSE 2222
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/exp006-agent-entrypoint"]

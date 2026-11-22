@@ -1,0 +1,114 @@
+# Scratch Herdr pod: the EXP-002 image UNCHANGED (Herdr 0.9.5, openssh-client, no tmux).
+# The entrypoint needs a writable $HOME and XDG state/cache dirs (it exits if $HOME is not writable)
+# and defaults HERDR_CONFIG_PATH to the config baked into the image (/etc/herdrnetes/config.toml),
+# so no ConfigMap is needed. HOME, /run/herdr and /tmp are emptyDirs: no PVCs, and Herdr state
+# does not survive this pod (K04 deletes and re-applies it on purpose).
+# Client credentials (Secret exp006-client-ssh: id_ed25519, known_hosts) are mounted read-only.
+# Required anti-affinity: not with the exec pod, and not on the node of the live Herdr pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: exp006-herdr
+  namespace: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: herdr
+    herdrnetes.io/pod-group: exp006-pair
+    herdrnetes.io/disposable: "true"
+spec:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 30
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              herdrnetes.io/run-id: "${RUN_ID}"
+              herdrnetes.io/pod-group: exp006-pair
+        - topologyKey: kubernetes.io/hostname
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: herdrnetes-exp
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: herdr
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: herdr
+      image: ghcr.io/jlaska/herdrnetes-herdr:exp002-h095-c311@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: HOME
+          value: /home/herdr
+        - name: XDG_CONFIG_HOME
+          value: /home/herdr/.config
+        - name: XDG_STATE_HOME
+          value: /run/herdr/state
+        - name: XDG_CACHE_HOME
+          value: /run/herdr/cache
+        - name: TMPDIR
+          value: /tmp
+      securityContext:
+        allowPrivilegeEscalation: false
+        privileged: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+      # Readiness = the Herdr server answers on its socket. Not evidence about any session.
+      startupProbe:
+        exec:
+          command: ["herdr", "status", "server"]
+        periodSeconds: 1
+        failureThreshold: 60
+      readinessProbe:
+        exec:
+          command: ["herdr", "status", "server"]
+        periodSeconds: 10
+        timeoutSeconds: 5
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+          ephemeral-storage: 64Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+          ephemeral-storage: 512Mi
+      volumeMounts:
+        - name: client-ssh
+          mountPath: /run/exp006/client
+          readOnly: true
+        - name: home
+          mountPath: /home/herdr
+        - name: run
+          mountPath: /run/herdr
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: client-ssh
+      secret:
+        secretName: exp006-client-ssh
+        defaultMode: 0440
+    - name: home
+      emptyDir:
+        sizeLimit: 128Mi
+    - name: run
+      emptyDir:
+        sizeLimit: 32Mi
+    - name: tmp
+      emptyDir:
+        sizeLimit: 128Mi

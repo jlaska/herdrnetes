@@ -121,7 +121,19 @@ The summary below is the original design.
   - K06: label-guarded namespace deletion, positive absence check, and recheck of the live baseline.
 - Untouched: the live Herdr StatefulSet and its PVCs, Argo CD and Longhorn.
 
-## Stage 3: real agent, local (harness prepared, NOT RUN)
+## Stage 3 (Kubernetes, real agent): G1 package prepared, NOT RUN
+
+The real-agent test runs in Kubernetes, not locally. The package is [`k8s/stage3/RUNBOOK.md`](k8s/stage3/RUNBOOK.md)
+with its manifests (including a Cilium FQDN egress allow for `api.anthropic.com:443` only) and the agent execution
+image in [`exec-image-agent/`](exec-image-agent/) (Claude Code 2.1.323 under tmux, an inactive build workflow, and a
+no-key, no-egress smoke test). It was written and validated statically only. Nothing has been built, pushed, applied
+or run, and no API key exists. G1 needs a new owner approval, an owner-created key in a $5-limited workspace, and an
+owner-dispatched image build.
+
+## Stage 3, local bwrap harness (historical preparation, kept, not developed further)
+
+The harness below was the first plan for stage 3. It is superseded by the Kubernetes stage above and is kept as
+historical preparation. The original text follows.
 
 [`local/agent-demo.sh`](local/agent-demo.sh) reuses the stage-1 isolation (dedicated tmux socket, disposable Herdr
 0.9.5, `env -i` allowlist). In place of the counter, it runs one Claude Code process (`--bare`, isolated

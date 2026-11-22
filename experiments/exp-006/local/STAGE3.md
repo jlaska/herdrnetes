@@ -1,6 +1,6 @@
 # EXP-006 stage 3: real Claude Code under tmux, driven through Herdr (NOT RUN)
 
-Status: **NOT RUN.** The harness and task were written and validated statically
+Status: **superseded by the Kubernetes stage 3 (k8s/stage3/); historical.** **NOT RUN.** The harness and task were written and validated statically
 (`bash -n`, `shellcheck`, `py_compile`, `agent-task/selftest.sh`), and the bwrap sandbox was tested without any
 credential by `agent-task/sandbox-test.sh` (see below). No real agent session has run.
 Nothing here is observed evidence about Herdr. Stages 1 and 2 used a synthetic counter;

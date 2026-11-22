@@ -1,0 +1,194 @@
+#!/usr/bin/python3 -I
+"""EXP-006 stage 3: read-only status of the agent process, its transcript and its task progress.
+
+  exp006-status [--since EPOCH] [--said TEXT] [--brief]
+
+Prints key=value lines; never the environment, settings or key. Exit 0 unless the identity file is
+missing (exit 2). Paths can be overridden with EXP006_* variables for host-side testing only.
+--since EPOCH adds progress_since, tool_uses_since and entries_since (entries newer than EPOCH).
+--said TEXT adds said=yes|no and said_ts: an assistant text block contains TEXT (TEXT is not echoed).
+"""
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+
+E = os.environ.get
+OUT = E("EXP006_OUT", "/tmp/agent/out")
+REPO = E("EXP006_REPO", "/tmp/work/repo")
+PRISTINE = E("EXP006_PRISTINE", "/usr/share/exp006/agent-task/repo")
+CCD = E("EXP006_CCD", "/tmp/home/.claude")
+SOCK = E("EXP006_SOCK", "/tmp/agent/tmux.sock")
+EXE = E("EXP006_EXE", "/usr/local/bin/claude")
+PLOG_RX = re.compile(r"^[0-9]+\.[0-9]+ check [0-9]+/12 passing=(f[0-9]{2}(,f[0-9]{2})*)?$")
+TS_RX = re.compile(r"^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(\.\d+)?Z$")
+
+
+def proc_start(pid):
+    try:
+        with open("/proc/%s/stat" % pid) as f:
+            return f.read().rsplit(") ", 1)[1].split()[19]  # field 22
+    except (OSError, IndexError):
+        return None
+
+
+def epoch(ts):
+    """ISO-8601 UTC 'YYYY-MM-DDTHH:MM:SS[.fff]Z' to epoch seconds, or None."""
+    m = TS_RX.match(ts) if isinstance(ts, str) else None
+    if not m:
+        return None
+    y, mo, d, h, mi, s = (int(x) for x in m.groups()[:6])
+    y -= mo <= 2
+    era = y // 400
+    yoe = y - era * 400
+    doy = (153 * (mo + (-3 if mo > 2 else 9)) + 2) // 5 + d - 1
+    days = era * 146097 + yoe * 365 + yoe // 4 - yoe // 100 + doy - 719468
+    return days * 86400 + h * 3600 + mi * 60 + s + float(m.group(7) or 0)
+
+
+def sha(path):
+    try:
+        with open(path, "rb") as f:
+            return hashlib.sha256(f.read()).hexdigest()
+    except OSError:
+        return None
+
+
+def same(name):
+    h = sha(os.path.join(REPO, name))
+    return "yes" if h is not None and h == sha(os.path.join(PRISTINE, name)) else "no"
+
+
+def blocks(d):
+    c = (d.get("message") or {}).get("content")
+    return c if isinstance(c, list) else []
+
+
+def passing():
+    try:
+        r = subprocess.run([sys.executable, "-I", "check.py", "--nolog"], cwd=REPO, stdin=subprocess.DEVNULL,
+                           capture_output=True, text=True, timeout=20,
+                           env={"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"})
+        m = re.findall(r"^TOTAL (\d+)/12$", r.stdout, re.M)
+        return m[-1] if m else "0"
+    except (subprocess.TimeoutExpired, OSError):
+        return "0"
+
+
+def tmux_clients():
+    try:
+        r = subprocess.run(["tmux", "-S", SOCK, "list-clients"], stdin=subprocess.DEVNULL, capture_output=True,
+                           text=True, timeout=10)
+        return str(len([x for x in r.stdout.splitlines() if x.strip()])) if r.returncode == 0 else "error"
+    except (subprocess.TimeoutExpired, OSError):
+        return "error"
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--since", type=float)
+    ap.add_argument("--said")
+    ap.add_argument("--brief", action="store_true")
+    a = ap.parse_args()
+
+    ident = {}
+    try:
+        with open(os.path.join(OUT, "identity")) as f:
+            for line in f:
+                k, _, v = line.rstrip("\n").partition("=")
+                ident[k] = v
+    except OSError:
+        print("exp006-status: identity file missing", file=sys.stderr)
+        return 2
+    pid, start, sid = ident.get("pid", ""), ident.get("start", ""), ident.get("sid", "")
+    live = proc_start(pid) if pid.isdigit() else None
+    try:
+        exe_ok = os.readlink("/proc/%s/exe" % pid) == EXE
+    except OSError:
+        exe_ok = False
+    try:
+        with open("/proc/%s/cmdline" % pid, "rb") as f:
+            argv = f.read().decode("utf-8", "replace").split("\0")
+        resume = "yes" if any(x in ("--resume", "--continue") or x.startswith("--resume=") for x in argv) else "no"
+    except OSError:
+        resume = "unknown"
+
+    jsonls = []
+    for root, _, files in os.walk(os.path.join(CCD, "projects")):
+        jsonls += [os.path.join(root, x) for x in files if x.endswith(".jsonl")]
+    sid_files = [x for x in jsonls if os.path.basename(x) == sid + ".jsonl"]
+    entries = tool_uses = since_e = since_t = 0
+    last_ts = said_ts = None
+    for path in sid_files[:1]:
+        with open(path, "rb") as f:
+            raw = f.read(64 * 1024 * 1024)
+        for line in raw.decode("utf-8", "replace").splitlines():
+            try:
+                d = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(d, dict):
+                continue
+            entries += 1
+            ts = epoch(d.get("timestamp"))
+            n_tools = sum(1 for b in blocks(d) if isinstance(b, dict) and b.get("type") == "tool_use")
+            tool_uses += n_tools
+            if ts is not None:
+                last_ts = ts if last_ts is None else max(last_ts, ts)
+                if a.since is not None and ts > a.since:
+                    since_e += 1
+                    since_t += n_tools
+            if a.said and said_ts is None and d.get("type") == "assistant" and any(
+                    isinstance(b, dict) and b.get("type") == "text" and a.said in str(b.get("text", ""))
+                    for b in blocks(d)):
+                said_ts = ts if ts is not None else 0
+
+    plines, pbad, plast, psince = 0, 0, None, 0
+    try:
+        with open(os.path.join(REPO, "progress.log"), "rb") as f:
+            for line in f.read().decode("utf-8", "replace").splitlines():
+                plines += 1
+                pbad += not PLOG_RX.match(line)
+                t = line.split(" ", 1)[0]
+                try:
+                    plast = float(t)
+                    psince += a.since is not None and plast > a.since
+                except ValueError:
+                    pass
+    except OSError:
+        pass
+
+    def fmt(x):
+        return "-" if x is None else "%.3f" % x
+
+    kv = [
+        ("pid", pid), ("start", start), ("live_start", live or "gone"),
+        ("alive", "yes" if live is not None and live == start and exe_ok else "no"),
+        ("sid", sid), ("key_present", ident.get("key_present", "unknown")),
+        ("jsonl_count", len(jsonls)), ("sid_jsonl", "yes" if sid_files else "no"),
+        ("entries", entries), ("tool_uses", tool_uses), ("last_entry_ts", fmt(last_ts)),
+        ("passing", passing()),
+        ("check_sha_ok", same("check.py")), ("readme_sha_ok", same("README.md")),
+        ("progress_lines", plines), ("progress_bad", pbad), ("last_progress_ts", fmt(plast)),
+        ("tmux_clients", tmux_clients()), ("resume_flag", resume),
+    ]
+    if a.since is not None:
+        kv += [("progress_since", psince), ("tool_uses_since", since_t), ("entries_since", since_e)]
+    if a.said:
+        kv += [("said", "yes" if said_ts is not None else "no"), ("said_ts", fmt(said_ts))]
+    if a.brief:
+        d = dict((k, str(v)) for k, v in kv)
+        keys = ["alive", "pid", "passing", "progress_lines", "tool_uses", "tmux_clients", "resume_flag"]
+        keys += [k for k in ("progress_since", "said") if k in d]
+        print(" ".join("%s=%s" % (k, d[k]) for k in keys))
+    else:
+        for k, v in kv:
+            print("%s=%s" % (k, v))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
