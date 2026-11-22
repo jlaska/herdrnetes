@@ -108,10 +108,11 @@ nonce=$(printf '%s\n' "$ident" | sed -n 's/^nonce=//p')
   || die "unparseable counter identity"
 echo "counter identity: pid=$pid start=$start nonce=$nonce"
 
-# client <container-name> <client-dir> <ssh args...>; stdin is passed through.
+# client <container-name> <client-dir> <tty-flag> [remote-command...]; stdin is passed through.
+# ssh options and the tty flag go before the destination; the optional remote command goes after it.
 client() {
-  local name=$1 dir=$2
-  shift 2
+  local name=$1 dir=$2 tty_flag=$3
+  shift 3
   timeout 30 docker run --rm -i --name "$name" --network "$NET" \
     "${HARDEN[@]}" -e TERM=xterm-256color \
     --tmpfs /tmp:rw,mode=1777 --tmpfs /home/herdr:rw,mode=0700,uid=1000,gid=1000 \
@@ -119,7 +120,7 @@ client() {
     -i /run/exp006/client/id_ed25519 -o IdentitiesOnly=yes -o IdentityAgent=none \
     -o BatchMode=yes -o StrictHostKeyChecking=yes \
     -o UserKnownHostsFile=/run/exp006/client/known_hosts \
-    -o HostKeyAlias=exp006-exec -o UpdateHostKeys=no -p 2222 "$@" herdr@exp006-exec
+    -o HostKeyAlias=exp006-exec -o UpdateHostKeys=no -p 2222 "$tty_flag" herdr@exp006-exec "$@"
 }
 
 # --- Test A: PTY + forced command + host-key verification -------------------
