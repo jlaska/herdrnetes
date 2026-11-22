@@ -44,7 +44,7 @@ binaries, and a cleanup record showing that every recorded PID was positively go
 
 Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…affc66`), tmux 3.8, bash 5.3.9.
 
-## Findings (owner review 2026-11-22: FIND-071/072 accepted as local findings; FIND-073 limited to the CLI-help survey)
+## Findings (owner review 2026-11-22: FIND-071/072 accepted as local findings; FIND-073 limited to the CLI-help survey; FIND-074 proposed)
 
 - **FIND-071: A tmux-owned process outlives Herdr pane closure, clean server stop and server SIGKILL, and a new
   pane reattaches to the same process.** [observed, local] This contrasts with in-pane processes (FIND-002). The
@@ -58,10 +58,16 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
   `herdr update --handoff` appears to pass PTY file descriptors to a new server on the same host (cf. FIND-009). It
   is disabled for Homebrew installs and was not exercised. Even if it works, it covers upgrades only, not crashes or
   pod replacement.
+- **FIND-074: The FIND-071 result holds across two pods in Kubernetes.** [observed, Kubernetes, single synthetic run
+  `s2a`, proposed] The process runs under tmux in its own exec pod and is reached over SSH through a forced
+  `tmux attach`. It survived closing the Herdr pane and deleting and recreating the scratch Herdr pod, with no
+  counter gaps and no exec-pod restart. A new pane in the new pod reattached to the same `pid`/start/nonce. The
+  replacement Herdr started with no workspaces, so reattaching was again a manual command (consistent with FIND-072).
+  → REQ-009. Evidence: [`k8s/evidence/s2a/`](k8s/evidence/s2a/).
 
 ## Limitations and open questions
 
-- Local only; no Kubernetes, SSH transport or real agent yet (stages 2 and 3 below are **NOT TESTED**).
+- Stage 1 is local only. Stage 2 (Kubernetes over SSH) passed once with the synthetic counter. No real agent has been tested yet (stage 3 is **NOT TESTED**).
 - Herdr shows the attached session as an ordinary pane. It has no agent status or transcript integration. These are
   future enhancements and were not attempted.
 - Reattach after a Herdr restart is manual. Automating it (pane command, shell rc, or Herdr's own agent-resume
@@ -69,7 +75,7 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
 - Only the tmux server's lifetime was tested. A tmux server crash would still lose the process. Survival of the
   execution host or pod itself is out of scope.
 
-## Stage 2: Kubernetes slice (image built; G1 package ready for review, NOT TESTED)
+## Stage 2: Kubernetes slice: PASS (run `s2a`, 2026-11-22; cleanup CLEAN)
 
 The review package is [`k8s/RUNBOOK.md`](k8s/RUNBOOK.md), with [`k8s/manifests/`](k8s/manifests/), the execution image
 [`exec-image/`](exec-image/), and a proposed build workflow kept as an inactive copy at
@@ -79,8 +85,16 @@ installs it under `.github/workflows/`, because the agent token cannot write wor
 The execution image is built and public:
 `ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16`, from source
 `35369c2`. It came from owner-dispatched [CI run 45033107115](https://github.com/jlaska/herdrnetes/actions/runs/45033107115),
-in which the four docker-based SSH/PTY smoke tests passed. Nothing has been applied to Kubernetes. The manifests pass
-`kubeconform -strict` for 1.36. The scratch Herdr pod uses the EXP-002 image unchanged. The image survey found no
+in which the four docker-based SSH/PTY smoke tests passed. The manifests pass `kubeconform -strict` for 1.36.
+
+**Result (owner-approved G1 run `s2a` at `39b1d5a`; owner accepted the results).** K00–K06 all PASS and cleanup was
+**CLEAN**, with the K00 and K06 live baselines byte-identical. Identity was `pid=17 start=29585526 nonce=4d941f1d19cdad5d`
+across `ACK k02` (n=41, first attach), `ACK k03` (n=146, after the pane closed) and `ACK k04` (n=197, after the Herdr
+pod was deleted and recreated). The counter ran n=1→208 with no gaps, and the exec pod had 0 restarts. Two
+deviations are recorded in [`k8s/evidence/s2a/`](k8s/evidence/s2a/README.md):
+- The local 10 s wait in K03 hung, so the detached checks ran about 78 s after the pane closed.
+- Commands ran in fresh shells through a helper library generated from the runbook setup. Its functions are verbatim,
+  except that `attach` saves the pane ID to a file. The scratch Herdr pod uses the EXP-002 image unchanged. The image survey found no
 existing pinned image with tmux and a non-root sshd, so the execution image is new.
 
 The summary below is the original design.

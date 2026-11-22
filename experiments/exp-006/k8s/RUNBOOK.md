@@ -1,6 +1,6 @@
 # EXP-006 stage 2: G1 resource inventory and runbook (PROPOSED)
 
-Issue [#7](https://github.com/jlaska/herdrnetes/issues/7) · REQ-009 · ADR-0001 unchanged · **G1 is not authorized.** Nothing here has been applied or run on Kubernetes. The execution image is built and published (below).
+Issue [#7](https://github.com/jlaska/herdrnetes/issues/7) · REQ-009 · ADR-0001 unchanged · **Executed once as G1 run `s2a` (2026-11-22): K00–K06 PASS, cleanup CLEAN; see [`evidence/s2a/`](evidence/s2a/README.md).** Any further run needs a new owner approval. The execution image is built and published (below).
 Reviewed commit: the PR #37 head SHA named in the G1 approval (a file cannot name its own commit).
 
 Question: does the stage 1 result (tmux owns the PTY; panes are disposable `tmux attach` clients) hold across two pods,

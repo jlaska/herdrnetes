@@ -1,0 +1,7 @@
+29585526
+    PID    PPID CMD
+      1       0 /usr/bin/tini -- /usr/local/bin/exp006-entrypoint
+      7       1 sshd: /usr/sbin/sshd -D -e -f /tmp/ssh/sshd_config [listener] 0 of 10-100 startups
+     16       1 tmux -S /tmp/agent/tmux.sock -f /dev/null new-session -d -s agent /usr/local/bin/counter.sh /tmp/agent/out
+     17      16 bash /usr/local/bin/counter.sh /tmp/agent/out
+     43       0 ps -eo pid,ppid,cmd
