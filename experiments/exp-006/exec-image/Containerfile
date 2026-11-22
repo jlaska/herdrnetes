@@ -1,20 +1,32 @@
 # EXP-006 stage 2 execution image: tmux + non-root sshd + the synthetic counter.
 # PROPOSED for owner review; not built, not pushed, not run. See ../k8s/RUNBOOK.md.
 #
-# Same base digest as the EXP-002 image. Debian packages are pinned to exact
-# versions taken from the trixie archive on 2026-11-21:
-#   https://packages.debian.org/trixie/{tmux,openssh-server,tini,procps}
-#   https://sources.debian.org/api/src/{tmux,openssh,tini,procps}/ (suites: trixie)
-# Debian keeps one version per suite, so a pin goes stale when a point release or
-# security update replaces it. A failed `apt-get install` here means "re-verify the
-# pin and re-review", not "float to latest". openssh-server pulls openssh-client and
-# openssh-sftp-server at the same version.
+# Same base digest as the EXP-002 image. Debian packages are pinned to exact binary
+# versions read from the live amd64 Packages indexes on 2026-11-22 (UTC); the indexes
+# were the trixie 13.8 Release of 2026-11-21 09:15 UTC and trixie-security of
+# 2026-11-21 00:53 UTC:
+#   tmux            3.5a-3                  suite trixie
+#   openssh-server  1:10.0p1-7+deb13u4      suite trixie (trixie-security still lists
+#                                           the older +deb13u2, so apt picks trixie)
+#   tini            0.19.0-3+b8             suite trixie (binNMU +b8, not 0.19.0-3)
+#   procps          2:4.0.4-9               suite trixie
+#   trixie-updates carries none of these four.
+# Sources:
+#   https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz
+#   https://deb.debian.org/debian/dists/trixie-updates/main/binary-amd64/Packages.xz
+#   https://security.debian.org/debian-security/dists/trixie-security/main/binary-amd64/Packages.xz
+# The base image digest is a fixed snapshot, but `apt-get update` reads the LIVE
+# archive, so the live index is what matters. A pin goes stale when a point release,
+# security update or binNMU replaces it. A stale pin fails the build: re-verify the
+# pin and re-review; do not float to latest. The RUN below prints `apt-cache policy`
+# first, so a mismatch is diagnosable from the CI log. openssh-server pulls
+# openssh-client and openssh-sftp-server at the same version.
 ARG BASE_IMAGE=docker.io/library/debian:trixie-slim@sha256:7378260c0a098d27ac206225db5e7d92b8c7c84ea7afccc86eeb513756bbd392
 
 FROM ${BASE_IMAGE}
 ARG TMUX_VERSION=3.5a-3
 ARG OPENSSH_VERSION=1:10.0p1-7+deb13u4
-ARG TINI_VERSION=0.19.0-3
+ARG TINI_VERSION=0.19.0-3+b8
 ARG PROCPS_VERSION=2:4.0.4-9
 
 # tini: PID 1 that reaps the daemonized tmux server and forwards SIGTERM to sshd.
@@ -23,6 +35,7 @@ ARG PROCPS_VERSION=2:4.0.4-9
 # per-run key from the Secret. /run/sshd is created root-owned (privilege
 # separation directory; may be unused when sshd is not root, see RUNBOOK risks).
 RUN apt-get update \
+ && apt-cache policy tini tmux openssh-server procps \
  && apt-get install -y --no-install-recommends \
       "tmux=${TMUX_VERSION}" \
       "openssh-server=${OPENSSH_VERSION}" \
