@@ -121,7 +121,17 @@ The summary below is the original design.
   - K06: label-guarded namespace deletion, positive absence check, and recheck of the live baseline.
 - Untouched: the live Herdr StatefulSet and its PVCs, Argo CD and Longhorn.
 
-## Stage 3: real agent (NOT TESTED)
+## Stage 3: real agent, local (harness prepared, NOT RUN)
 
-Once stage 2 passes, run Claude Code or Pi in the tmux session, with credentials approved separately. Check that its
-PID survives Herdr's absence, and that a task keeps progressing while detached.
+[`local/agent-demo.sh`](local/agent-demo.sh) reuses the stage-1 isolation (dedicated tmux socket, disposable Herdr
+0.9.5, `env -i` allowlist). In place of the counter, it runs one Claude Code process (`--bare`, isolated
+`HOME`/`CLAUDE_CONFIG_DIR`, fixed `--session-id`, never `--resume`) on a synthetic 12-function task in a throwaway
+repository ([`local/agent-task/`](local/agent-task/)). It checks:
+- that the agent's PID and `/proc` start time stay the same;
+- task progress made while Herdr is detached or down, measured by the harness's own check runs and
+  `progress.log`;
+- conversation continuity, via a codeword that exists only in the first prompt, asked back after each reattach.
+
+Procedure, PASS criteria and credential handling are in [`local/STAGE3.md`](local/STAGE3.md). The harness and the
+synthetic task are statically validated: shellcheck passes and the task self-test passes. Nothing has been run with
+a credential.
