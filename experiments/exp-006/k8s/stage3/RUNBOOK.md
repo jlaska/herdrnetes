@@ -1,6 +1,6 @@
-# EXP-006 stage 3: Kubernetes real-agent G0 package and runbook (PROPOSED, NOT RUN)
+# EXP-006 stage 3: Kubernetes real-agent G1 package and runbook (image built; K00–K06 NOT RUN)
 
-Issue [#7](https://github.com/jlaska/herdrnetes/issues/7) · REQ-009 · ADR-0001 unchanged · **Status: G0 only. Nothing here has been built, pushed, applied or run, and no API key exists. G1 needs a new owner approval, an owner-created key and an owner-dispatched image build.**
+Issue [#7](https://github.com/jlaska/herdrnetes/issues/7) · REQ-009 · ADR-0001 unchanged · **Status: the execution image is built, smoke-tested and published (see Image). Nothing has been applied to a cluster or run, and no API key exists. G1 needs a new owner approval, and separately the owner-created key and $5 budget.**
 Reviewed commit: the PR head SHA named in the G1 approval (a file cannot name its own commit). Stage 2 ([`../RUNBOOK.md`](../RUNBOOK.md), run `s2a`, CLEAN) is unchanged.
 
 Question: does stage 2's result (tmux owns the PTY; panes are disposable `tmux attach` clients; two pods over SSH) hold for a **real Claude Code session**? Specifically: does the same agent process, with the same conversation, keep working while no Herdr pane is attached, and is it reachable and still remembers its first prompt after the Herdr pod is deleted and recreated? This is process, PTY and conversation continuity across Herdr churn. It is not a Herdr upgrade test and does not use `--resume` (FIND-007). The local bwrap harness ([`../../local/STAGE3.md`](../../local/STAGE3.md)) is historical preparation; this Kubernetes stage supersedes it.
@@ -17,7 +17,7 @@ Namespace `herdrnetes-exp006-${RUN_ID}` (`RUN_ID=s3a`; labels `herdrnetes.io/exp
 | Service | `exp006-exec` (ClusterIP, 2222) | unchanged |
 | Secret | `exp006-exec-ssh`, `exp006-client-ssh` | throwaway SSH keys, as stage 2 |
 | Secret | `exp006-anthropic` (`api-key`) | the owner-created API key, from `$KEY_FILE`; mounted only in the exec pod |
-| Pod | `exp006-exec` | `ghcr.io/jlaska/herdrnetes-exec@sha256:<DIGEST-FROM-S3-BUILD>` (placeholder until the owner-dispatched build; see Image) |
+| Pod | `exp006-exec` | `ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18` (tag `exp006-s3`; see Image) |
 | Pod | `exp006-herdr` | EXP-002 Herdr image, unchanged (`herdr-pod.yaml` is byte-identical to stage 2); it gets **no** API key |
 
 No PVCs, no ServiceAccount tokens, no RBAC, no cluster-scoped objects except the Namespace. 11 objects. Placement: the stage-2 required anti-affinity (off the live Herdr node, off each other). Budget: exec requests 100m / 256Mi / 256Mi ephemeral, limits 1000m / 1Gi / 1Gi; `/tmp` emptyDir 1Gi; Herdr pod as stage 2.
@@ -29,7 +29,17 @@ Built from [`../../exec-image-agent/`](../../exec-image-agent/) (context `experi
 - Debian trixie pins (live index, 2026-11-22): `python3-minimal 3.13.5-1`, `ca-certificates 20250419+deb13u1` (sources in the Containerfile header; a stale pin fails the build).
 - `exp006-agent-entrypoint` (stage-2 sshd setup, then one Claude Code process in tmux) and `exp006-status` (read-only status). The pristine task repo is at `/usr/share/exp006/agent-task/repo` (root-owned).
 - Build path (no step builds from main or a moving branch): the owner installs the inactive [`proposed-workflow-exp006-exec-agent-image.yml`](../../exec-image-agent/proposed-workflow-exp006-exec-agent-image.yml) as `.github/workflows/exp006-exec-agent-image.yml` in an owner-operated commit (the agent token has no `workflow` scope) with `SOURCE_SHA` pinned to the build-source commit `b6e3c92418a5cc03689cc475d9245a33b000a662`, then dispatches it. It builds the pinned source, runs `smoke-agent.sh` (no key, `--internal` network, no egress) before any GHCR login, then pushes tag `exp006-s3` of the existing public package.
-- After the build, a reviewed commit replaces the digest placeholder in `exec-pod.yaml` and in the inventory above. Until then `run_ok` stops every guarded command.
+- **Built and published (2026-11-22).** The owner installed the workflow on main in `6c7a88a` (byte-identical to the inactive copy) and dispatched [CI run 45083319378](https://github.com/jlaska/herdrnetes/actions/runs/45083319378) (`workflow_dispatch`, conclusion success). The run checked out and verified `b6e3c92418a5cc03689cc475d9245a33b000a662`, the build fetched Claude Code with the sha256 above (`2.1.323 (Claude Code)`), and `smoke-agent.sh: PASS` ran before the GHCR login:
+
+  | Result | Test | Detail (from the run log) |
+  |---|---|---|
+  | PASS | A pty+forced tmux attach, detach, session still exists | ssh rc=0; session agent exists |
+  | PASS | B remote command `id` not executed | no uid= in output; ssh rc=1 (nonzero is expected) |
+  | PASS | C unauthorized key rejected | ssh rc=255; no new accepted login |
+  | PASS | D agent alive and stable, no key, hashes ok, version | alive=yes x2, passing=0, jsonl_count=0, version=2.1.323 |
+  | PASS | E claude <- tmux server <- tini (pid 1) | claude ppid = tmux server, its ppid = 1 (tini) |
+
+  Pushed digest: **`ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18`** (docker v2 manifest, linux/amd64, 12 layers, config `sha256:c2e87ebb088042fb47ae8b40b82b895457ad327dc2a144545cdca20d11a182f5`, `User 1000:1000`, entrypoint `tini -- exp006-agent-entrypoint`). Anonymous pull checked on 2026-11-22 with no credentials: a GHCR anonymous pull token returned HTTP 200 for the manifest by digest and by tag `exp006-s3` (both `docker-content-digest` equal to the pinned digest), for the config blob (sha256 verified) and for a layer blob. `exec-pod.yaml` pins this digest; `run_ok` still stops on any remaining placeholder.
 
 ## Egress
 
@@ -73,6 +83,8 @@ spec:
               protocol: TCP
 ```
 
+The exec pod sets `dnsConfig` `ndots: 1`. With the Kubernetes default of 5, a two-dot name such as `api.anthropic.com` is first tried with each search-list suffix; the DNS rule above rejects those (REFUSED is Cilium's default reject code), and both glibc and c-ares stop searching on such an answer, so the allowed name would never be queried. With `ndots: 1` the name is queried as-is first. Short in-cluster names are not used by the exec pod.
+
 Limitations (this is not a sandbox):
 - It is an L3/L4 plus FQDN allow to `api.anthropic.com:443`, not HTTP-level inspection. Anything served from that hostname is reachable, and the DNS proxy answers only for that name. Cilium resolves the name through its DNS proxy (`enable-l7-proxy=true` on this cluster, `toFQDNs` supported); the allow is learned from those answers.
 - The agent can read its own API key (it needs it). Its exposure is bounded by the workspace spend limit and by revoking the key at K06. The exec pod also holds the throwaway SSH host key.
@@ -95,7 +107,7 @@ export RUN_ID=s3a NS=herdrnetes-exp006-s3a CTX='<context>'   # RUN_ID: [a-z0-9-]
 export EXPECT_SERVER='<api-url>' EXPECT_KUBE_SYSTEM_UID='<uid>' EXPECT_HERDR_UID='<uid>' ARGO_APP='<cluster>-herdrnetes-exp'   # owner-supplied, never committed
 export KEY_FILE='<path>'   # owner-supplied API key file (mode 0600, outside the repo); never printed
 K="kubectl --context $CTX"; umask 077; WORK=$(mktemp -d) && mkdir "$WORK"/{m,keys,ev}
-for f in ./*.yaml; do sed "s/\${RUN_ID}/$RUN_ID/g" "$f" >"$WORK/m/$(basename "$f")"; done   # exec-pod.yaml must already carry the real digest: run_ok stops on the placeholder
+for f in ./*.yaml; do sed "s/\${RUN_ID}/$RUN_ID/g" "$f" >"$WORK/m/$(basename "$f")"; done   # run_ok stops if any rendered manifest still holds a <PLACEHOLDER> or ${...}
 baseline() { { ctx_ok && $K get nodes -o jsonpath='{range .items[*]}{.metadata.name} {.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
   $K -n herdrnetes-exp get pod herdr-0 -o jsonpath='{.metadata.uid} {.spec.nodeName}{range .status.containerStatuses[*]} {.restartCount} {.imageID}{end}{"\n"}'
   $K -n herdrnetes-exp get sts,pvc,networkpolicy -o name; $K get pv -o json | jq -S '[.items[]|{n:.metadata.name,c:.spec.claimRef}]'
@@ -158,10 +170,11 @@ MN create -f "$WORK/m/exec-pod.yaml" && $K -n "$NS" wait --for=condition=Ready p
 $K -n "$NS" get pod exp006-exec -o jsonpath='{.metadata.uid} {.spec.nodeName} {.status.containerStatuses[0].restartCount} {.status.containerStatuses[0].imageID}{"\n"}'
 X cat /tmp/agent/out/identity
 X exp006-status
+X python3 -I -c 'import socket;s=socket.create_connection(("api.anthropic.com",443),10);print("allowed ok",s.getpeername()[1]);s.close()'
 X python3 -I -c 'import socket;socket.create_connection(("1.1.1.1",443),5)'
 X python3 -I -c 'import socket;print(socket.getaddrinfo("example.com",443))'
 ```
-Expected: Ready within 5 min on a node other than the live one; `imageID` equals the pinned digest; `identity` has `pid`, `start`, `sid`, `model=claude-sonnet-5-5`, `effort=medium`, `claude_version=2.1.323`, `key_present=yes`; status has `alive=yes`, `key_present=yes`, `passing=0`, `check_sha_ok=yes`, `readme_sha_ok=yes`, `resume_flag=no`; both egress probes **fail** (a timeout or a resolution error), showing that only the allowed name is reachable. Save outputs to `$WORK/ev` (they name a node: sanitize first). If the pod does not become Ready, `X` and `$K logs` show the entrypoint log (never the key).
+Expected: Ready within 5 min on a node other than the live one; `imageID` equals the pinned digest; `identity` has `pid`, `start`, `sid`, `model=claude-sonnet-5-5`, `effort=medium`, `claude_version=2.1.323`, `key_present=yes`; status has `alive=yes`, `key_present=yes`, `passing=0`, `check_sha_ok=yes`, `readme_sha_ok=yes`, `resume_flag=no`; the allowed probe prints `allowed ok 443` (DNS through the proxy and a TCP connect only: no TLS, no HTTP request, no key, no spend); both other egress probes **fail** (a timeout or a resolution error), showing that only the allowed name is reachable. If the allowed probe fails, stop: the agent could not reach the API either. Save outputs to `$WORK/ev` (they name a node: sanitize first). If the pod does not become Ready, `X` and `$K logs` show the entrypoint log (never the key).
 
 **K02 Herdr pod, first attach, first prompt.** The prompts are single-line ASCII; only `P1` carries the codeword.
 ```
@@ -266,9 +279,10 @@ No changes to `herdrnetes-exp`, Argo CD or Longhorn (only reads). No owner SSH o
 
 1. Under `--bare` with `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`, Claude Code contacts no host other than `api.anthropic.com`. If it does, the policy blocks it and the run stalls (stop condition).
 2. The pre-seeded `.claude.json` keys (`hasCompletedOnboarding`, `hasTrustDialogAccepted`) suppress all first-run dialogs; the permission rule syntax (`./` is the project directory, `//` an absolute path) and `apiKeyHelper` under `--bare` work as in the local harness, which never ran either.
-3. The Claude TUI stays alive without a key in the CI smoke (`EXP006_ALLOW_NO_KEY=1`); if it exits, `smoke-agent.sh` fails before any push.
-4. `python3-minimal` suffices for `check.py` and `exp006-status` (`signal`, `time`, `json`, `re`, `subprocess`, `hashlib`, `argparse` are expected in it or built in).
+3. ~~The Claude TUI stays alive without a key.~~ Shown in CI run 45083319378 (smoke D: `alive=yes` twice, flags `--bare --settings --strict-mcp-config --tools --model --effort --session-id` accepted). With a key it is still untested.
+4. `python3-minimal` suffices: `exp006-status` ran in smoke D (`json`, `re`, `subprocess`, `hashlib`, `argparse`). `passing=0` there is the expected value for the pristine task but would also be printed if `check.py` failed to run, so `check.py` itself is first shown at K02 (`progress_since>=1`). `socket` is first used by the K01 probes.
 5. A Secret file with a trailing newline is accepted by `apiKeyHelper`; the model id `claude-sonnet-5-5` is valid for the key (K00b).
-6. Cilium merges the CiliumNetworkPolicy with the stage-2 NetworkPolicies additively, its DNS proxy handles the `matchName` rule, and the policy does not break the kubelet's `tcpSocket` readiness probe.
-7. The Herdr pod can attach to a tmux session whose client is a full-screen TUI, and `herdr pane wait-output --match` matches the literal text `for shortcuts`.
-8. The Debian pins are those of the live index on 2026-11-22; any later point release fails the build until re-reviewed. `python3.13-minimal`, `libpython3.13-minimal` and `openssl` float within the suite.
+6. Cilium rejects disallowed names with REFUSED (default) or NXDOMAIN; `ndots: 1` works for either. If the API name returns AAAA records, Claude Code falls back to IPv4 on this IPv4-only cluster (the K01 probe uses Python, not Claude Code).
+7. Cilium merges the CiliumNetworkPolicy with the stage-2 NetworkPolicies additively, its DNS proxy handles the `matchName` rule, and the policy does not break the kubelet's `tcpSocket` readiness probe.
+8. The Herdr pod can attach to a tmux session whose client is a full-screen TUI, and `herdr pane wait-output --match` matches the literal text `for shortcuts`.
+9. The Debian pins are those of the live index on 2026-11-22; any later point release fails the build until re-reviewed. `python3.13-minimal`, `libpython3.13-minimal` and `openssl` float within the suite.

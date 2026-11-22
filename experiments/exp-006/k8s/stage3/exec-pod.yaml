@@ -1,8 +1,10 @@
 # EXP-006 stage 3 execution pod: tmux server (dedicated socket) owning one Claude Code process, plus non-root sshd on 2222.
-# Image: owner-dispatched CI build of exec-image-agent/ (RUNBOOK, Image). The digest below is a placeholder that is
-# replaced in a reviewed commit after that build; the RUNBOOK run_ok guard stops while it is still a placeholder.
+# Image: owner-dispatched CI run 45083319378 of exec-image-agent/ at source b6e3c92 (tag exp006-s3), pinned by digest.
 # The API key is the Secret exp006-anthropic, mounted as a file; the Herdr pod gets no key.
 # restartPolicy Never: a container restart must not mask a failure (K05 checks restartCount 0).
+# dnsConfig ndots 1: api.anthropic.com is queried as an absolute name first. With the default ndots 5 the resolver
+# tries the search-list expansions first; the CiliumNetworkPolicy DNS rule rejects those (REFUSED is Cilium's default
+# reject code), a refused answer ends the search in glibc and c-ares, and the allowed name would never be queried.
 # Required anti-affinity: (1) not with the herdr pod of this run, (2) not on the node of the live Herdr pod.
 apiVersion: v1
 kind: Pod
@@ -22,6 +24,10 @@ spec:
   hostPID: false
   hostIPC: false
   restartPolicy: Never
+  dnsConfig:
+    options:
+      - name: ndots
+        value: "1"
   terminationGracePeriodSeconds: 10
   affinity:
     podAntiAffinity:
@@ -47,7 +53,7 @@ spec:
       type: RuntimeDefault
   containers:
     - name: exec
-      image: ghcr.io/jlaska/herdrnetes-exec@sha256:<DIGEST-FROM-S3-BUILD>
+      image: ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18
       imagePullPolicy: IfNotPresent
       env:
         - name: EXP006_MODEL

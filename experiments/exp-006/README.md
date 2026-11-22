@@ -121,14 +121,17 @@ The summary below is the original design.
   - K06: label-guarded namespace deletion, positive absence check, and recheck of the live baseline.
 - Untouched: the live Herdr StatefulSet and its PVCs, Argo CD and Longhorn.
 
-## Stage 3 (Kubernetes, real agent): G1 package prepared, NOT RUN
+## Stage 3 (Kubernetes, real agent): image built, G1 package ready, NOT RUN
 
 The real-agent test runs in Kubernetes, not locally. The package is [`k8s/stage3/RUNBOOK.md`](k8s/stage3/RUNBOOK.md)
 with its manifests (including a Cilium FQDN egress allow for `api.anthropic.com:443` only) and the agent execution
 image in [`exec-image-agent/`](exec-image-agent/) (Claude Code 2.1.323 under tmux, an inactive build workflow, and a
-no-key, no-egress smoke test). It was written and validated statically only. Nothing has been built, pushed, applied
-or run, and no API key exists. G1 needs a new owner approval, an owner-created key in a $5-limited workspace, and an
-owner-dispatched image build.
+no-key, no-egress smoke test). The image was built from `b6e3c92` by owner-dispatched
+[CI run 45083319378](https://github.com/jlaska/herdrnetes/actions/runs/45083319378), passed smoke tests A–E before the
+push, and is pinned (anonymously pullable) as
+`ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18`. Nothing has
+been applied to a cluster or run, and no API key exists. G1 needs a new owner approval, and separately an owner-created
+key in a $5-limited workspace.
 
 ## Stage 3, local bwrap harness (historical preparation, kept, not developed further)
 
