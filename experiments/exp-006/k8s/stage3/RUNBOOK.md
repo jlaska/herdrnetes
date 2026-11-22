@@ -95,7 +95,7 @@ Limitations (this is not a sandbox):
 
 1. An Anthropic Console **workspace `herdrnetes-exp006`** with a **$5 spend limit**, and **one** API key created in it for this run. The agent creates and uses no key.
 2. The key is stored in `$KEY_FILE`: mode 0600, outside the repo, never printed, never in argv, never committed. It is delivered to the exec pod as Secret `exp006-anthropic` and read through `apiKeyHelper` (`cat /run/exp006/anthropic/api-key`); it is never an environment variable.
-3. The model id `claude-sonnet-5-5` is re-verified with the key at K00b, before anything is created.
+3. The model is Claude Haiku 5.5 (`claude-haiku-5-5`, effort `medium`), set by `EXP006_MODEL` in `exec-pod.yaml`; it overrides the entrypoint's built-in default (`claude-sonnet-5-5`, unchanged in the pinned image), and K01 checks `model=` in the identity file. The model id is re-verified with the key at K00b, before anything is created. Expected spend is well under $1; the $5 workspace limit stays as the safeguard.
 4. After K05/K06 the owner **revokes the key** in the Console and removes `$KEY_FILE`. The run is not CLEAN until that is confirmed.
 5. Run cap: 30 minutes of wall clock from the exec pod's creation; stop earlier if spend approaches the limit.
 
@@ -149,7 +149,7 @@ anything is committed.
 
 **K00b model check (credentialed approval only; no Kubernetes access).** `KEY_FILE` is owner-supplied, mode 0600, outside the repo, and never printed. The key goes through a process substitution, not argv:
 ```
-curl -sS -o /dev/null -w '%{http_code}\n' -H @<(printf 'x-api-key: %s\nanthropic-version: 2023-06-01\n' "$(cat "$KEY_FILE")") https://api.anthropic.com/v1/models/claude-sonnet-5-5
+curl -sS -o /dev/null -w '%{http_code}\n' -H @<(printf 'x-api-key: %s\nanthropic-version: 2023-06-01\n' "$(cat "$KEY_FILE")") https://api.anthropic.com/v1/models/claude-haiku-5-5
 ```
 Expected `200`. Anything else: stop (nothing has been created).
 
@@ -174,7 +174,7 @@ X python3 -I -c 'import socket;s=socket.create_connection(("api.anthropic.com",4
 X python3 -I -c 'import socket;socket.create_connection(("1.1.1.1",443),5)'
 X python3 -I -c 'import socket;print(socket.getaddrinfo("example.com",443))'
 ```
-Expected: Ready within 5 min on a node other than the live one; `imageID` equals the pinned digest; `identity` has `pid`, `start`, `sid`, `model=claude-sonnet-5-5`, `effort=medium`, `claude_version=2.1.323`, `key_present=yes`; status has `alive=yes`, `key_present=yes`, `passing=0`, `check_sha_ok=yes`, `readme_sha_ok=yes`, `resume_flag=no`; the allowed probe prints `allowed ok 443` (DNS through the proxy and a TCP connect only: no TLS, no HTTP request, no key, no spend); both other egress probes **fail** (a timeout or a resolution error), showing that only the allowed name is reachable. If the allowed probe fails, stop: the agent could not reach the API either. Save outputs to `$WORK/ev` (they name a node: sanitize first). If the pod does not become Ready, `X` and `$K logs` show the entrypoint log (never the key).
+Expected: Ready within 5 min on a node other than the live one; `imageID` equals the pinned digest; `identity` has `pid`, `start`, `sid`, `model=claude-haiku-5-5` (if it shows `claude-sonnet-5-5`, the env override did not apply: stop), `effort=medium`, `claude_version=2.1.323`, `key_present=yes`; status has `alive=yes`, `key_present=yes`, `passing=0`, `check_sha_ok=yes`, `readme_sha_ok=yes`, `resume_flag=no`; the allowed probe prints `allowed ok 443` (DNS through the proxy and a TCP connect only: no TLS, no HTTP request, no key, no spend); both other egress probes **fail** (a timeout or a resolution error), showing that only the allowed name is reachable. If the allowed probe fails, stop: the agent could not reach the API either. Save outputs to `$WORK/ev` (they name a node: sanitize first). If the pod does not become Ready, `X` and `$K logs` show the entrypoint log (never the key).
 
 **K02 Herdr pod, first attach, first prompt.** The prompts are single-line ASCII; only `P1` carries the codeword.
 ```
@@ -281,7 +281,7 @@ No changes to `herdrnetes-exp`, Argo CD or Longhorn (only reads). No owner SSH o
 2. The pre-seeded `.claude.json` keys (`hasCompletedOnboarding`, `hasTrustDialogAccepted`) suppress all first-run dialogs; the permission rule syntax (`./` is the project directory, `//` an absolute path) and `apiKeyHelper` under `--bare` work as in the local harness, which never ran either.
 3. ~~The Claude TUI stays alive without a key.~~ Shown in CI run 45083319378 (smoke D: `alive=yes` twice, flags `--bare --settings --strict-mcp-config --tools --model --effort --session-id` accepted). With a key it is still untested.
 4. `python3-minimal` suffices: `exp006-status` ran in smoke D (`json`, `re`, `subprocess`, `hashlib`, `argparse`). `passing=0` there is the expected value for the pristine task but would also be printed if `check.py` failed to run, so `check.py` itself is first shown at K02 (`progress_since>=1`). `socket` is first used by the K01 probes.
-5. A Secret file with a trailing newline is accepted by `apiKeyHelper`; the model id `claude-sonnet-5-5` is valid for the key (K00b).
+5. A Secret file with a trailing newline is accepted by `apiKeyHelper`; the model id `claude-haiku-5-5` is valid for the key (K00b), and Claude Code 2.1.323 accepts it with `--effort medium`.
 6. Cilium rejects disallowed names with REFUSED (default) or NXDOMAIN; `ndots: 1` works for either. If the API name returns AAAA records, Claude Code falls back to IPv4 on this IPv4-only cluster (the K01 probe uses Python, not Claude Code).
 7. Cilium merges the CiliumNetworkPolicy with the stage-2 NetworkPolicies additively, its DNS proxy handles the `matchName` rule, and the policy does not break the kubelet's `tcpSocket` readiness probe.
 8. The Herdr pod can attach to a tmux session whose client is a full-screen TUI, and `herdr pane wait-output --match` matches the literal text `for shortcuts`.
