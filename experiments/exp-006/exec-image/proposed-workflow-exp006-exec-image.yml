@@ -1,0 +1,79 @@
+# Proposed for owner review; not yet authorized to run. INACTIVE COPY: the owner moves it to
+# .github/workflows/exp006-exec-image.yml in an owner-operated commit (agent token has no `workflow` scope).
+#
+# EXP-006 stage 2: build the execution image (tmux + non-root sshd + counter.sh)
+# and push it to GHCR. Inert until this file is on the default branch AND the
+# owner dispatches it (workflow_dispatch only: no push or pull_request trigger).
+# Auth is the repository-scoped GITHUB_TOKEN; no PATs. The pushed digest, not the
+# tag, is what the manifests pin. Context: experiments/exp-006/exec-image.
+name: exp006-exec-image
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: exp006-exec-image
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/jlaska/herdrnetes-exec
+  TAG: exp006-s1
+  CONTEXT: experiments/exp-006/exec-image
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      # actions/checkout v7.0.1 (release 2026-07-20); SHA is the commit the tag points to.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify counter.sh is byte-identical to the stage-1 copy
+        run: cmp experiments/exp-006/local/counter.sh "$CONTEXT/counter.sh"
+
+      - name: Build
+        run: docker build --file "$CONTEXT/Containerfile" --tag "$IMAGE:$TAG" "$CONTEXT"
+
+      # Smoke test: UID 1000, read-only rootfs, no capabilities, no network. It uses a
+      # throwaway host key generated inside the discarded container; it proves only that
+      # the binaries start and the config syntax is accepted, not that sshd serves logins.
+      - name: Smoke test (tmux -V, ssh -V, sshd -t)
+        run: |
+          set -eu
+          run() { docker run --rm --user 1000:1000 --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --network none --tmpfs /tmp:rw,mode=1777 \
+            --entrypoint "$1" "$IMAGE:$TAG" "${@:2}"; }
+          run /usr/bin/tmux -V
+          run /usr/bin/ssh -V
+          run /bin/cat /usr/share/exp006-manifest.txt
+          run /bin/bash -c 'ssh-keygen -q -t ed25519 -N "" -f /tmp/k && printf "Port 2222\nHostKey /tmp/k\nUsePAM no\nAllowUsers herdr\n" >/tmp/c && /usr/sbin/sshd -t -f /tmp/c && echo sshd-t-ok'
+
+      - name: Log in to GHCR (GITHUB_TOKEN)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$ACTOR" --password-stdin
+
+      - name: Push and report digest
+        run: |
+          set -eu
+          docker push "$IMAGE:$TAG" | tee push.log
+          digest=$(sed -n 's/.*digest: \(sha256:[0-9a-f]\{64\}\).*/\1/p' push.log | tail -1)
+          [ -n "$digest" ] || { echo "could not read digest from docker push output" >&2; exit 1; }
+          {
+            echo "### EXP-006 exec image"
+            echo
+            echo "- Tag: \`$IMAGE:$TAG\`"
+            echo "- Digest: \`$IMAGE@$digest\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo
+            echo '```'
+            docker run --rm --entrypoint /bin/cat "$IMAGE:$TAG" /usr/share/exp006-manifest.txt
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY"

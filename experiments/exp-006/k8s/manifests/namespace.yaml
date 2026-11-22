@@ -1,0 +1,14 @@
+# EXP-006 stage 2 scratch namespace. PROPOSED: nothing here has been applied; G1 is not authorized.
+# ${RUN_ID} is substituted by the runbook (envsubst). Never the live namespace (herdrnetes-exp).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: namespace
+    herdrnetes.io/disposable: "true"
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

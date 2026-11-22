@@ -44,7 +44,7 @@ binaries, and a cleanup record showing that every recorded PID was positively go
 
 Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…affc66`), tmux 3.8, bash 5.3.9.
 
-## Findings (proposed, for owner review)
+## Findings (owner review 2026-11-22: FIND-071/072 accepted as local findings; FIND-073 limited to the CLI-help survey)
 
 - **FIND-071: A tmux-owned process outlives Herdr pane closure, clean server stop and server SIGKILL, and a new
   pane reattaches to the same process.** [observed, local] This contrasts with in-pane processes (FIND-002). The
@@ -69,10 +69,18 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
 - Only the tmux server's lifetime was tested. A tmux server crash would still lose the process. Survival of the
   execution host or pod itself is out of scope.
 
-## Stage 2: proposed Kubernetes slice (not prepared)
+## Stage 2: Kubernetes slice (G1 package prepared, NOT TESTED)
 
-This is the proposal design. Its manifests, rehearsal and runbook have **not** been produced (see the PR and the
-handoff report).
+The review package is [`k8s/RUNBOOK.md`](k8s/RUNBOOK.md), with [`k8s/manifests/`](k8s/manifests/), the execution image
+[`exec-image/`](exec-image/), and a proposed build workflow kept as an inactive copy at
+[`exec-image/proposed-workflow-exp006-exec-image.yml`](exec-image/proposed-workflow-exp006-exec-image.yml). The owner
+installs it under `.github/workflows/`, because the agent token cannot write workflows.
+
+Nothing has been built, rehearsed, published or applied. The manifests pass `kubeconform -strict` for 1.36, and
+`entrypoint.sh` passes shellcheck. The scratch Herdr pod uses the EXP-002 image unchanged. The image survey found no
+existing pinned image with tmux and a non-root sshd, so the execution image is new.
+
+The summary below is the original design.
 
 - One scratch namespace `herdrnetes-exp006-<run-id>`, PSA restricted, with the labels used in EXP-005-RWX.
 - Two plain Pods built from one image derived from the EXP-002 image digest, adding pinned `tmux` and

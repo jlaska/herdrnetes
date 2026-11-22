@@ -1,6 +1,6 @@
 # EXP-006: Independent execution and isolation
 
-**Status:** In progress. Local tmux prototype passed. The Kubernetes slice is proposed, but not prepared or approved (G1).
+**Status:** In progress. Local tmux prototype accepted (FIND-071/072 local; FIND-073 qualified). Kubernetes G1 package prepared for review; image build and G1 not authorized.
 
 First assess whether Herdr's session management can restart/upgrade independently from long-running agent processes through remote PTY/session attachment. Then test trusted remote agent pods and consider OpenShell/Kata policy, terminal integration, state restoration, and sandbox isolation. Do not assume native support for remote agent status/transcript detection or process migration without tests. Consider `agent-runner` reuse only after requirements emerge.
 
