@@ -9,8 +9,8 @@
 # Source pinning: a workflow_dispatch run executes the workflow file from main, but
 # this job builds from the pinned, reviewed SOURCE_SHA, not from main or any branch.
 # That commit contains experiments/exp-006/exec-image/ (Containerfile, entrypoint.sh,
-# counter.sh, smoke.sh). The owner/orchestrator replaces the literal placeholder
-# 8f9cd31bf21dd0a2de77f6fff9e2e5719e42d350 below with the 40-hex commit after committing the build context.
+# counter.sh, smoke.sh). SOURCE_SHA below is that reviewed build-source commit; any
+# change to the build context needs a new source commit and an updated SOURCE_SHA.
 # A step fails the job unless the checked-out HEAD equals SOURCE_SHA.
 #
 # Order: build, smoke.sh, and only then GHCR login and push. A smoke failure stops the
@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SOURCE_SHA: 8f9cd31bf21dd0a2de77f6fff9e2e5719e42d350
+  SOURCE_SHA: 35369c2db4daa6d241aa6b08e9ddf3e751143490
   IMAGE: ghcr.io/jlaska/herdrnetes-exec
   TAG: exp006-s1
   CONTEXT: experiments/exp-006/exec-image

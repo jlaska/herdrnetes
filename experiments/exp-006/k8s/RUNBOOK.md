@@ -28,7 +28,7 @@ Namespace `herdrnetes-exp006-${RUN_ID}` (labels `herdrnetes.io/experiment=exp-00
 - Exec pod: built from [`../exec-image/`](../exec-image/) (Debian trixie-slim, base digest as EXP-002). Binary pins verified against the live trixie index on 2026-11-22: `tmux 3.5a-3`, `openssh-server 1:10.0p1-7+deb13u4`, `tini 0.19.0-3+b8`, `procps 2:4.0.4-9` (sources in the Containerfile header; a stale pin fails the build). Digest: **pending the owner-dispatched build**. Source SHA: **pending** (recorded with the digest).
 - Build path (no step builds "from main" or from a moving branch):
   1. The owner reviews `exec-image/`, then installs the corrected workflow on `main` as `.github/workflows/exp006-exec-image.yml` in an owner-operated commit (the agent token has no `workflow` scope) and dispatches it (`workflow_dispatch` only, GITHUB_TOKEN, no PAT).
-  2. The workflow (from `main`) checks out the **pinned reviewed source commit** (`SOURCE_SHA` = `8f9cd31bf21dd0a2de77f6fff9e2e5719e42d350`, which holds `exec-image/` and `smoke.sh`), verifies HEAD equals it, and builds.
+  2. The workflow (from `main`) checks out the **pinned reviewed source commit** (`SOURCE_SHA` = `35369c2db4daa6d241aa6b08e9ddf3e751143490`, which holds `exec-image/` and `smoke.sh`), verifies HEAD equals it, and builds.
   3. `smoke.sh` runs before any GHCR login. A failure stops the job and nothing is pushed.
   4. On success it pushes and prints `ghcr.io/jlaska/herdrnetes-exec@sha256:...` and the source SHA in the job summary.
   5. The owner sets the GHCR package to PUBLIC by hand (the image holds no secret), so no imagePullSecret is needed.
@@ -133,7 +133,7 @@ This was captured with `kubectl get`/`version`/`auth can-i` only. K00 must re-ca
 
 ## Owner-operated or approval-gated steps (in order)
 
-1. **Image build.** Review `exec-image/` (Containerfile, `smoke.sh`, the inactive workflow copy). `SOURCE_SHA` is set to the build-source commit `8f9cd31bf21dd0a2de77f6fff9e2e5719e42d350`; the owner then installs the workflow on `main` in an owner-operated commit (the agent token cannot write workflows) and dispatches it. Record the digest and source SHA from the job summary, and set the GHCR package PUBLIC in its settings. The agent cannot do this: there is no local build or push, and no personal GHCR identity.
+1. **Image build.** Review `exec-image/` (Containerfile, `smoke.sh`, the inactive workflow copy). `SOURCE_SHA` is set to the build-source commit `35369c2db4daa6d241aa6b08e9ddf3e751143490`; the owner then installs the workflow on `main` in an owner-operated commit (the agent token cannot write workflows) and dispatches it. Record the digest and source SHA from the job summary, and set the GHCR package PUBLIC in its settings. The agent cannot do this: there is no local build or push, and no personal GHCR identity.
 2. **Rehearsal, optional.** `smoke.sh` in CI covers the SSH path (risks 1–3). A local `podman` rehearsal would add only the risks it does not cover; the agent did not do one, because earlier local build and rehearsal delegation was declined by the agent permission system.
 3. **G1.** Commit the digest into `manifests/exec-pod.yaml`, fill `Commit SHA`, review, then run K00–K06 owner-operated or explicitly agent-authorized.
 
