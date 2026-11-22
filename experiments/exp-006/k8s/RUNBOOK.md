@@ -25,8 +25,14 @@ Namespace `herdrnetes-exp006-${RUN_ID}` (labels `herdrnetes.io/experiment=exp-00
 ## Image
 
 - Herdr pod: EXP-002 digest above, reused. It already has `openssh-client` and no tmux. Its entrypoint needs a writable `$HOME` and `XDG_*`; these are emptyDirs. Its config is baked in, so no ConfigMap.
-- Exec pod: built from [`../exec-image/`](../exec-image/) (Debian trixie-slim, base digest as EXP-002; `tmux 3.5a-3`, `openssh-server 1:10.0p1-7+deb13u4`, `tini 0.19.0-3`, `procps 2:4.0.4-9`). Digest: **pending the owner-dispatched build**.
-- Prerequisite: owner reviews the inactive copy [`exec-image/proposed-workflow-exp006-exec-image.yml`](../exec-image/proposed-workflow-exp006-exec-image.yml), moves it to `.github/workflows/exp006-exec-image.yml` on the default branch in an owner-operated commit (the agent token has no `workflow` scope; GitHub rejected the agent push), keeping it `workflow_dispatch` only, GITHUB_TOKEN, no PAT) and dispatches it. The digest from the job summary is then committed into `manifests/exec-pod.yaml` in a reviewed commit. A new GHCR package is private by default: the owner must make it public (the image holds no secret) or decide on a pull credential. Any such change is a separate decision.
+- Exec pod: built from [`../exec-image/`](../exec-image/) (Debian trixie-slim, base digest as EXP-002). Binary pins verified against the live trixie index on 2026-11-22: `tmux 3.5a-3`, `openssh-server 1:10.0p1-7+deb13u4`, `tini 0.19.0-3+b8`, `procps 2:4.0.4-9` (sources in the Containerfile header; a stale pin fails the build). Digest: **pending the owner-dispatched build**. Source SHA: **pending** (recorded with the digest).
+- Build path (no step builds "from main" or from a moving branch):
+  1. The owner reviews `exec-image/`, then installs the corrected workflow on `main` as `.github/workflows/exp006-exec-image.yml` in an owner-operated commit (the agent token has no `workflow` scope) and dispatches it (`workflow_dispatch` only, GITHUB_TOKEN, no PAT).
+  2. The workflow (from `main`) checks out the **pinned reviewed source commit** (`SOURCE_SHA` = `8f9cd31bf21dd0a2de77f6fff9e2e5719e42d350`, which holds `exec-image/` and `smoke.sh`), verifies HEAD equals it, and builds.
+  3. `smoke.sh` runs before any GHCR login. A failure stops the job and nothing is pushed.
+  4. On success it pushes and prints `ghcr.io/jlaska/herdrnetes-exec@sha256:...` and the source SHA in the job summary.
+  5. The owner sets the GHCR package to PUBLIC by hand (the image holds no secret), so no imagePullSecret is needed.
+  6. The digest and source SHA are recorded in a reviewed commit to `manifests/exec-pod.yaml` and this runbook.
 
 ## Credentials plan (per run; none are the owner's identity; nothing is printed)
 
@@ -42,23 +48,31 @@ Totals: requests 100m / 128Mi / 128Mi; limits 1000m / 768Mi / 768Mi. emptyDir si
 
 ## Procedure
 
-Setup (run in **bash**, not zsh: the `$K`/`$X`/`$H` command variables rely on word splitting; `CTX` is the owner's kube context, never committed; `jq` runs locally):
+Setup (run in **bash**, not zsh: the `$K`/`$X`/`$H` command variables rely on word splitting; `CTX` and the three `EXPECT_*` identity values are supplied by the owner at run time and never committed; `jq` runs locally):
 ```
 export RUN_ID=s2a NS=herdrnetes-exp006-s2a CTX=<context>   # RUN_ID: [a-z0-9-], NS must be herdrnetes-exp006-$RUN_ID
+export EXPECT_SERVER=<api-url> EXPECT_KUBE_SYSTEM_UID=<uid> EXPECT_HERDR_UID=<uid> ARGO_APP=<cluster>-herdrnetes-exp   # owner-supplied, never committed
 K="kubectl --context $CTX"; umask 077; WORK=$(mktemp -d); mkdir "$WORK"/{m,keys,ev}
 for f in manifests/*.yaml; do sed -e "s/\${RUN_ID}/$RUN_ID/g" -e "s|sha256:<DIGEST-FROM-G1-BUILD>|$EXEC_DIGEST|" "$f" >"$WORK/m/$(basename "$f")"; done  # EXEC_DIGEST=sha256:<hex>
 grep -nE '<[A-Z]|\$\{' "$WORK"/m/*.yaml   # must print nothing (no unfilled placeholder)
 test "$(grep -hoE 'herdrnetes-exp006-[a-z0-9-]+' "$WORK"/m/*.yaml | sort -u)" = "$NS" && echo ns-ok   # every manifest names only the run namespace
-baseline() { { $K config current-context >/dev/null && $K get nodes -o jsonpath='{range .items[*]}{.metadata.name} {.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
+baseline() { { ctx_ok && $K get nodes -o jsonpath='{range .items[*]}{.metadata.name} {.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}'
   $K -n herdrnetes-exp get pod herdr-0 -o jsonpath='{.metadata.uid} {.spec.nodeName}{range .status.containerStatuses[*]} {.restartCount} {.imageID}{end}{"\n"}'
   $K -n herdrnetes-exp get sts,pvc,networkpolicy -o name; $K get pv -o json | jq -S '[.items[]|{n:.metadata.name,c:.spec.claimRef}]'
-  $K -n argo-system get applications.argoproj.io <cluster>-herdrnetes-exp -o jsonpath='{.status.sync.status} {.status.health.status}{"\n"}'; } 2>&1; }
+  $K -n argo-system get applications.argoproj.io "$ARGO_APP" -o jsonpath='{.status.sync.status} {.status.health.status}{"\n"}'; } 2>&1; }
+ctx_ok() { local s u h a  # STOP CONDITION: a non-zero return means stop; no reliance on current-context
+  s=$(kubectl config view --minify --context "$CTX" -o jsonpath='{.clusters[0].cluster.server}') &&
+  u=$(kubectl --context "$CTX" get ns kube-system -o jsonpath='{.metadata.uid}') &&   # cluster identity
+  h=$(kubectl --context "$CTX" -n herdrnetes-exp get pod herdr-0 -o jsonpath='{.metadata.uid}') &&
+  a=$(kubectl --context "$CTX" -n argo-system get applications.argoproj.io "$ARGO_APP" -o jsonpath='{.status.sync.status} {.status.health.status}') &&
+  [ "$s" = "$EXPECT_SERVER" ] && [ "$u" = "$EXPECT_KUBE_SYSTEM_UID" ] && [ "$h" = "$EXPECT_HERDR_UID" ] && [ "$a" = "Synced Healthy" ] ||
+  { echo "ctx_ok FAILED: wrong cluster, identity mismatch or Argo CD not Synced/Healthy; stop" >&2; return 1; }; }
 ```
 `baseline` output names nodes: it stays in `$WORK/ev` and is sanitized before anything is committed.
 
-**K00 read-only preflight.** `baseline >"$WORK/ev/k00.txt"`; `$K get ns "$NS"` must print `Error from server (NotFound)`; `$K get ns -l herdrnetes.io/experiment=exp-006` lists none. Expected: the context is the intended cluster, all nodes Ready, at least 3 schedulable nodes (two besides the live Herdr node), `herdr-0` Running with its UID, node, restart counts and image IDs recorded, Argo CD app Synced/Healthy.
+**K00 read-only preflight.** `ctx_ok` must succeed first (else stop). `baseline >"$WORK/ev/k00.txt"`; `$K get ns "$NS"` must print `Error from server (NotFound)`; `$K get ns -l herdrnetes.io/experiment=exp-006` lists none. Expected: `ctx_ok` passes (server URL, `kube-system` UID and `herdr-0` UID match the owner-supplied values), all nodes Ready, at least 3 schedulable nodes (two besides the live Herdr node), `herdr-0` Running with its UID, node, restart counts and image IDs recorded, Argo CD app Synced/Healthy.
 
-**K01 namespace, network, secrets, exec pod.**
+**K01 namespace, network, secrets, exec pod.** Run `ctx_ok` first; stop if it fails.
 ```
 $K apply -f "$WORK/m/namespace.yaml"; $K -n "$NS" apply -f "$WORK/m/networkpolicy.yaml" -f "$WORK/m/service.yaml"
 env -u SSH_AUTH_SOCK ssh-keygen -q -t ed25519 -N '' -C "exp006-host-$RUN_ID" -f "$WORK/keys/host"
@@ -89,13 +103,13 @@ Expected: the ACK line carries the K01 `pid`, `start` and `nonce`; one tmux clie
 
 **K03 pane close, continuity, reattach.** `n0=$($X tail -1 /tmp/agent/out/counter.log)`; `$H pane close "$P"`; wait 10 s; `$X tmux -S /tmp/agent/tmux.sock list-clients` (expect none); `$X cat /tmp/agent/out/identity` and `$X tail -3 /tmp/agent/out/counter.log` (same identity, `n` advanced past `n0`); then `attach k03; mark k03`. Expected: same triple, `n` greater than at close.
 
-**K04 Herdr pod replacement.** `$K -n "$NS" delete pod exp006-herdr --wait=true`; `$K -n "$NS" get pod exp006-herdr` (NotFound); `$X tail -2 /tmp/agent/out/counter.log` twice, a few seconds apart (still advancing); `$K apply -f "$WORK/m/herdr-pod.yaml"`; wait Ready; `attach k04; mark k04`. Expected: the new Herdr has no panes; the ACK shows the same triple. This is a pod replacement, not a Herdr upgrade.
+**K04 Herdr pod replacement.** `ctx_ok` first (stop on failure). `$K -n "$NS" delete pod exp006-herdr --wait=true`; `$K -n "$NS" get pod exp006-herdr` (NotFound); `$X tail -2 /tmp/agent/out/counter.log` twice, a few seconds apart (still advancing); `$K apply -f "$WORK/m/herdr-pod.yaml"`; wait Ready; `attach k04; mark k04`. Expected: the new Herdr has no panes; the ACK shows the same triple. This is a pod replacement, not a Herdr upgrade.
 
 **K05 identity and continuity.** `$X cat /tmp/agent/out/counter.log >"$WORK/ev/counter.log"`; `grep -E ' ACK k0[234] ' "$WORK/ev/counter.log"` (three ACKs, one triple, rising `n`); `grep COUNT "$WORK/ev/counter.log" | sed 's/.*n=//' | awk 'NR>1&&$1!=p+1{g++}{p=$1}END{print "gaps="g+0,"last="p}'` (expect `gaps=0`); re-run the K01 pod command (UID, restartCount 0 and `startedAt` unchanged: `$K -n "$NS" get pod exp006-exec -o jsonpath='{.status.containerStatuses[0].state.running.startedAt}'`).
 
-**K06 label-guarded cleanup.**
+**K06 label-guarded cleanup.** `ctx_ok` is part of the guard and must pass.
 ```
-test "$($K get ns "$NS" -o jsonpath='{.metadata.labels.herdrnetes\.io/experiment}')" = exp-006 && test "$($K get ns "$NS" -o jsonpath='{.metadata.labels.herdrnetes\.io/run-id}')" = "$RUN_ID" && case $NS in herdrnetes-exp006-*) ;; *) false;; esac
+ctx_ok && test "$($K get ns "$NS" -o jsonpath='{.metadata.labels.herdrnetes\.io/experiment}')" = exp-006 && test "$($K get ns "$NS" -o jsonpath='{.metadata.labels.herdrnetes\.io/run-id}')" = "$RUN_ID" && case $NS in herdrnetes-exp006-*) ;; *) false;; esac
 $K delete ns "$NS" --wait=true --timeout=300s
 $K get ns "$NS"                                       # must print Error from server (NotFound)
 $K get pv -o json | jq -e --arg ns "$NS" '[.items[]|select(.spec.claimRef.namespace==$ns)]|length==0'
@@ -119,13 +133,13 @@ This was captured with `kubectl get`/`version`/`auth can-i` only. K00 must re-ca
 
 ## Owner-operated or approval-gated steps (in order)
 
-1. **Image build.** Review `exec-image/`, including `proposed-workflow-exp006-exec-image.yml`. In an owner-operated commit, copy the workflow to `.github/workflows/exp006-exec-image.yml` on `main` (`workflow_dispatch` only runs from the default branch; the agent's token cannot write workflows). Dispatch it and record the digest. Make the GHCR package public, or choose a pull credential. The agent cannot do this: there is no local build or push, and no personal GHCR identity.
-2. **Rehearsal, optional but recommended.** Run the built image locally with `podman` to retire risks 1–4 below before touching the cluster. The agent did not do this, because earlier local build and rehearsal delegation was declined by the agent permission system.
+1. **Image build.** Review `exec-image/` (Containerfile, `smoke.sh`, the inactive workflow copy). `SOURCE_SHA` is set to the build-source commit `8f9cd31bf21dd0a2de77f6fff9e2e5719e42d350`; the owner then installs the workflow on `main` in an owner-operated commit (the agent token cannot write workflows) and dispatches it. Record the digest and source SHA from the job summary, and set the GHCR package PUBLIC in its settings. The agent cannot do this: there is no local build or push, and no personal GHCR identity.
+2. **Rehearsal, optional.** `smoke.sh` in CI covers the SSH path (risks 1–3). A local `podman` rehearsal would add only the risks it does not cover; the agent did not do one, because earlier local build and rehearsal delegation was declined by the agent permission system.
 3. **G1.** Commit the digest into `manifests/exec-pod.yaml`, fill `Commit SHA`, review, then run K00–K06 owner-operated or explicitly agent-authorized.
 
 ## Stop conditions
 
-Stop and report (do not continue) on: any K00 baseline change; a rendered manifest whose namespace is not the run namespace; a pod not Ready within 5 min; a pod scheduled onto the live Herdr node; PSA rejection; the K02 attach failing twice; any ssh prompt for a password or passphrase.
+Stop and report (do not continue) on: `ctx_ok` failing at K00 or before K01, K04 or K06; any K00 baseline change; a rendered manifest whose namespace is not the run namespace; a pod not Ready within 5 min; a pod scheduled onto the live Herdr node; PSA rejection; the K02 attach failing twice; any ssh prompt for a password or passphrase.
 
 ## Safety
 
@@ -133,11 +147,11 @@ No changes to `herdrnetes-exp`, Argo CD or Longhorn (only reads). No owner SSH o
 
 ## Untested risks
 
-1. Non-root `sshd` under PSA restricted (no setuid, no chroot): `/run/sshd`, OpenSSH 10 `sshd-session` re-exec, the pre-auth sandbox under RuntimeDefault seccomp, and the `sshd` privsep user. Unverified; build and rehearsal must show it.
-2. `StrictModes yes`: `authorized_keys` lives under the passwd home `/tmp/home` (0700), where sshd's parent-directory walk stops, so `/tmp` (1777) should not be checked. Fallback if rejected: `EXP006_STRICT_MODES=no` (entrypoint env) in a reviewed manifest change.
-3. The client key Secret file is root-owned and group-readable through fsGroup. `ssh` may refuse it (believed to check only files it owns). Fallback: `install -m 0600` it into an emptyDir and change `-i`.
+1. Non-root `sshd` under PSA restricted (no setuid, no chroot): `/run/sshd`, OpenSSH 10 `sshd-session` re-exec, the pre-auth sandbox under the default seccomp profile, and the `sshd` privsep user. The CI smoke test (`smoke.sh`) is the gate that covers this. Its docker flags (uid 1000, read-only rootfs, no caps, no-new-privileges, tmpfs) only approximate PSA restricted; the cluster's runtime and seccomp profile can differ.
+2. `StrictModes yes`: `authorized_keys` lives under the passwd home `/tmp/home` (0700), where sshd's parent-directory walk stops. `smoke.sh` gates this, including key-permission handling and the forced command (`restrict,pty,command=...`, and `id` must not run). Fallback if rejected: `EXP006_STRICT_MODES=no` (entrypoint env) in a reviewed manifest change.
+3. The client key Secret file is root-owned and group-readable through fsGroup. `smoke.sh` mimics this with a 0644 file not owned by uid 1000 and the real client `ssh`; it cannot reproduce the kubelet's actual Secret mount. Fallback: `install -m 0600` it into an emptyDir and change `-i`.
 4. `HostKeyAlias=exp006-exec` with `-p 2222` should match a plain `exp006-exec` known_hosts line; confirm with `ssh -v`.
 5. The EXP-002 entrypoint has never run with emptyDir `$HOME`, `/run/herdr` and a read-only rootfs; hook reconciliation writes under `$HOME`.
 6. NetworkPolicy: the kube-dns labels, a node-local DNS cache, and whether the CNI lets kubelet reach tcpSocket 2222 through ingress deny.
-7. GHCR package visibility after a GITHUB_TOKEN first push; Debian pins go stale when the archive moves.
+7. GHCR package visibility after a GITHUB_TOKEN first push (owner sets PUBLIC); Debian pins go stale when the archive moves.
 8. Only two non-live nodes can host the pods; tmux client count can lag after pod deletion (half-open TCP).
