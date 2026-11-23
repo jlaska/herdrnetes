@@ -1760,7 +1760,7 @@ run_a3() {
   local why=''
   step A3
   A3_N=$(last_n)
-  pane_attach a3 || { record A3 FAIL "could not attach a pane"; return; }
+  pane_attach a3 || { record A3 FAIL "could not attach a pane"; stop "A3 attach"; } # authorization section 4
   wait_for 10 replay_seen || why="$why;no replayed tick (min K=${A3_K:-none} > n at connect $A3_N)"
   mark "$PANE" a3 || why="$why;mark a3 rc=$?"
   ident_wait a3 30 || why="$why;identity not collectable"
@@ -1775,36 +1775,114 @@ run_a3() {
 }
 
 # ==================================================================== A4a/b
+# Client lifecycle (owner adjustment before run 3, 2026-11-23): client processes that outlive the
+# Herdr server are recorded, not failed. A4 passes on PLAN's criteria only: same identity, counter
+# progress while Herdr is down, and a new pane's ACK. Survivors are never signalled here (cleanup
+# handles tracked pids). The run stops if a survivor may have blocked the new pane, or is still
+# present after A4, because later steps count client processes. "Zero clients" is claimed only
+# when two scans, with counter progress between them, found no client process.
+fd0_of() { case ${1:-} in '' | *[!0-9]*) return 0 ;; esac; readlink "/proc/$1/fd/0" 2>/dev/null; }
+gw_estab() { "$SS" -Htnp state established "( dport = :$PORT )" 2>/dev/null | grep -c "pid=$1,"; } # <pid>: its TCP sessions to the gateway
+pts_masters() { # pts_masters <n>: "<count> [pid:comm ...]" of our processes holding the ptmx master of /dev/pts/<n> (fdinfo tty-index)
+  local f i p n=0 seen=0 idx=0 who=''
+  while read -r f; do
+    seen=1
+    i=$(sed -n 's/^tty-index:[[:space:]]*//p' "${f%/fd/*}/fdinfo/${f##*/}" 2>/dev/null)
+    [ -n "$i" ] && idx=1
+    if [ "$i" = "$1" ]; then p=${f#/proc/}; p=${p%%/*}; n=$((n + 1)); who="$who $p:$(proc_comm "$p")"; fi
+  done < <(find /proc/[0-9]*/fd -maxdepth 1 -user "$UID_" \( -lname /dev/ptmx -o -lname /dev/pts/ptmx \) 2>/dev/null)
+  if [ "$seen" = 0 ] || [ "$idx" = 1 ]; then echo "$n [${who# }]"; else echo "unknown []"; fi
+}
+pts_report() { case ${1:-} in /dev/pts/[0-9]*) echo "exists=$([ -e "$1" ] && echo yes || echo no) ptmx-master-holders=$(pts_masters "${1#/dev/pts/}")" ;; *) echo "not a pty" ;; esac; }
+a4_clients_obs() { # a4_clients_obs <id> <tag> <original chain>: one scan appended to obs/a4<id>-clients.txt; sets A4_LEFT
+  local snapout cls p st pp role kid orig=" $3 "
+  snapout=$(client_snap)
+  A4_LEFT=$(grep -c -E '^(cli|transport|proxy|run-ssh) ' <<<"$snapout")
+  {
+    echo "# $2 $(date -u +%FT%TZ) t+${SECONDS}s n=$(last_n)"
+    awk '{ n[$1]++ } END { printf "counts: attached=%d cli=%d transport=%d proxy=%d run-ssh=%d other=%d\n", n["attached"], n["cli"], n["transport"], n["proxy"], n["run-ssh"], n["other"] }' <<<"$snapout"
+    while read -r cls p st pp; do
+      case $cls in
+      cli)
+        kid=$(awk -v p="$p" '$1 == "transport" && $4 == p { print $2 }' <<<"$snapout" | tr '\n' ' ')
+        if [ -n "$kid" ]; then role="supervising CLI with transport child ${kid% }"; else role="disconnected supervising CLI (no transport child)"; fi ;;
+      transport)
+        kid=$(awk -v p="$p" '$1 == "proxy" && $4 == p { print $2 }' <<<"$snapout" | sed -n '1p')
+        if [ -n "$kid" ]; then role="SSH transport with proxy $kid (proxy TCP sessions to the gateway: $(gw_estab "$kid"))"; else role="SSH transport without a proxy child"; fi ;;
+      proxy) role="proxy, parent $(awk -v q="$pp" '$2 == q { print $1 }' <<<"$snapout" | sed -n '1p'), TCP sessions to the gateway: $(gw_estab "$p")" ;;
+      run-ssh) role="ssh using the run's ssh_config outside any chain" ;;
+      *) continue ;;
+      esac
+      echo "$cls pid=$p start=$st ppid=$pp original=$(case $orig in *" $p:$st "*) echo yes ;; *) echo no ;; esac) state=$(sed -n 's/^State:[[:space:]]*//p' "/proc/$p/status" 2>/dev/null) fd0=$(fd0_of "$p") role: $role"
+    done <<<"$snapout"
+    grep '^attached ' <<<"$snapout"
+  } 2>&1 | redact >>"$E/obs/a4$1-clients.txt"
+}
+a4_orig_input() { # a4_orig_input <original chain>: can the original connection still take input?
+  local e alive=() pts cap=unknown trn=no px=no m
+  [ -n "$1" ] || { echo "original connection: unknown (no recorded chain)"; return; }
+  for e in $1; do alive_same "${e%%:*}" "${e#*:}" && alive+=("$e"); done
+  if [ "${#alive[@]}" = 0 ]; then echo "original connection: ended (cli, ssh and proxy all gone); capable of input: no"; return; fi
+  read -r _ e _ <<<"$1"; alive_same "${e%%:*}" "${e#*:}" && trn=yes
+  e=${1##* }; alive_same "${e%%:*}" "${e#*:}" && px=yes
+  pts=$(fd0_of "${alive[0]%%:*}")
+  m=$(pts_report "$pts")
+  if [ "$trn" = no ] || [ "$px" = no ]; then cap="no (transport or proxy gone)"
+  else case $m in *"holders=0 "*) cap="no (no process holds its terminal's master)" ;; *holders=[1-9]*) cap="possibly (heuristic: transport and proxy alive and a master holder of its terminal exists; holders named above; not demonstrated by typing)" ;; esac; fi
+  echo "original connection: alive ${alive[*]}; transport alive=$trn proxy alive=$px; terminal ${pts:-none} $m; capable of input: $cap"
+}
+a4_strays() { client_snap | awk -v keep=" $1 " '$1 ~ /^(cli|transport|proxy|run-ssh)$/ && index(keep, " " $2 ":" $3 " ") == 0 { print $1 ":" $2 ":" $3 }'; } # outside chain <1>
+a4_no_strays() { [ -z "$(a4_strays "$1")" ]; }
+a4_track() { local p; for p in $(clients_pids) $(ssh_pids) $(proxy_pids); do track "stray-$p" "$p"; done; } # for cleanup's verified signals
 restart_test() { # restart_test <a|b> <clean|kill>
-  local id=$1 mode=$2 label=A4$1 n_stop n_down old old_start why='' p rp strays=() rpanes=()
+  local id=$1 mode=$2 label=A4$1 n_stop n_gone n_down old old_start why='' rp rpanes=() orig obs t0 left_down left_up zero ro=no mrc=0 ackok=1 left_end=0 note=''
   step "$label"
-  [ "$(clients)" -ge 1 ] || pane_attach "$label-pre"
+  [ "$(clients)" -ge 1 ] || pane_attach "$label-pre" || { record "$label" FAIL "could not attach the pre-restart pane"; stop "$label attach"; }
+  orig=${PANE_CLIENT[$PANE]:-}
+  obs=$E/obs/a4$id-clients.txt
   n_stop=$(last_n)
   old=$HERDR_PID
   old_start=$HERDR_START
   snap "04$id-before-restart"
   pane_ids | "$JQ" -R . | "$JQ" -sc . >"$E/obs/a4$id-panes-before.json"
+  { echo "# before $mode stop $(date -u +%FT%TZ): pane $PANE original chain (cli ssh proxy) ${orig:-unknown} alive=$(att_alive "$orig" && echo yes || echo no)"
+    echo "control: original cli fd0=$(fd0_of "${orig%%:*}") $(pts_report "$(fd0_of "${orig%%:*}")") (expected >= 1 holder: the herdr server)"; } 2>&1 | redact >>"$obs"
   if [ "$mode" = clean ]; then
-    stop_herdr_clean || { record "$label" FAIL "server stop failed"; return; }
+    stop_herdr_clean || { record "$label" FAIL "server stop failed"; stop "$label herdr server stop failed"; }
   else
     # SIGKILL exactly the recorded pid, after re-verifying start time and environment
     if ! { proc_env_has "$old" "XDG_CONFIG_HOME=$E/config" && alive_same "$old" "$old_start"; }; then
-      record "$label" FAIL "refusing to kill unverified pid $old"; return
+      record "$label" FAIL "refusing to kill unverified pid $old"; stop "$label unverified herdr pid"
     fi
     sig KILL "herdr-server:$old:$old_start"
   fi
   GUARD_OK=0
   wait_for 10 gone "$old" "$old_start" || why="$why;old server pid $old still alive"
-  wait_for 10 no_client_procs || {
-    why="$why;connect clients survived the server ($(client_counts))"
-    mapfile -t strays < <({ clients_pids; ssh_pids; proxy_pids; })
-    for p in "${strays[@]}"; do [ -n "$p" ] && track "stray-$p" "$p"; done # cleanup signals them (verified)
-  }
-  # the counter must keep progressing without Herdr and without any client
+  # client lifecycle: an observation (scan 1), not an A4 criterion
+  t0=$SECONDS
+  wait_for 10 no_client_procs
+  a4_clients_obs "$id" "scan 1: herdr server gone, after up to 10s for clients to end (waited $((SECONDS - t0))s)" "$orig"
+  left_down=$A4_LEFT
+  a4_orig_input "$orig" 2>&1 | redact >>"$obs"
+  [ "$left_down" = 0 ] || a4_track
+  n_gone=$(last_n)
+  # PLAN criterion: the counter keeps progressing while Herdr is down
   wait_for 15 counter_past $((${n_stop:-0} + 3)) || why="$why;counter did not advance by 3 while herdr down"
+  wait_for 15 counter_past $((${n_gone:-0} + 2)) # progress between the two client scans
   n_down=$(last_n)
+  save_out "a4$id-down"
+  a4_clients_obs "$id" "scan 2: herdr still down, after counter progress" "$orig"
+  left_up=$A4_LEFT
+  a4_orig_input "$orig" 2>&1 | redact >>"$obs"
+  [ "$left_up" = 0 ] || a4_track
+  if [ "$left_down" = 0 ] && [ "$left_up" = 0 ] && [ "${n_down:-0}" -gt "${n_gone:-0}" ] 2>/dev/null; then
+    zero="verified zero (two scans, n $n_gone -> $n_down between them)"
+  else
+    zero="not verified zero (client processes at scans: $left_down, $left_up; n $n_gone -> $n_down)"
+  fi
+  echo "clients while herdr down: $zero" >>"$obs"
   snap "04$id-herdr-down"
-  start_herdr "restart-$id" || { record "$label" FAIL "herdr did not restart${why:+ ($why)}"; return; }
+  start_herdr "restart-$id" || { record "$label" FAIL "herdr did not restart${why:+ ($why)}"; stop "$label herdr restart failed"; }
   snap "04$id-herdr-restarted"
   {
     echo "pane ids before stop: $(cat "$E/obs/a4$id-panes-before.json")"
@@ -1817,20 +1895,39 @@ restart_test() { # restart_test <a|b> <clean|kill>
       H pane read "$rp" --source visible --lines 40 | grep -v '^$' | sed -n '1,8p'
     done
   } 2>&1 | redact >"$E/obs/restored-$id.txt"
-  pane_attach "$label" || why="$why;new pane could not attach"
+  if ! pane_attach "$label"; then
+    a4_clients_obs "$id" "new pane did not attach" "$orig"
+    record "$label" FAIL "$mode:${why};new pane could not attach; client processes at herdr-down scans: $left_down, $left_up (obs/a4$id-clients.txt)"
+    stop "$label attach"
+  fi
   load_counter_id a1
-  mark "$PANE" "a4$id" || why="$why;mark a4$id rc=$?"
+  mark "$PANE" "a4$id" || { mrc=$?; ackok=0; why="$why;mark a4$id rc=$mrc"; }
+  H pane read "$PANE" --source recent --lines 300 >"$E/panes/a4$id-new-recent.txt" 2>&1
+  grep 'attached read-only' "$E/panes/a4$id-new-recent.txt" >/dev/null && ro=yes
+  echo "new pane $PANE chain $ATT; 'attached read-only' notice: $ro; mark rc=$mrc" | redact >>"$obs"
   ident_wait "a4$id" 30 || why="$why;identity not collectable"
   same_ident a1 "a4$id" || why="$why;identity changed"
-  verify_ack "a4$id" "$n_stop" || why="$why;ACK mismatch: $(ack_line "a4$id")"
+  verify_ack "a4$id" "$n_stop" || { ackok=0; why="$why;ACK mismatch: $(ack_line "a4$id")"; }
   save_out "a4$id"
   snap "04$id-reattached"
+  # survivors outside the new pane's chain: wait (no signal) for them to end on their own;
+  # 75 s covers the CLI's 60 s reconnect window (FIND-080)
+  if ! a4_no_strays "$ATT"; then
+    t0=$SECONDS
+    if wait_for 75 a4_no_strays "$ATT"; then note="survivors ended on their own $((SECONDS - t0))s after the reattach"; else left_end=1; fi
+  fi
+  a4_clients_obs "$id" "end of $label${note:+ ($note)}" "$orig"
   if [ -z "$why" ]; then
-    record "$label" PASS "$mode: old server $old gone, clients 0, counter unchanged and n $n_stop -> $n_down while herdr down; new server $HERDR_PID; ACK n=$ACKN"
+    record "$label" PASS "$mode: old server $old gone; identity unchanged, n $n_stop -> $n_down while herdr down; clients while down: $zero; new server $HERDR_PID; ACK n=$ACKN${note:+; $note}"
   else
-    record "$label" FAIL "$mode:${why}"
+    record "$label" FAIL "$mode:${why}; clients while down: $zero"
   fi
   if ident_changed a1 "a4$id"; then stop "$label identity change in A1-A4"; fi
+  if [ "$((left_down + left_up))" -gt 0 ] && { [ "$ro" = yes ] || [ "$ackok" = 0 ]; }; then
+    stop "$label: a client that survived Herdr may have blocked the new pane (read-only notice=$ro, mark rc=$mrc); not terminated"
+  fi
+  [ "$left_end" = 0 ] || stop "$label: client processes outside the new pane's chain still present 75s after the reattach ($(a4_strays "$ATT" | tr '\n' ' ')); later steps count client processes; not terminated"
+  [ "$ackok" = 1 ] || stop "$label: the new pane's ACK did not satisfy the primary criterion (mark rc=$mrc)"
 }
 
 # ==================================================================== A5a/b
@@ -1986,9 +2083,9 @@ run_a6() {
   close_all_panes
   load_counter_id a5b
   n0=$(last_n)
-  pane_attach a6-owner || { record A6 FAIL "pane 1 could not attach"; return; }
+  pane_attach a6-owner || { record A6 FAIL "pane 1 could not attach"; stop "A6 attach"; } # authorization section 4
   p1=$PANE
-  pane_attach a6-viewer || { record A6 FAIL "pane 2 could not attach"; return; }
+  pane_attach a6-viewer || { record A6 FAIL "pane 2 could not attach"; stop "A6 attach"; }
   p2=$PANE
   H pane wait-output "$p2" --match 'attached read-only' --source visible --timeout 15000 >/dev/null || why="$why;no 'attached read-only' notice in pane 2"
   type_line "$p2" "mark a6ro"
