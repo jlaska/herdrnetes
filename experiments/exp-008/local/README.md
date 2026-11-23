@@ -35,9 +35,103 @@ Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../.
 | FIND-077 | **Accepted** (owner, 2026-11-23) at its observed, single-workstation scope: the workaround succeeded in run 2 | OpenShell v0.1.9's Podman driver gives the workload and supervisor a Podman healthconfig with `test ["NONE"]` and a 10 s interval. Rootless Podman 5.8.9 then needs `$XDG_RUNTIME_DIR/systemd/private` when the container starts. Run 1 observed this failure. In run 2, `DISABLE_HC_SYSTEMD=true` in the dedicated service's environment was sufficient: the probe and the real sandbox started with no healthcheck timer unit, and `State.Health` was absent (null). Scope: one workstation, Podman 5.8.9, a relocated runtime dir. REQ-011. |
 | FIND-078 | **Accepted** (owner, 2026-11-23) at its documented scope | A disposable OpenShell v0.1.9 gateway can be isolated on a workstation that already has OpenShell registrations, a default rootless Podman store and agent-backed SSH. The ingredients are a dedicated store and socket, a run-local XDG/registry with `OPENSHELL_SYSTEM_GATEWAY_DIR`, a loopback mTLS listener and an agentless ssh wrapper. The protected baselines were unchanged in both runs. |
 | FIND-079 | **Accepted** (owner, 2026-11-23) at its documented scope | Verify OpenShell v0.1.9 release provenance with `gh attestation verify --owner NVIDIA`. The signer is `release-publish.yml@refs/heads/main`, and the certificate names the `main` dispatch commit `624aceea`. The build commit `ce58cf8e` comes from the promote job's `SOURCE_SHA`. Runtime images carry no GitHub attestation. Re-verified in run 2's preflight. |
-| FIND-080 | **Proposed, revised** (2026-11-23). The first version, "connect exec-replaces itself with `ssh` on a TTY", was **wrong** and is withdrawn | **Source (v0.1.9, `crates/openshell-cli/src`):** `sandbox connect` dispatches `main.rs:3665` → `run::sandbox_connect` (re-export, `run.rs:100`) → `ssh.rs:674-681` → `sandbox_connect_supervised()` (`ssh.rs:540`) → `run_main_attach_supervised()` (`ssh.rs:396-417`), which **spawns the host `ssh` as a child** (`kill_on_drop`) and stays up as its supervisor. It forwards SIGINT/SIGQUIT/SIGTERM (`ssh.rs:304-329`); SIGHUP is not caught. If ssh exits 255 after at least 2 s attached and the main process has no terminal result, it creates a new SSH session and respawns ssh, retrying for up to 60 s (`ssh.rs:57-68`, `445-455`, `593-651`). The exec-replace in `exec_or_wait()` (`ssh.rs:241-247`) is reachable only from `sandbox exec` (`ssh.rs:1027-1035` → `1021`); every connect path spawns. ssh runs the ProxyCommand `<cli> ssh-proxy --gateway … --sandbox … --token …` (`openshell-core/src/forward.rs:931-969`) via `$SHELL -c 'exec …'`. An attached pane therefore holds a three-process chain: CLI → `ssh … -s sandbox openshell-main` → `ssh-proxy`. Client accounting must recognise the chain, zero-client checks must cover all three processes, and the session token appears in two processes' argv. **Runtime (run 2):** the gateway log shows `CreateSshSession`, an allowed token `ForwardTcp` and an opened relay that stayed up until cleanup cancelled it. That is consistent with a live chain, but no process snapshot was taken, so the chain itself is unobserved. |
-| FIND-081 | **Proposed** (run 3, 2026-11-23; one local run) | An OpenShell v0.1.9 sandbox's canonical main process (`counter.sh` from `sandbox create --detach --tty … --`) is independent of Herdr. The process and session continued, with identity unchanged on all three sources (counter pid/start/nonce, `main_process_instance_id`/`main_process_started_at_ms`, host PID and `/proc` start) and `restart_count` 0, through each of: pane close with no client (n 6→11), reattach with replay from tick 1, clean Herdr server stop/start, and SIGKILL of the server (n advanced while Herdr was down). A new pane's `sandbox connect` accepted input (`ACK a4a`, `ACK a4b`). Scope: Podman driver, loopback gateway, synthetic counter; A4b's pane check is recorded FAIL by a harness wrap defect. REQ-009, REQ-011. |
-| FIND-082 | **Proposed** (run 3, 2026-11-23; two observations) | When the Herdr 0.9.5 server stops cleanly or is SIGKILLed, the attached `openshell sandbox connect` client chain (supervising CLI, ssh transport, `ssh-proxy`) ends with it. In both cases no client process was present at the first scan (0 s wait), and none appeared before the next scan. No disconnected supervising CLI lingered; v0.1.9's 60 s reconnect did not keep it alive. Inferred mechanism (not traced): the pty hangup reaches the chain's foreground process group, and the CLI does not catch SIGHUP. |
+| FIND-080 | **Accepted** (owner, 2026-11-23) at its revised, documented scope: source reading plus run 3's process snapshots of the chain. The first version, "connect exec-replaces itself with `ssh` on a TTY", was **wrong** and stays withdrawn | **Source (v0.1.9, `crates/openshell-cli/src`):** `sandbox connect` dispatches `main.rs:3665` → `run::sandbox_connect` (re-export, `run.rs:100`) → `ssh.rs:674-681` → `sandbox_connect_supervised()` (`ssh.rs:540`) → `run_main_attach_supervised()` (`ssh.rs:396-417`), which **spawns the host `ssh` as a child** (`kill_on_drop`) and stays up as its supervisor. It forwards SIGINT/SIGQUIT/SIGTERM (`ssh.rs:304-329`); SIGHUP is not caught. If ssh exits 255 after at least 2 s attached and the main process has no terminal result, it creates a new SSH session and respawns ssh, retrying for up to 60 s (`ssh.rs:57-68`, `445-455`, `593-651`). The exec-replace in `exec_or_wait()` (`ssh.rs:241-247`) is reachable only from `sandbox exec` (`ssh.rs:1027-1035` → `1021`); every connect path spawns. ssh runs the ProxyCommand `<cli> ssh-proxy --gateway … --sandbox … --token …` (`openshell-core/src/forward.rs:931-969`) via `$SHELL -c 'exec …'`. An attached pane therefore holds a three-process chain: CLI → `ssh … -s sandbox openshell-main` → `ssh-proxy`. Client accounting must recognise the chain, zero-client checks must cover all three processes, and the session token appears in two processes' argv. **Runtime (run 2):** the gateway log shows `CreateSshSession`, an allowed token `ForwardTcp` and an opened relay that stayed up until cleanup cancelled it. That is consistent with a live chain, but no process snapshot was taken, so the chain itself is unobserved. |
+| FIND-081 | **Accepted** (owner, 2026-11-23) at its proposed scope: one local run, one synthetic process, not a real agent or a production deployment. See the A4b note below | An OpenShell v0.1.9 sandbox's canonical main process (`counter.sh` from `sandbox create --detach --tty … --`) is independent of Herdr. The process and session continued, with identity unchanged on all three sources (counter pid/start/nonce, `main_process_instance_id`/`main_process_started_at_ms`, host PID and `/proc` start) and `restart_count` 0, through each of: pane close with no client (n 6→11), reattach with replay from tick 1, clean Herdr server stop/start, and SIGKILL of the server (n advanced while Herdr was down). A new pane's `sandbox connect` accepted input (`ACK a4a`, `ACK a4b`). Scope: Podman driver, loopback gateway, synthetic counter; A4b's pane check is recorded FAIL by a harness wrap defect. REQ-009, REQ-011. |
+| FIND-082 | **Accepted** (owner, 2026-11-23) at its proposed scope: two observations in one local run; the mechanism stays inferred | When the Herdr 0.9.5 server stops cleanly or is SIGKILLed, the attached `openshell sandbox connect` client chain (supervising CLI, ssh transport, `ssh-proxy`) ends with it. In both cases no client process was present at the first scan (0 s wait), and none appeared before the next scan. No disconnected supervising CLI lingered; v0.1.9's 60 s reconnect did not keep it alive. Inferred mechanism (not traced): the pty hangup reaches the chain's foreground process group, and the CLI does not catch SIGHUP. |
+
+**A4b: recorded result versus evidence (owner acceptance, 2026-11-23).**
+- The **recorded** A4b result stays **FAIL**. The harness's exact-line parser could not match an ACK that the terminal had wrapped. Run 3's `results.tsv` is not rewritten, and the harness is not claimed to have passed A4b.
+- The **committed evidence** shows separately that the correct ACK was received and that the main process kept its original identity:
+  - the counter log line `ACK a4b pid=52 start=43423622 nonce=fdf5d2b339358279 n=38`;
+  - the same text across three rows of [panes/a4b.txt](evidence/1123-122157/panes/a4b.txt);
+  - identity on all three sources, unchanged from A1.
+- FIND-081 is accepted on that evidence, at its narrow scope: one local synthetic process, not a real agent or a production deployment.
+
+## Run 4 (owner-authorized fourth and last attempt): corrections, reviewed before the run
+
+**Authorization (owner, 2026-11-23).** One more bounded local stage A execution, focused on A5–A7. It runs after the corrections below have been made and independently reviewed. No fifth attempt is authorized.
+
+**Boundaries.** The same pinned software, images and isolation controls as run 3, with fresh P1–P3 checks and all existing stop conditions. The run is limited to 30 minutes, uses no credentials, paid inference or Kubernetes, and gets no repair-and-retry loop.
+
+### Harness corrections
+
+**1. Wrap-aware ACK verification** (`demo.sh`, region `# >>> pane-ack`).
+- Raw pane captures are kept as read: `panes/<word>.txt` (visible), `-recent.txt`, and `-unwrapped.txt` (Herdr 0.9.5's `--source recent-unwrapped`, which `herdr --skill` documents as "recent output with soft wraps joined").
+- The expected ACK is built from the loaded identity and the log's `n`. The counter-log line must equal it exactly.
+- The pane check passes if any capture shows the complete expected ACK:
+  - as one whole row; or
+  - as exactly the rows a terminal of width W shows when it soft-wraps that line from column 0. Each row except the last is the next W characters, right-trimmed. W comes from the candidate first row only.
+- Other text between or around the rows, a partial line, unequal row widths or any other identity cannot match. The method does not join arbitrary newlines.
+- Per-source results go to `obs/ack-<word>.txt`.
+- `mark` now polls this check instead of `wait-output --match`. That match string could itself wrap.
+- Every marked word in A1, A6, A5a, A5b (and the uncalled A4) is verified this way (static test).
+- Notices are matched by their key phrase on one row, or by the whole notice line wrap-aware. Herdr's unwrapped capture covers both.
+
+**2. Sequence.** A1 → A6 → A7a → A5a → A5b → A7b. A2–A4 are covered by run 3 and are not called.
+- `CUR_ID` names the identity of the current main-process incarnation. It changes only after a classified gateway restart whose identity settled.
+- Before any gateway restart, an identity change stops the run.
+- A1 now stops on FAIL.
+- **A6:**
+  - Pane 1 must show live output, and no read-only notice, before pane 2 attaches, so that pane 1 holds the input lease.
+  - **Negative:** the viewer's `mark a6ro` never produces an ACK, whether the viewer types it while read-only or the check comes after the owner leaves.
+  - **Positive:** the owner gets `ACK a6w` while the viewer is attached. After pane 1 closes, pane 2 gets `ACK a6ro2` (a second attempt is made only if the first left no log ACK), together with `openshell: input enabled`.
+- **A7a:** all panes are closed. The create CLI is gone, the identity is the same, phase is Ready and `n` advances.
+- **A5a / A5b:**
+  - Each restart is classified separately:
+    - **survived:** every key is equal;
+    - **restarted:** every key was collected and a process-level key differs;
+    - **inconclusive:** otherwise;
+    - **unavailable:** see below.
+  - `ident_settle` waits for an identity that is unchanged 15 s later, because the persisted phase can read Ready before startup recovery restarts the containers.
+  - **Unavailable** means no Ready within 300 s, or no settled identity and no Ready sandbox with a running workload. It records and **stops**: no recreate and no reset.
+  - A5b runs only if the sandbox was usable after A5a: Ready, a classified identity, and a new pane that ACKed. It records whether the pane's original supervising CLI recovered and accepted input, or a new pane was needed.
+- **A7b:**
+  - Runs only if the sandbox is still manageable.
+  - Delete output must say `Deleted sandbox` or `deletion accepted`; `already deleted` is rejected.
+  - The sandbox must then read `sandbox not found`, and every tracked counter and container process from every incarnation must be gone.
+  - Phase and `exit_code` before the delete separate natural completion from explicit deletion.
+  - A deletion done by the cleanup trap is recorded as `C-delete INFO` ("emergency deletion"), never as A7b.
+- **Results:** every planned step without a row is recorded `NOT-RUN`. A missing result is never PASS.
+- **Evidence:** after a stop, cleanup first takes a bounded, read-only capture of panes, client chains, containers and `sandbox get`. The gateway log tail kept in evidence grows from 400 to 1500 lines.
+
+**3. Offline tests** ([tests/ack-test.sh](tests/ack-test.sh), [fixtures](tests/fixtures/ack/)).
+- **61 cases**, all passing:
+  - run 3's exact A4b captures (visible and recent) and ACK log lines;
+  - normal widths (96 and 57 columns, and Herdr-unwrapped);
+  - synthetic wraps at 47, 32 and 17 columns, including wraps just after a space;
+  - wrong pid, start, nonce, n and word;
+  - incomplete ACKs;
+  - unrelated or interleaved rows;
+  - `verify_ack` with stale or uninitialised identity;
+  - `mark` through a Herdr stub;
+  - A5 classification.
+- The old exact-line grep is shown to fail on run 3's capture.
+- **Mutation check:** a matcher that skips row comparison fails 11 cases.
+- **Surviving mutants:** two survive, and both are equivalent: the prefix guard is implied by the chunk comparison, and widths above l+1 cannot match single-spaced text.
+- `clients-test.sh` 9/9, `bash -n` and shellcheck pass.
+
+**4. Independent review (Sonnet).**
+- The review found no blockers.
+- It found five should-fix defects, all fixed:
+  - pane 2 could win the input lease;
+  - an inconclusive A5 could hide an unavailable sandbox;
+  - "already deleted" could pass A7b;
+  - there was no live-state capture before a stop;
+  - a failed unwrapped read discarded a good match.
+- Six minor items were fixed.
+- **Verified against v0.1.9 source:**
+  - the read-only and input-enabled notice texts (`crates/openshell-supervisor-process/src/ssh.rs:862`, `:1024`);
+  - forwarding of the triggering keystroke, and discard of read-only input;
+  - lease release on channel close or connection drop;
+  - the CLI's 60 s reconnect window and its retryable errors (`crates/openshell-cli/src/ssh.rs`);
+  - graceful shutdown stops the sandboxes without changing the persisted phase (`compute/mod.rs:4133-4138`);
+  - startup recovery restarts both containers when the gateway mints sandbox JWTs (`driver-podman/src/driver.rs:2069-2078`); run 3's gateway logged "gateway-minted sandbox JWT enabled";
+  - the delete output, and the post-delete `sandbox not found` error.
+
+**Source predictions (not results):**
+- A5a: `restarted`.
+- A5b: `restarted` (JWT enabled).
+- A supervising CLI that sees FailedPrecondition "sandbox is not ready" while reconnecting exits, because that error is not retryable.
 
 ## Run 3: 1123-122157 (owner-authorized third attempt) — A1–A4a PASS, A4b recorded FAIL (harness), stopped
 

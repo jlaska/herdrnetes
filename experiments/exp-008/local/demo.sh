@@ -121,6 +121,7 @@ PANE=
 PSHELL=
 ATT=
 declare -A PANE_CLIENT=() # pane id -> "cli:start ssh:start proxy:start" of the client attached in it
+PLANNED="A1 A6 A7a A5a A5b A7b" # run 4 order; cleanup records NOT-RUN for any without a row
 CLS=CLEAN
 EVBAD=0
 ROOT_GONE=unknown
@@ -506,11 +507,25 @@ cl_herdr() {
   done
 }
 
+prestop_capture() { # bounded (every call has its own timeout); read-only; nothing is signalled or deleted
+  local p n=0
+  mkdir -p "$E/obs" "$E/panes" "$E/snaps" 2>/dev/null
+  log "pre-stop capture"
+  if [ "$GUARD_OK" = 1 ] && [ -n "$HERDR_PID" ] && alive_same "$HERDR_PID" "$HERDR_START"; then
+    for p in $(pane_ids 2>/dev/null); do n=$((n + 1)); [ "$n" -le 4 ] || break; pane_capture "$p" "stop-$p"; done
+  fi
+  snap 99-stop 2>/dev/null
+  { echo "# pre-stop $(date -u +%FT%TZ): $(client_counts 2>/dev/null)"; client_snap 2>/dev/null | awk '$1 != "other"'; } 2>&1 | redact >"$E/obs/stop-clients.txt"
+  [ -S "$E/podman.sock" ] && PT=30 P ps -a --format '{{.ID}} {{.Names}} {{.State}} {{.Status}}' >"$E/obs/stop-containers.txt" 2>&1
+  [ -n "$GWPID" ] && alive_same "$GWPID" "$GWSTART" && OT=30 sbx_json stop >/dev/null 2>&1
+  return 0
+}
 cl_sandbox() { # remove the sandbox through the gateway if both still exist
   [ -n "$GWPID" ] && alive_same "$GWPID" "$GWSTART" || return 0
   [ -x "$E/wrap/openshell" ] || return 0
   OT=30 sbx_json cl-probe >/dev/null 2>&1 || return 0
-  cl_note "sandbox still exists; deleting through the gateway"
+  cl_note "sandbox still exists; emergency deletion through the gateway by the cleanup trap (not A7b)"
+  record C-delete INFO "emergency deletion by the cleanup trap, not an explicit A7b deletion (phase before: $(sbx_phase cl-probe))"
   OT=60 O sandbox delete "$GW" >>"$E/obs/cleanup-delete.out" 2>&1
   poll 60 2 sbx_gone || cl_residue "sandbox $GW still present after delete"
 }
@@ -685,7 +700,7 @@ collect_evidence() {
     evcopy "$E/$f" "cfg/$f"
   done
   mkdir -p "$EVID/logs"
-  tail -n 400 "$E/logs/gateway.log" 2>/dev/null | redact >"$EVID/logs/gateway.log"
+  tail -n 1500 "$E/logs/gateway.log" 2>/dev/null | redact >"$EVID/logs/gateway.log"
   tail -n 200 "$E/logs/podman-service.log" 2>/dev/null | redact >"$EVID/logs/podman-service.log"
   tail -n 100 "$E/logs/herdr-stdout.log" 2>/dev/null | redact >"$EVID/logs/herdr-stdout.log"
 }
@@ -796,8 +811,9 @@ cleanup() {
   trap 'echo "signal received during cleanup; continuing" >&2' INT TERM HUP
   [ "$OWN_E" = 1 ] || exit "$rc"
   log "cleanup start (exit=$rc)"
-  # 1) watchdog, then Herdr via its own socket
+  # 1) watchdog; after a stop, a best-effort capture of the live state; then Herdr via its own socket
   [ -n "$WD_ENTRY" ] && sig TERM "$WD_ENTRY"
+  [ "$MAIN_DONE" = 1 ] || prestop_capture
   cl_herdr
   # 2-3) sandbox via the gateway (if still possible), then the gateway
   save_out_final
@@ -821,9 +837,14 @@ cleanup() {
   cl_note "CLASSIFICATION: $CLS"
   # exit code policy: 2 refusal (earlier), 1 any FAIL/STOP, 3 cleanup not CLEAN, 0 otherwise
   fails=$(awk -F'\t' '$2 == "FAIL" || $2 == "STOP"' "$RESULTS" 2>/dev/null | wc -l)
+  # every planned step ends with a row: a missing result is recorded as NOT-RUN, never read as PASS
+  for id in $PLANNED; do
+    awk -F'\t' -v i="$id" '$1 == i {f = 1} END {exit !f}' "$RESULTS" 2>/dev/null ||
+      record "$id" NOT-RUN "no result recorded ($([ "$MAIN_DONE" = 1 ] && echo 'the step recorded nothing' || echo 'not reached: the run stopped earlier'))"
+  done
   if [ "$MAIN_DONE" = 1 ]; then
-    for id in A1 A2 A3 A4a A4b A6 A7a A7b; do
-      awk -F'\t' -v i="$id" '$1 == i && $2 == "PASS" {f = 1} END {exit !f}' "$RESULTS" 2>/dev/null || { record "$id" FAIL "no PASS recorded"; fails=$((fails + 1)); }
+    for id in A1 A6 A7a A7b; do
+      awk -F'\t' -v i="$id" '$1 == i && $2 == "PASS" {f = 1} END {exit !f}' "$RESULTS" 2>/dev/null || fails=$((fails + 1))
     done
   fi
   [ "$rc" = 0 ] && [ "$fails" -gt 0 ] && rc=1
@@ -1173,22 +1194,97 @@ close_all_panes() {
   wait_for 15 no_client_procs
 }
 type_line() { H pane send-text "$1" "$2" >/dev/null; H pane send-keys "$1" Enter >/dev/null; } # <pane> <text>
-mark() { # mark <pane> <word>: type "mark <word>"; wait for ACK in the log and in the pane
-  local pane=$1 w=$2
+# >>> pane-ack
+# Pane checks that tolerate terminal wrapping (run 3: A4b's ACK wrapped onto three rows of a
+# 27-column pane and the exact-line grep failed). Raw captures are kept as read.
+#
+# ack_rows_match <capture> <expected>: the complete expected line is in the capture, either as one
+# whole row, or as exactly the rows a terminal of width W shows when it soft-wraps that line from
+# column 0: every row but the last is the next W characters, right-trimmed as captures are (a wrap
+# just after a space loses the space). W comes from the candidate first row (its length, or one
+# more for a trimmed space), never from other output. Other text between or around the rows, a
+# partial line, or any other identity cannot match. Prints "line" or "wrapped:<W>:<rows>".
+ack_rows_match() {
+  [ -n "${2:-}" ] && [ -r "${1:-}" ] || return 1
+  awk -v e="$2" -v minw=8 '
+    { sub(/\r$/, ""); sub(/[ \t]+$/, ""); r[NR] = $0 }
+    END {
+      le = length(e)
+      for (i = 1; i <= NR; i++) {
+        if (r[i] == e) { print "line"; exit 0 }
+        l = length(r[i])
+        if (l < minw || l >= le || substr(e, 1, l) != r[i]) continue
+        for (w = l; w <= l + 1; w++) {
+          ok = 1; k = 0
+          for (p = 1; p <= le; p += w) {
+            c = substr(e, p, w); sub(/ +$/, "", c)
+            if (i + k > NR || r[i + k] != c) { ok = 0; break }
+            k++
+          }
+          if (ok && k > 1) { print "wrapped:" w ":" k; exit 0 }
+        }
+      }
+      exit 1
+    }' "$1"
+}
+# text_rows_seen <capture> <text>: <text> as a substring of one row, or as a whole wrapped line
+text_rows_seen() { [ -n "${2:-}" ] && [ -r "${1:-}" ] || return 1; grep -F -- "$2" "$1" >/dev/null 2>&1 || ack_rows_match "$1" "$2" >/dev/null; }
+PANE_SOURCES="unwrapped recent visible"
+pane_cap() { case $2 in visible) echo "$E/panes/$1.txt" ;; *) echo "$E/panes/$1-$2.txt" ;; esac; } # <tag> <source>
+# pane_capture <pane> <tag>: visible (panes/<tag>.txt, as in runs 1-3), recent scrollback, and
+# Herdr 0.9.5's recent-unwrapped (soft wraps joined by its terminal emulator). Overwritten per poll.
+pane_capture() {
+  H pane read "$1" --source visible --lines 40 >"$(pane_cap "$2" visible)" 2>&1
+  H pane read "$1" --source recent --lines 300 >"$(pane_cap "$2" recent)" 2>&1
+  H pane read "$1" --source recent-unwrapped --lines 300 >"$(pane_cap "$2" unwrapped)" 2>&1
+  return 0 # a failed read leaves an error text in that capture, which cannot match; the others still count
+}
+# caps_ack <tag> <expected>: per-source result lines for the saved captures; true if any matched
+caps_ack() {
+  local s m hit=1
+  for s in $PANE_SOURCES; do
+    if m=$(ack_rows_match "$(pane_cap "$1" "$s")" "$2"); then echo "source=$s match=$m"; hit=0; else echo "source=$s match=none"; fi
+  done
+  return "$hit"
+}
+caps_text() { local s; for s in $PANE_SOURCES; do text_rows_seen "$(pane_cap "$1" "$s")" "$2" && return 0; done; return 1; } # <tag> <text>
+pane_ack_seen() { pane_capture "$1" "$2" && caps_ack "$2" "$3" >/dev/null; }    # <pane> <tag> <expected>
+pane_text_seen() { pane_capture "$1" "$2" && caps_text "$2" "$3"; }              # <pane> <tag> <text>
+# ack_expected <word>: the complete ACK the counter prints for the CURRENT identity (CPID CSTART
+# CNONCE) with the log's n. Empty if the identity is not loaded or the log has no such ACK.
+ack_expected() {
+  local n
+  [ -n "$CPID" ] && [ -n "$CSTART" ] && [ -n "$CNONCE" ] || return 1
+  n=$(ackf "$(ack_line "$1")" n)
+  [[ $n =~ ^[0-9]+$ ]] || return 1
+  echo "ACK $1 pid=$CPID start=$CSTART nonce=$CNONCE n=$n"
+}
+mark() { # mark <pane> <word> [log-wait-s]: type "mark <word>"; wait for the ACK in the log (rc 1), then the complete ACK in the pane (rc 2)
+  local pane=$1 w=$2 exp
   type_line "$pane" "mark $w"
-  wait_for 15 ack_present "$w" || return 1
-  H pane wait-output "$pane" --match "ACK $w pid=$CPID" --source visible --timeout 10000 >/dev/null || return 2
-  H pane read "$pane" --source visible --lines 40 >"$E/panes/$w.txt" 2>&1
+  wait_for "${3:-15}" ack_present "$w" || return 1
+  exp=$(ack_expected "$w") || { pane_capture "$pane" "$w"; return 2; }
+  poll 10 0.5 pane_ack_seen "$pane" "$w" "$exp" || return 2
   return 0
 }
-# verify_ack <word> <min-n-exclusive> -> sets ACKN; ACK carries the current identity, in log and pane
+# verify_ack <word> <min-n-exclusive> -> sets ACKN. The log's ACK line is exactly the expected ACK for
+# the current identity with n > min, and the saved captures of the pane show that complete ACK.
+# Per-source results go to obs/ack-<word>.txt.
 verify_ack() {
-  local line pid start nonce
+  local line exp rc=0 res
+  ACKN=
   line=$(ack_line "$1")
-  pid=$(ackf "$line" pid); start=$(ackf "$line" start); nonce=$(ackf "$line" nonce); ACKN=$(ackf "$line" n)
-  [ "$pid" = "$CPID" ] && [ "$start" = "$CSTART" ] && [ "$nonce" = "$CNONCE" ] && [ "${ACKN:-0}" -gt "$2" ] &&
-    grep "ACK $1 pid=$CPID start=$CSTART nonce=$CNONCE" "$E/panes/$1.txt" >/dev/null 2>&1
+  exp=$(ack_expected "$1") || rc=1
+  ACKN=$(ackf "$line" n)
+  [ "$rc" = 0 ] && [ "${line#* * }" = "$exp" ] && [ "$ACKN" -gt "$2" ] 2>/dev/null || rc=1
+  res=$(caps_ack "$1" "$exp") || rc=1
+  { echo "word=$1 expected=${exp:-<none: identity not loaded or no ACK in the log>} min_n_exclusive=$2"
+    echo "log: ${line:-<none>}"
+    echo "$res"
+    echo "verify=$([ "$rc" = 0 ] && echo pass || echo fail)"; } | redact >"$E/obs/ack-$1.txt"
+  return "$rc"
 }
+# <<< pane-ack
 ticks_min() { grep -o 'tick n=[0-9]*' | sed 's/.*=//' | sort -n | sed -n '1p'; }
 ticks_last() { grep -o 'tick n=[0-9]*' | tail -n 1 | sed 's/.*=//'; }
 
@@ -1679,6 +1775,7 @@ run_a1() {
     { record A1 FAIL "no counter identity within 30s (is $OUTDIR writable? phase=$(sbx_phase poll)); /tmp/out fallback is not authorised"; stop "A1 no identity"; }
   ident_wait a1 30 || { record A1 FAIL "identity inconsistent: $(tr '\n' ' ' <"$E/obs/a1-identity.txt")"; stop "A1 identity consistency"; }
   load_counter_id a1
+  CUR_ID=a1
   save_out a1
   log "fd0 of the counter: $(kv "$E/obs/a1-identity.txt" fd0)"
   # attach the first pane. The ACK is the primary evidence; the process chain corroborates it.
@@ -1720,10 +1817,12 @@ run_a1() {
     record A1 PASS "ACK in log and pane: pid=$CPID start=$CSTART nonce=$CNONCE n=$n_ack; instance=$(kv "$E/obs/a1-identity.txt" instance_id) hpid=$HPIDC hstart=$(kv "$E/obs/a1-identity.txt" hstart) cread=$(tail -n 1 "$E/obs/cread-method.txt"); client cli/ssh/proxy=$ATT"
   else
     record A1 FAIL "${why#;}"
+    stop "A1: no verified identity and working attachment; later steps need both"
   fi
 }
 
 # ====================================================================== A2
+# A2, A3 and A4a/b are not called in run 4 (covered by run 3's evidence); kept as reviewed.
 N_A2=0
 run_a2() {
   local n0 why=''
@@ -1930,6 +2029,138 @@ restart_test() { # restart_test <a|b> <clean|kill>
   [ "$ackok" = 1 ] || stop "$label: the new pane's ACK did not satisfy the primary criterion (mark rc=$mrc)"
 }
 
+# ============================================================ run 4 sequence
+# Owner-approved order for the fourth (last) attempt: A1, A6, A7a, A5a, A5b, A7b. A2-A4 are covered
+# by run 3 and not repeated (their functions above are kept but not called). CUR_ID names the
+# identity file of the main-process incarnation later steps must see: a1 until a gateway restart
+# is classified with a consistent identity, then a5a, then a5b. A restarted process is never
+# treated as continuity; before any gateway restart, any identity change stops the run.
+CUR_ID=
+A5A_USABLE=no
+A5A_WHY='not run'
+# v0.1.9 notice texts (crates/openshell-supervisor-process/src/ssh.rs:862 with the error text of its
+# test at :2219, and :1024; crates/openshell-cli/src/ssh.rs:627). The read-only notice is longer than a
+# half-width pane: it counts if its key phrase is on one row, or the whole line matches wrap-aware.
+NOTICE_RO='attached read-only'
+NOTICE_RO_LINE='openshell: canonical main process already has an input owner; attached read-only; retry input after the owner disconnects; press Ctrl-C or Ctrl-D to exit'
+NOTICE_INPUT='openshell: input enabled'
+NOTICE_RECONNECT='Connection to sandbox lost; reconnecting'
+A6_N1=0
+a6_owner_ready() { # <pane>: a tick newer than A6_N1 is visible and no read-only notice
+  local t
+  pane_capture "$1" a6-owner-ready
+  t=$(ticks_last <"$(pane_cap a6-owner-ready visible)")
+  [ -n "$t" ] && [ "$t" -gt "$A6_N1" ] 2>/dev/null && ! caps_text a6-owner-ready "$NOTICE_RO" && ! caps_text a6-owner-ready "$NOTICE_RO_LINE"
+}
+a6_ro_seen() { pane_capture "$1" "$2" && { caps_text "$2" "$NOTICE_RO" || caps_text "$2" "$NOTICE_RO_LINE"; }; } # <pane> <tag>
+# ident_settle <label> <timeout-s>: a consistent identity that is still the same 15 s later. After a
+# gateway restart, the persisted phase can read Ready before startup recovery restarts the
+# containers (v0.1.9 compute/mod.rs:4133-4137, driver-podman/src/driver.rs:2071-2078), so one
+# sample taken at Ready could still be the old process. Each superseded sample is kept.
+ident_settle() {
+  local end=$((SECONDS + $2)) i=0
+  ident_wait "$1" 90 || return 1
+  while :; do
+    cp "$E/obs/$1-identity.txt" "$E/obs/$1-settle$i-identity.txt"
+    sleep 15
+    ident_wait "$1" 60 || return 1
+    same_ident "$1-settle$i" "$1" && { echo "settled after $((i + 1)) comparison(s)" >"$E/obs/$1-settle.txt"; return 0; }
+    log "identity $1 changed while settling (sample $i superseded)"
+    i=$((i + 1))
+    [ "$SECONDS" -lt "$end" ] || { echo "not settled within $2s ($i change(s))" >"$E/obs/$1-settle.txt"; return 1; }
+  done
+}
+
+# ====================================================================== A6
+# With the original main process and a healthy gateway. Pane 1 attaches first and owns input; pane 2
+# is a read-only viewer. Negative: the viewer's "mark a6ro" never reaches the counter, not even after
+# the owner leaves. Positive: the owner's "mark a6w" ACKs while the viewer is attached; after pane 1
+# is closed (the owner's client ends, releasing input), the viewer's "mark a6ro2" ACKs in pane 2.
+run_a6() {
+  local p1 p2 why='' n0 tries=1 mrc=0 exp t s notices=$E/obs/a6-notices.txt
+  step A6
+  close_all_panes || { record A6 FAIL "A1's client did not end before A6 ($(client_counts))"; stop "A6: a client outside A6's panes may own input"; }
+  ident_wait a6-pre 30 || { record A6 FAIL "identity not collectable before A6"; stop "A6 identity"; }
+  same_ident "$CUR_ID" a6-pre || { record A6 FAIL "identity changed since $CUR_ID with no gateway restart"; stop "A6 identity change before any gateway restart"; }
+  if [ "$(kv "$E/obs/a6-pre-identity.txt" phase)" != Ready ] || ! alive_same "$GWPID" "$GWSTART"; then
+    record A6 FAIL "gateway or sandbox not healthy before A6 (phase=$(kv "$E/obs/a6-pre-identity.txt" phase))"; stop "A6 health"
+  fi
+  load_counter_id "$CUR_ID"
+  n0=$(last_n)
+  pane_attach a6-owner || { record A6 FAIL "pane 1 could not attach"; stop "A6 attach"; }
+  p1=$PANE
+  # pane 1 must hold the input lease before pane 2 attaches: the host chain exists before the
+  # supervisor has processed the attachment, so wait for live output in pane 1 (a tick newer than
+  # the n at its attach) with no read-only notice
+  A6_N1=$(last_n)
+  poll 15 1 a6_owner_ready "$p1" || { record A6 FAIL "pane 1 showed no live output, or a read-only notice, within 15s of attaching"; stop "A6 owner not established"; }
+  pane_attach a6-viewer || { record A6 FAIL "pane 2 could not attach"; stop "A6 attach"; }
+  p2=$PANE
+  clients_eq 2 || why="$why;not exactly two chains with both panes attached ($(client_counts))"
+  poll 15 1 a6_ro_seen "$p2" a6-viewer-attach || why="$why;no '$NOTICE_RO' notice in pane 2"
+  # negative: the viewer types while read-only
+  type_line "$p2" "mark a6ro"
+  sleep 5
+  if ack_present a6ro; then why="$why;the read-only viewer's input reached the counter (ACK a6ro)"; fi
+  # the owner has input while the viewer is attached
+  mark "$p1" a6w || why="$why;owner mark a6w rc=$?"
+  verify_ack a6w "${n0:-0}" || why="$why;owner ACK a6w check failed: $(ack_line a6w)"
+  if exp=$(ack_expected a6w); then pane_capture "$p2" a6w-viewer; fi
+  echo "viewer pane shows the owner's ACK a6w (output reaches the viewer; not a pass criterion): $(caps_ack a6w-viewer "${exp:-}" >/dev/null && echo yes || echo no)" >>"$notices"
+  # the owner releases: its pane is closed and its whole chain ends
+  H pane close "$p1" >/dev/null
+  wait_for 15 att_gone "${PANE_CLIENT[$p1]:-}" || why="$why;pane 1's cli/ssh/proxy (${PANE_CLIENT[$p1]:-unknown}) still present"
+  wait_for 15 clients_eq 1 || why="$why;clients != 1 after closing pane 1 ($(client_counts))"
+  att_alive "${PANE_CLIENT[$p2]:-}" || why="$why;pane 2's chain did not survive pane 1's close"
+  sleep 2
+  if ack_present a6ro; then why="$why;the viewer's discarded input reached the counter after the owner left"; fi
+  # positive: the viewer gains input on its next keystroke. A second attempt only if the first left no ACK in the log.
+  mark "$p2" a6ro2 5 || mrc=$?
+  if [ "$mrc" = 1 ]; then
+    for s in $PANE_SOURCES; do cp "$(pane_cap a6ro2 "$s")" "$(pane_cap a6ro2-attempt1 "$s")" 2>/dev/null; done
+    tries=2; mrc=0; sleep 1; mark "$p2" a6ro2 15 || mrc=$?
+  fi
+  [ "$mrc" = 0 ] || why="$why;viewer mark a6ro2 rc=$mrc after $tries attempt(s)"
+  verify_ack a6ro2 "${n0:-0}" || why="$why;viewer ACK a6ro2 check failed: $(ack_line a6ro2)"
+  poll 10 1 pane_text_seen "$p2" a6-viewer-final "$NOTICE_INPUT" || why="$why;no '$NOTICE_INPUT' notice in pane 2"
+  ident_wait a6 30 || why="$why;identity not collectable"
+  same_ident "$CUR_ID" a6 || why="$why;identity changed during A6"
+  if ack_present a6ro; then why="$why;ACK a6ro present at the end of A6"; fi
+  {
+    echo "attempts for the viewer's mark a6ro2: $tries"
+    for t in a6-viewer-attach a6-viewer-final; do
+      for s in $PANE_SOURCES; do grep -h -i -e 'openshell' -e 'read-only' -e 'input' -e 'connection' "$(pane_cap "$t" "$s")" 2>/dev/null | sed "s/^/$t $s: /"; done
+    done
+  } 2>&1 | redact >>"$notices"
+  save_out a6
+  snap 06-a6
+  PANE=$p2
+  if [ -z "$why" ]; then record A6 PASS "'$NOTICE_RO' in pane 2; no ACK a6ro while read-only or after; owner ACK a6w with pane 2 attached; after pane 1 closed, pane 2 ACK a6ro2 (attempts=$tries) and '$NOTICE_INPUT'; same identity ($CUR_ID)"
+  else record A6 FAIL "${why#;}"; fi
+  if ident_changed "$CUR_ID" a6; then stop "A6 identity change before any gateway restart"; fi
+}
+
+# ====================================================================== A7a
+# The creating CLI exited at create time (A1 waited for it); the same main process keeps running
+# with no client of any kind attached.
+run_a7a() {
+  local why='' n0
+  step A7a
+  close_all_panes || why="$why;client processes remain after closing all panes ($(client_counts))"
+  if [ -z "$CREATE_PID" ] || [ -z "$CREATE_START" ]; then why="$why;create CLI pid/start unknown"
+  elif ! gone "$CREATE_PID" "$CREATE_START"; then why="$why;create CLI pid $CREATE_PID still alive"; fi
+  ident_wait a7a 30 || why="$why;identity not collectable"
+  same_ident "$CUR_ID" a7a || why="$why;identity changed (not the process A1 created)"
+  [ "$(kv "$E/obs/a7a-identity.txt" phase)" = Ready ] || why="$why;phase not Ready"
+  n0=$(last_n)
+  wait_for 10 counter_past $((${n0:-0} + 3)) || why="$why;n did not advance by 3 with no client (n0=$n0 now=$(last_n))"
+  save_out a7a
+  snap 07a
+  if [ -z "$why" ]; then record A7a PASS "create CLI pid $CREATE_PID gone (exited 0 at create); no client; phase Ready; same identity ($CUR_ID); n $n0 -> $(last_n)"
+  else record A7a FAIL "${why#;}"; fi
+  if ident_changed "$CUR_ID" a7a; then stop "A7a identity change before any gateway restart"; fi
+}
+
 # ==================================================================== A5a/b
 a5_sample() { # a5_sample <id> <tag>: containers, counter host pid, last n (via cread; works while down)
   {
@@ -1946,194 +2177,252 @@ a5_gap() { # counter-log gap(s): n resets mark a replaced counter
     if (NR > 1 && n <= pn) printf "reset: old last n=%d at %s, new first n=%d at %s, gap=%.2fs\n", pn, pe, n, $1, $1 - pe
     pn = n; pe = $1 }'
 }
-a5_classify() { # a5_classify <id> <pre> <post> -> prints survived|restarted (details in obs)
+# a5_classify <id> <pre> <post> <consistent yes|no> -> prints survived|restarted|inconclusive (details in obs).
+# survived: all identity keys equal. restarted: the keys were collected on both sides and some differ.
+# inconclusive: a key is missing, or the post identity's sources did not agree (ident_wait failed).
+a5_classify() {
   local id=$1 pre=$2 post=$3 cls k
-  if same_ident "$pre" "$post"; then cls=survived
+  if [ "$4" != yes ]; then cls=inconclusive
+  elif same_ident "$pre" "$post"; then cls=survived
   else
-    cls=restarted
+    cls=inconclusive # restarted needs every key collected on both sides and a process-level difference
     for k in pid nonce instance_id hpid hstart; do
-      [ -n "$(kv "$E/obs/$pre-identity.txt" "$k")" ] && [ -n "$(kv "$E/obs/$post-identity.txt" "$k")" ] || cls=inconclusive
+      [ -n "$(kv "$E/obs/$pre-identity.txt" "$k")" ] && [ -n "$(kv "$E/obs/$post-identity.txt" "$k")" ] || { cls=missing; break; }
     done
+    if [ "$cls" != missing ]; then
+      for k in pid start nonce instance_id hpid hstart; do
+        [ "$(kv "$E/obs/$pre-identity.txt" "$k")" = "$(kv "$E/obs/$post-identity.txt" "$k")" ] || cls=restarted
+      done
+    fi
+    [ "$cls" = restarted ] || cls=inconclusive
   fi
   {
     echo "class=$cls"
-    for k in pid start nonce instance_id started_at_ms restart_count hpid hstart phase; do
+    echo "post identity sources consistent: $4"
+    for k in pid start nonce instance_id started_at_ms restart_count sandbox_id cid hpid hstart phase; do
       echo "$k: old=$(kv "$E/obs/$pre-identity.txt" "$k") new=$(kv "$E/obs/$post-identity.txt" "$k")"
     done
     a5_gap
   } >"$E/obs/$id-classification.txt"
   echo "$cls"
 }
+# a5_running <id>: after a failed settle, is the sandbox Ready with exactly one running workload container
+# and a counter process? If not, the restart left it unavailable (the persisted phase can read Ready).
+a5_running() { sbx_json poll && [ "$(sbx_phase poll)" = Ready ] && find_workload; }
 gw_restart_ready() { # start the gateway again and wait for Ready WITHOUT any openshell action (only sandbox get)
   start_gateway "gateway-$((++GW_COUNT))" || return 2
   poll 300 2 sbx_ready
 }
-a5_unavailable() { # a5_unavailable <id>
-  local conds
-  conds=$("$JQ" -c '.conditions // []' "$E/obs/poll-sandbox.json" 2>/dev/null)
-  record "$1" unavailable "no Ready within 300s after gateway restart; phase=$(sbx_phase poll) conditions=$conds"
-  stop "$1 unavailable"
+a5_unavailable() { # a5_unavailable <id> [reason]: not usable after the restart. Record, then stop: no recreate, no reset.
+  local conds err why=${2:-no Ready within 300s after the gateway restart}
+  conds=$("$JQ" -c '.conditions // .status.conditions // []' "$E/obs/poll-sandbox.json" 2>/dev/null)
+  err=$(tr '\n' ' ' <"$E/obs/poll-sandbox.err" 2>/dev/null | cut -c1-200)
+  ident "$1-unavailable" >/dev/null 2>&1
+  a5_sample "${1,,}" unavailable
+  record "$1" unavailable "$why; last sandbox get: phase=$(sbx_phase poll) conditions=$conds err=$err"
+  stop "$1 unavailable after the gateway restart; later steps not run"
 }
 
 run_a5a() {
-  local t_term t_exit dur cls note=
+  local t_term dur cls note='' use='' t_gw rr cons=yes rdy
   step A5a
-  close_all_panes
-  ident_wait a5a-pre 30 || log "A5a: pre-identity not fully collectable"
+  close_all_panes || note="$note;client processes still present before the stop ($(client_counts))"
+  ident_wait a5a-pre 30 || { record A5a FAIL "pre-restart identity not collectable; the gateway was not stopped"; stop "A5a pre-restart identity"; }
+  same_ident "$CUR_ID" a5a-pre || { record A5a FAIL "identity changed since $CUR_ID before any gateway restart"; stop "A5a identity change before the gateway restart"; }
   save_out a5a-pre
   snap 05a-before
   # SIGTERM the verified gateway pid; wait for exit (bounded); sample while it is down
   t_term=$SECONDS
-  sig TERM "$(printf 'gateway:%s:%s' "$GWPID" "$GWSTART")" || { record A5a FAIL "refusing to signal an unverified gateway pid"; stop "A5a gateway pid"; }
+  sig TERM "gateway:$GWPID:$GWSTART" || { record A5a FAIL "refusing to signal an unverified gateway pid"; stop "A5a gateway pid"; }
   sleep 2; a5_sample a5a during-shutdown+2s
   if ! poll 180 1 gone "$GWPID" "$GWSTART"; then
-    note="gateway did not exit within 180s of SIGTERM; SIGKILL sent"
-    sig KILL "$(printf 'gateway:%s:%s' "$GWPID" "$GWSTART")"
-    poll 10 1 gone "$GWPID" "$GWSTART"
+    note="$note;gateway did not exit within 180s of SIGTERM; SIGKILL sent (shutdown not graceful)"
+    sig KILL "gateway:$GWPID:$GWSTART"
+    poll 10 1 gone "$GWPID" "$GWSTART" || { record A5a FAIL "gateway still alive after SIGKILL"; stop "A5a gateway did not exit"; }
   fi
-  t_exit=$SECONDS
-  dur=$((t_exit - t_term))
-  log "A5a: gateway exited after ${dur}s ${note}"
+  dur=$((SECONDS - t_term))
+  log "A5a: gateway exited ${dur}s after SIGTERM"
   sleep 2; a5_sample a5a down+2s
   sleep 8; a5_sample a5a down+10s
   snap 05a-gateway-down
-  local t_gw=$SECONDS rr
+  t_gw=$SECONDS
   gw_restart_ready; rr=$?
-  [ "$rr" = 0 ] || { [ "$rr" = 2 ] && { record A5a FAIL "gateway did not restart"; stop "A5a gateway restart"; }; a5_unavailable A5a; }
-  log "A5a: Ready again $((SECONDS - t_gw))s after gateway start (no openshell action taken)"
-  ident_wait a5a 90 || log "A5a: post identity not consistent within 90s"
-  cls=$(a5_classify a5a a5a-pre a5a)
-  echo "gateway_exit_after_sigterm_s=$dur $note" >>"$E/obs/a5a-classification.txt"
-  echo "ready_without_action=yes (only sandbox get polled)" >>"$E/obs/a5a-classification.txt"
-  load_counter_id a5a
+  if [ "$rr" = 2 ]; then record A5a FAIL "gateway did not restart"; stop "A5a gateway restart"; fi
+  [ "$rr" = 0 ] || a5_unavailable A5a
+  rdy=$((SECONDS - t_gw))
+  log "A5a: Ready again ${rdy}s after gateway start (no openshell action taken)"
+  ident_settle a5a 120 || cons=no
+  if [ "$cons" = no ] && ! poll 30 3 a5_running; then a5_unavailable A5a "identity did not settle within 120s and no Ready sandbox with a running workload and counter"; fi
+  cls=$(a5_classify a5a a5a-pre a5a "$cons")
+  { echo "gateway_exit_after_sigterm_s=$dur"; echo "ready_after_gateway_start_s=$rdy"; echo "ready_without_action=yes (only sandbox get polled)"; } >>"$E/obs/a5a-classification.txt"
   save_out a5a
-  pane_attach a5a || note="$note;new pane could not attach"
-  mark "$PANE" a5a || note="$note;mark a5a rc=$?"
-  verify_ack a5a 0 && note="$note;ACK carries identity pid=$CPID nonce=$CNONCE" || note="$note;ACK identity check failed"
+  case $cls in
+  survived | restarted)
+    CUR_ID=a5a
+    load_counter_id a5a
+    poll 60 2 sbx_ready || use="not Ready after the identity settled (phase=$(sbx_phase poll))"
+    if [ -n "$use" ]; then :
+    elif pane_attach a5a; then
+      mark "$PANE" a5a || use="mark a5a rc=$?"
+      [ -n "$use" ] || verify_ack a5a 0 || use="ACK a5a check failed: $(ack_line a5a)"
+    else
+      use="new pane could not attach"
+    fi
+    ;;
+  *) use="identity $cls after the restart" ;;
+  esac
+  [ -n "$use" ] || A5A_USABLE=yes
+  A5A_WHY=${use:-usable}
+  echo "usable_after_restart=$A5A_USABLE${use:+ ($use)}" >>"$E/obs/a5a-classification.txt"
   save_out a5a-acked
   snap 05a-after
-  record A5a "$cls" "SIGTERM: gateway exit ${dur}s; $(tr '\n' ' ' <"$E/obs/a5a-classification.txt" | cut -c1-600)$note"
-  cp "$E/obs/a5a-identity.txt" "$E/obs/a5b-pre-identity.txt"
+  record A5a "$cls" "SIGTERM: $(tr '\n' ' ' <"$E/obs/a5a-classification.txt" | cut -c1-700)${note:+; ${note#;}}"
 }
 
 A5B_TICK_DOWN=
-a5b_cli_alive() { local e=${PANE_CLIENT[$PANE]:-}; e=${e%% *}; [ -n "$e" ] && alive_same "${e%%:*}" "${e#*:}" && echo yes || echo no; } # supervised CLI survives a transport loss
+A5B_ORIG=
+A5B_T_KILL=0
+chain_of_cli() { client_snap | awk -v c="$1" '$1 == "attached" && $2 ":" $3 == c { print $2 ":" $3, $4 ":" $5, $6 ":" $7; exit }'; } # <cli:start> -> its complete chain
+a5b_cli_alive() { local e=${A5B_ORIG%% *}; [ -n "$e" ] && alive_same "${e%%:*}" "${e#*:}" && echo yes || echo no; } # the pane's supervising CLI
 a5b_pane_ticks() { H pane read "$PANE" --source visible --lines 40 2>/dev/null | ticks_last; }
+a5b_obs() { # a5b_obs <tag>: client processes and the pane, appended to obs/a5b-clients.txt and panes/a5b-<tag>*
+  {
+    echo "# $1 t+$((SECONDS - A5B_T_KILL))s after the kill $(date -u +%FT%TZ): $(client_counts)"
+    echo "original chain (cli ssh proxy) $A5B_ORIG; cli alive=$(a5b_cli_alive); complete chain under that cli now: $(chain_of_cli "${A5B_ORIG%% *}")"
+    client_snap | awk '$1 != "other"'
+  } 2>&1 | redact >>"$E/obs/a5b-clients.txt"
+  pane_capture "$PANE" "a5b-$1"
+}
 run_a5b() {
-  local n_pre t_kill t_gw rr ready=no auto=no tn now cls note='' pane_before=$PANE
+  local n_pre t_gw ready=no auto=no t_auto='' tn now cls note='' rec='' usable=no pane_before ch skip='' cons=yes mrc=0
   step A5b
-  # one attached pane (PLAN implies it) so auto-reattach can be observed
-  clients_ge 1 || { pane_attach a5b-pre || { record A5b FAIL "could not attach a pane"; stop "A5b attach"; }; }
-  load_counter_id a5b-pre
-  mark "$PANE" a5b0 || { record A5b FAIL "pre-kill mark a5b0 failed"; stop "A5b pre-mark"; }
+  if [ "$A5A_USABLE" != yes ]; then record A5b NOT-RUN "not run: sandbox not usable after A5a ($A5A_WHY)"; return 0; fi
+  # one attached pane, so supervised client recovery can be observed (A5a's pane if its chain is intact)
+  if ! att_alive "${PANE_CLIENT[$PANE]:-}"; then close_all_panes; pane_attach a5b-pre || skip="could not attach a pane"; fi
+  [ -n "$skip" ] || ident_wait a5b-pre 30 || skip="pre-kill identity not collectable"
+  if [ -z "$skip" ] && ! same_ident "$CUR_ID" a5b-pre; then
+    record A5b FAIL "identity changed since $CUR_ID with no gateway restart; A5b not run"; return 0
+  fi
+  if [ -z "$skip" ]; then
+    load_counter_id a5b-pre
+    mark "$PANE" a5b0 || skip="pre-kill mark a5b0 rc=$?"
+    [ -n "$skip" ] || verify_ack a5b0 0 || skip="pre-kill ACK a5b0 check failed"
+  fi
+  if [ -n "$skip" ]; then record A5b NOT-RUN "not run: $skip"; return 0; fi
   n_pre=$(last_n)
   pane_before=$PANE
+  A5B_ORIG=${PANE_CLIENT[$PANE]:-}
   save_out a5b-pre
   snap 05b-before
-  t_kill=$SECONDS
-  sig KILL "$(printf 'gateway:%s:%s' "$GWPID" "$GWSTART")" || { record A5b FAIL "refusing to signal an unverified gateway pid"; stop "A5b gateway pid"; }
-  poll 10 0.5 gone "$GWPID" "$GWSTART" || note="$note;gateway still alive after SIGKILL"
-  sleep 2; a5_sample a5b down+2s
-  { echo "$(client_counts); this pane's cli ${PANE_CLIENT[$PANE]:-unknown} alive=$(a5b_cli_alive)"; H pane read "$PANE" --source visible --lines 40 2>&1; } | redact >"$E/panes/a5b-down+2s.txt"
-  sleep 8; a5_sample a5b down+10s
-  { echo "$(client_counts); this pane's cli ${PANE_CLIENT[$PANE]:-unknown} alive=$(a5b_cli_alive)"; H pane read "$PANE" --source visible --lines 40 2>&1; } | redact >"$E/panes/a5b-down+10s.txt"
+  A5B_T_KILL=$SECONDS
+  sig KILL "gateway:$GWPID:$GWSTART" || { record A5b FAIL "refusing to signal an unverified gateway pid"; stop "A5b gateway pid"; }
+  poll 10 0.5 gone "$GWPID" "$GWSTART" || { record A5b FAIL "gateway still alive 10s after SIGKILL"; stop "A5b gateway did not exit"; }
+  sleep 2; a5_sample a5b down+2s; a5b_obs down+2s
+  sleep 8; a5_sample a5b down+10s; a5b_obs down+10s
   A5B_TICK_DOWN=$(a5b_pane_ticks)
   snap 05b-gateway-down
-  # restart immediately after the +10 s sample
+  # restart right after the +10 s sample
   t_gw=$SECONDS
   start_gateway "gateway-$((++GW_COUNT))" || { record A5b FAIL "gateway did not restart"; stop "A5b gateway restart"; }
-  # wait Ready (only sandbox get) while watching the SAME pane for auto-reattach within 60 s of the kill
+  # wait for Ready (sandbox get only) while watching the SAME pane, up to 75 s after the kill (the
+  # CLI's 60 s window plus margin): recovered = the original CLI heads a complete chain again AND
+  # the pane shows ticks it did not show while the gateway was down. Input is checked afterwards.
   while :; do
-    now=$((SECONDS - t_kill))
-    if [ "$auto" = no ] && [ "$now" -le 60 ]; then
+    now=$((SECONDS - A5B_T_KILL))
+    if [ "$auto" = no ] && [ "$now" -le 75 ]; then
+      ch=$(chain_of_cli "${A5B_ORIG%% *}")
       tn=$(a5b_pane_ticks)
-      if [ -n "$tn" ] && [ "$tn" != "$A5B_TICK_DOWN" ]; then auto=yes; log "A5b: new ticks in the same pane at +${now}s (last tick n=$tn vs $A5B_TICK_DOWN)"; fi
+      if [ -n "$ch" ] && [ -n "$tn" ] && [ "$tn" != "$A5B_TICK_DOWN" ]; then
+        auto=yes; t_auto=$now; PANE_CLIENT[$PANE]=$ch
+        log "A5b: the original CLI heads a chain again at +${now}s ($ch; transport respawned: $([ "$ch" != "$A5B_ORIG" ] && echo yes || echo no)); pane tick n=$tn vs $A5B_TICK_DOWN while down"
+      fi
     fi
     if [ "$ready" = no ] && sbx_ready; then ready=yes; log "A5b: Ready $((SECONDS - t_gw))s after gateway start"; fi
-    if { [ "$ready" = yes ] || [ $((SECONDS - t_gw)) -ge 300 ]; } && { [ "$auto" = yes ] || [ "$now" -gt 60 ]; }; then break; fi
+    if { [ "$ready" = yes ] || [ $((SECONDS - t_gw)) -ge 300 ]; } && { [ "$auto" = yes ] || [ "$now" -gt 75 ]; }; then break; fi
     sleep 2
   done
-  H pane read "$PANE" --source recent --lines 300 >"$E/panes/a5b-after-window.txt" 2>&1
-  echo "reconnect-message lines in pane: $(grep -c 'Connection to sandbox lost; reconnecting' "$E/panes/a5b-after-window.txt")" >"$E/obs/a5b-reconnect-msg.txt"
+  a5b_obs after-window
+  echo "reconnect notice ('$NOTICE_RECONNECT') in the pane: $(caps_text a5b-after-window "$NOTICE_RECONNECT" && echo yes || echo no)" >"$E/obs/a5b-reconnect-msg.txt"
   [ "$ready" = yes ] || a5_unavailable A5b
-  ident_wait a5b 90 || log "A5b: post identity not consistent within 90s"
-  cls=$(a5_classify a5b a5b-pre a5b)
-  echo "auto_reattach=$auto" >>"$E/obs/a5b-classification.txt"
-  load_counter_id a5b
-  if [ "$auto" = yes ]; then
-    if ! { mark "$PANE" a5b && verify_ack a5b 0; }; then note="$note;auto-reattached pane did not ACK"; auto=no; fi
-  fi
-  if [ "$auto" = no ]; then
-    H pane close "$pane_before" >/dev/null 2>&1
-    wait_for 15 no_client_procs
-    pane_attach a5b || note="$note;new pane could not attach"
-    mark "$PANE" a5b2 || note="$note;mark a5b2 rc=$?"
-    verify_ack a5b2 0 || note="$note;ACK check failed: $(ack_line a5b2)"
-  fi
-  echo "auto_reattach_final=$auto" >>"$E/obs/a5b-classification.txt"
+  ident_settle a5b 120 || cons=no
+  if [ "$cons" = no ] && ! poll 30 3 a5_running; then a5_unavailable A5b "identity did not settle within 120s and no Ready sandbox with a running workload and counter"; fi
+  cls=$(a5_classify a5b a5b-pre a5b "$cons")
+  {
+    echo "ready_after_gateway_start_s=see timeline; ready_without_action=yes (only sandbox get polled)"
+    echo "original supervising CLI alive after the window: $(a5b_cli_alive)"
+    echo "auto_reattach=$auto${t_auto:+ (+${t_auto}s after the kill)}"
+  } >>"$E/obs/a5b-classification.txt"
   save_out a5b
+  case $cls in
+  survived | restarted)
+    CUR_ID=a5b
+    load_counter_id a5b
+    if [ "$auto" = yes ]; then
+      mark "$PANE" a5b 5 || mrc=$?
+      if [ "$mrc" = 1 ]; then mrc=0; sleep 1; mark "$PANE" a5b 15 || mrc=$?; note="$note;mark a5b needed a second attempt"; fi
+      if [ "$mrc" = 0 ] && verify_ack a5b 0; then rec="supervised: the original CLI reattached the same pane, which accepted input (ACK a5b) from the $cls main process"; usable=yes
+      else note="$note;the reattached pane did not accept input (mark a5b rc=$mrc)"; fi
+    fi
+    if [ "$usable" = no ]; then
+      poll 60 2 sbx_ready || note="$note;not Ready after the identity settled (phase=$(sbx_phase poll))"
+      H pane close "$pane_before" >/dev/null 2>&1
+      wait_for 15 no_client_procs || note="$note;client processes still present after closing the pane ($(client_counts))"
+      if pane_attach a5b2; then
+        mrc=0; mark "$PANE" a5b2 || mrc=$?
+        if [ "$mrc" = 0 ] && verify_ack a5b2 0; then rec="${rec:-no supervised recovery}; a new pane attached and accepted input (ACK a5b2)"; usable=yes
+        else rec="${rec:-no supervised recovery}; a new pane attached but mark a5b2 rc=$mrc"; fi
+      else
+        rec="${rec:-no supervised recovery}; a new pane could not attach"
+      fi
+    fi
+    ;;
+  *) rec="not attempted: identity $cls after the restart" ;;
+  esac
+  echo "client_recovery=$rec; usable_after_restart=$usable" >>"$E/obs/a5b-classification.txt"
+  save_out a5b-acked
   snap 05b-after
-  record A5b "$cls" "SIGKILL: auto_reattach=$auto; n at kill=$n_pre; $(tr '\n' ' ' <"$E/obs/a5b-classification.txt" | cut -c1-600)$note"
+  record A5b "$cls" "SIGKILL: n at kill=$n_pre; $(tr '\n' ' ' <"$E/obs/a5b-classification.txt" | cut -c1-800)${note:+; ${note#;}}"
 }
 
-# ====================================================================== A6
-run_a6() {
-  local p1 p2 why='' n0 notices=$E/obs/a6-notices.txt
-  step A6
-  close_all_panes
-  load_counter_id a5b
-  n0=$(last_n)
-  pane_attach a6-owner || { record A6 FAIL "pane 1 could not attach"; stop "A6 attach"; } # authorization section 4
-  p1=$PANE
-  pane_attach a6-viewer || { record A6 FAIL "pane 2 could not attach"; stop "A6 attach"; }
-  p2=$PANE
-  H pane wait-output "$p2" --match 'attached read-only' --source visible --timeout 15000 >/dev/null || why="$why;no 'attached read-only' notice in pane 2"
-  type_line "$p2" "mark a6ro"
-  sleep 5
-  if clog | grep ' ACK a6ro pid=' >/dev/null; then why="$why;read-only pane produced an ACK"; fi
-  mark "$p1" a6w || why="$why;owner mark a6w rc=$?"
-  verify_ack a6w "${n0:-0}" || why="$why;a6w ACK mismatch"
-  H pane close "$p1" >/dev/null
-  wait_for 15 att_gone "${PANE_CLIENT[$p1]:-}" || why="$why;pane 1's cli/ssh/proxy (${PANE_CLIENT[$p1]:-unknown}) still present"
-  wait_for 15 clients_eq 1 || why="$why;clients != 1 after closing pane 1 ($(client_counts))"
-  log "A6: pane 2's chain ${PANE_CLIENT[$p2]:-unknown} unchanged after pane 1 closed: $(att_alive "${PANE_CLIENT[$p2]:-}" && echo yes || echo no)"
-  type_line "$p2" "mark a6ro2"
-  wait_for 5 ack_present a6ro2 || { sleep 1; type_line "$p2" "mark a6ro2"; wait_for 10 ack_present a6ro2 || why="$why;no ACK a6ro2 after owner released"; }
-  H pane read "$p2" --source recent --lines 300 >"$E/panes/a6-viewer.txt" 2>&1 # scrollback: the notices may have scrolled off
-  cp "$E/panes/a6-viewer.txt" "$E/panes/a6ro2.txt"
-  grep 'input enabled' "$E/panes/a6-viewer.txt" >/dev/null || why="$why;no 'input enabled' in pane 2"
-  verify_ack a6ro2 "${n0:-0}" || why="$why;a6ro2 ACK identity mismatch"
-  ident_wait a6 30 || why="$why;identity not collectable"
-  same_ident a5b a6 || why="$why;identity changed during A6"
-  grep -h -e 'openshell:' -e 'Connection to sandbox' "$E/panes/a6-viewer.txt" | redact >"$notices"
-  save_out a6
-  snap 06-a6
-  PANE=$p2
-  if [ -z "$why" ]; then record A6 PASS "viewer notices seen; no ACK a6ro while read-only; ACK a6w from owner; after owner closed, ACK a6ro2 and 'input enabled'; same identity"
-  else record A6 FAIL "${why#;}"; fi
+# ====================================================================== A7b
+# Explicit deletion through the gateway, if the sandbox is still manageable. Deletion by the
+# cleanup trap is recorded separately (C-delete) and is never an A7b result.
+tracked_gone() { # every counter and container-main pid tracked in this run (all incarnations) is gone
+  local e p st n=0
+  for e in "${PIDS[@]}"; do
+    case ${e%%:*} in counter-* | container-main-*) ;; *) continue ;; esac
+    IFS=: read -r _ p st <<<"$e"
+    n=$((n + 1))
+    [ -n "$st" ] && gone "$p" "$st" || return 1
+  done
+  [ "$n" -gt 0 ]
 }
-
-# ====================================================================== A7
-run_a7() {
-  local why='' n6 out=$E/obs/a7b-delete.out nets
-  step A7
-  n6=$(kv "$E/obs/a6-identity.txt" n)
-  # A7a: the creating CLI is long gone while the sandbox lives on and keeps ticking
-  gone "$CREATE_PID" "$CREATE_START" || why="$why;create CLI pid $CREATE_PID still alive"
-  sbx_json a7a && [ "$(sbx_phase a7a)" = Ready ] || why="$why;phase not Ready"
-  wait_for 10 counter_past $((${n6:-0} + 3)) || why="$why;n did not advance since A6 (n6=$n6 now=$(last_n))"
-  save_out a7a
-  save_out_final
-  if [ -z "$why" ]; then record A7a PASS "create CLI pid $CREATE_PID gone; phase Ready; n $n6 -> $(last_n)"
-  else record A7a FAIL "${why#;}"; fi
-  # A7b: delete, poll until absent, then look at what is left in the dedicated store
-  why=''
-  close_all_panes
-  OT=120 O sandbox delete "$GW" >"$out" 2>&1
-  log "A7b delete: $(tr '\n' ' ' <"$out")"
-  poll 120 2 sbx_gone || why="$why;sandbox still present 120s after delete"
-  if [ -z "$HPIDC" ] || [ -z "$HSTARTC" ]; then why="$why;counter host pid unknown (cannot show it is gone)"
-  elif ! gone "$HPIDC" "$HSTARTC"; then why="$why;counter host pid $HPIDC still alive"; fi
+sbx_absent() { # the gateway answers, and says the sandbox does not exist
+  OT=30 O sandbox get "$GW" -o json >"$E/obs/a7b-get.out" 2>"$E/obs/a7b-get.err" && return 1
+  grep -F 'sandbox not found' "$E/obs/a7b-get.err" "$E/obs/a7b-get.out" >/dev/null 2>&1
+}
+run_a7b() {
+  local why='' out=$E/obs/a7b-delete.out nets phase rc ecode compl
+  step A7b
+  if ! { [ -n "$GWPID" ] && alive_same "$GWPID" "$GWSTART" && sbx_json a7b-pre; }; then
+    record A7b NOT-RUN "not run: sandbox not manageable through the gateway (obs/a7b-pre-sandbox.err); cleanup deletes it as an emergency step"
+    stop "A7b sandbox not manageable"
+  fi
+  phase=$(sbx_phase a7b-pre)
+  ecode=$("$JQ" -r '.exit_code // "null"' "$E/obs/a7b-pre-sandbox.json" 2>/dev/null)
+  case $phase in Completed | Error) compl="natural completion before delete (phase $phase, exit_code $ecode)" ;; *) compl="no natural completion (phase $phase, exit_code $ecode)" ;; esac
+  close_all_panes || why="$why;client processes remain after closing all panes ($(client_counts))"
+  ident a7b-pre >/dev/null 2>&1
+  save_out a7b-pre
+  save_out_final # the full counter log, before the delete
+  rc=0
+  OT=120 O sandbox delete "$GW" >"$out" 2>&1 || rc=$?
+  log "A7b delete rc=$rc: $(tr '\n' ' ' <"$out")"
+  [ "$rc" = 0 ] || why="$why;sandbox delete exited $rc"
+  if grep -F 'already deleted' "$out" >/dev/null; then why="$why;delete reported 'already deleted': this was not an explicit deletion"
+  elif ! grep -E 'Deleted sandbox|deletion accepted' "$out" >/dev/null; then why="$why;delete output names neither 'Deleted sandbox' nor 'deletion accepted'"; fi
+  poll 120 2 sbx_absent || why="$why;sandbox not reported absent 120s after delete"
+  wait_for 30 tracked_gone || why="$why;a tracked counter or container main process is still alive"
   poll 60 2 a7_store_empty || why="$why;store not empty after delete"
   {
     echo "containers:"; P ps -a --format '{{.ID}} {{.Names}} {{.State}}'
@@ -2144,20 +2433,17 @@ run_a7() {
   } >"$E/obs/a7b-listings.txt" 2>&1
   nets=$(P network ls --format '{{.Name}}' 2>/dev/null | LC_ALL=C sort | tr '\n' ' ')
   case "$nets" in "podman " | "exp008-$RUN podman ") ;; *) why="$why;unexpected networks: $nets" ;; esac
-  if [ -z "$why" ]; then record A7b PASS "delete: $(tr '\n' ' ' <"$out" | cut -c1-120); counter pid gone; no containers/volumes/secrets; networks: $nets"
-  else record A7b FAIL "${why#;}"; fi
+  if [ -z "$why" ]; then record A7b PASS "explicit deletion (sandbox delete; $compl): $(tr '\n' ' ' <"$out" | cut -c1-120); sandbox absent; all tracked counter/container pids gone; no containers/volumes/secrets; networks: $nets"
+  else record A7b FAIL "explicit deletion attempted ($compl): ${why#;}"; fi
 }
 a7_store_empty() { p_empty ps -a -q && p_empty ps -a --filter label=openshell.managed=true -q && p_empty volume ls -q && p_empty secret ls -q; }
 
 # ---------------------------------------------------------------------- run
 run_a1
-run_a2
-run_a3
-restart_test a clean
-restart_test b kill
+run_a6
+run_a7a
 run_a5a
 run_a5b
-run_a6
-run_a7
+run_a7b
 MAIN_DONE=1
 exit "$RC" # cleanup (EXIT trap) decides the final exit code from results.tsv and the classification

@@ -1,0 +1,4 @@
+tick n=3
+openshell: attached 
+read-only
+tick n=4
