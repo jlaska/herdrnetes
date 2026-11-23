@@ -120,6 +120,9 @@ PANE=
 CLS=CLEAN
 EVBAD=0
 ROOT_GONE=unknown
+CL_LOG=$E/cleanup.txt # becomes $EVID/cleanup-final.txt for the post-removal verification
+CLS_INTERMEDIATE=
+declare -A REF1=() REF0=()
 BASE_FILES=(openshell-config.txt openshell-state.txt ssh-meta.txt listeners.txt podman-default.txt systemd-units.txt)
 
 # ------------------------------------------------------------ environment
@@ -136,7 +139,11 @@ H() { # every herdr call except read-only ones: refuse unless the guard verified
   if [ "$GUARD_OK" != 1 ]; then echo "GUARD not verified; refusing herdr $*" >&2; return 99; fi
   Hraw "$@"
 }
-P() { tcenv "${PT:-120}" "$PODMAN" --url "unix://$E/podman.sock" "$@"; } # the dedicated service only
+# Owner-approved correction (retry): the driver gives its containers a 10 s healthconfig interval, and
+# rootless Podman would add systemd healthcheck timers through $XDG_RUNTIME_DIR/systemd/private, which
+# the isolated runtime dir does not have. Only the dedicated service and our own podman calls get this.
+PENV=("DISABLE_HC_SYSTEMD=true")
+P() { tcenv "${PT:-120}" "${PENV[@]}" "$PODMAN" --url "unix://$E/podman.sock" "$@"; } # the dedicated service only
 O() { tcenv "${OT:-60}" "$E/wrap/openshell" -g "$GW" "$@"; }             # through the guard wrapper
 # Read-only listing of the owner's DEFAULT store, for the protected baseline only.
 PD() { timeout -k 5 60 env -u SSH_AUTH_SOCK "$PODMAN" "$@"; }
@@ -347,29 +354,38 @@ snap() { # snap <name>: process-tree snapshot, redacted
 
 # ------------------------------------------------------- protected baselines
 # baseline <dir>: metadata only (never contents) of everything this run must not change.
-baseline() {
-  local d=$1 pf='%P\t%y\t%s\t%T@\t%m\n' u
-  mkdir -p "$d"
-  find "$HOME/.config/openshell" -printf "$pf" 2>&1 | LC_ALL=C sort >"$d/openshell-config.txt"
-  { find "$HOME/.local/state/openshell" -printf "$pf" 2>&1; find "$HOME/.local/share/openshell" -printf "$pf" 2>&1; } |
-    LC_ALL=C sort >"$d/openshell-state.txt"
-  find "$HOME/.ssh" -printf "$pf" 2>&1 | LC_ALL=C sort >"$d/ssh-meta.txt"
-  "$SS" -Htlnu 2>&1 | awk '{print $1,$5}' | LC_ALL=C sort >"$d/listeners.txt"
-  {
+# bl_one <name>: one listing on stdout (also used after the run root is gone, for the final check)
+bl_one() {
+  local pf='%P\t%y\t%s\t%T@\t%m\n' u
+  case $1 in
+  openshell-config.txt) find "$HOME/.config/openshell" -printf "$pf" 2>&1 | LC_ALL=C sort ;;
+  openshell-state.txt)
+    { find "$HOME/.local/state/openshell" -printf "$pf" 2>&1; find "$HOME/.local/share/openshell" -printf "$pf" 2>&1; } |
+      LC_ALL=C sort ;;
+  ssh-meta.txt) find "$HOME/.ssh" -printf "$pf" 2>&1 | LC_ALL=C sort ;;
+  listeners.txt) "$SS" -Htlnu 2>&1 | awk '{print $1,$5}' | LC_ALL=C sort ;;
+  podman-default.txt)
     echo '## ps'; PD ps -a --format '{{.ID}} {{.Names}} {{.State}}' 2>&1 | LC_ALL=C sort
     echo '## volumes'; PD volume ls -q 2>&1 | LC_ALL=C sort
     echo '## networks'; PD network ls --format '{{.ID}} {{.Name}}' 2>&1 | LC_ALL=C sort
     echo '## secrets'; PD secret ls --format '{{.ID}} {{.Name}}' 2>&1 | LC_ALL=C sort
     echo '## images'; PD images -q --no-trunc 2>&1 | LC_ALL=C sort
-  } >"$d/podman-default.txt"
-  # transient-scope residue from the systemd cgroup manager would show up here
-  u=$(timeout -k 5 30 systemctl --user list-units --all --no-legend --plain 'libpod*' 'podman*' 2>&1 | awk '{print $1}' | LC_ALL=C sort)
-  printf '%s\n' "$u" >"$d/systemd-units.txt"
+    ;;
+  systemd-units.txt) # transient-scope residue from the systemd cgroup manager would show up here
+    u=$(timeout -k 5 30 systemctl --user list-units --all --no-legend --plain 'libpod*' 'podman*' 2>&1 | awk '{print $1}' | LC_ALL=C sort)
+    printf '%s\n' "$u"
+    ;;
+  esac
+}
+baseline() {
+  local d=$1 f
+  mkdir -p "$d"
+  for f in "${BASE_FILES[@]}"; do bl_one "$f" >"$d/$f"; done
   (cd "$d" && sha256sum -- *.txt >SHA256SUMS)
 }
 
 # ------------------------------------------------------------------ cleanup
-cl_note() { printf '%s\n' "$*" | tee -a "$E/cleanup.txt"; }
+cl_note() { printf '%s\n' "$*" | tee -a "$CL_LOG"; }
 cl_residue() { CLS=RESIDUE; cl_note "RESIDUE: $*"; }
 
 cl_sig_wait() { # cl_sig_wait <label:pid:start> <term-wait-s>: SIGTERM, wait, SIGKILL (verified pids only)
@@ -486,7 +502,7 @@ cl_store_rm() { # remove the dedicated store from inside its user namespace (fil
     if contained "$d"; then args+=("$d"); else cl_residue "store path not contained: $d"; fi
   done
   [ "${#args[@]}" -gt 0 ] || return 0
-  tcenv 300 "$PODMAN" --root "$E/podman/root" --runroot "$E/podman/runroot" unshare rm -rf --one-file-system -- "${args[@]}" >>"$E/obs/cleanup-store.out" 2>&1
+  tcenv 300 "${PENV[@]}" "$PODMAN" --root "$E/podman/root" --runroot "$E/podman/runroot" unshare rm -rf --one-file-system -- "${args[@]}" >>"$E/obs/cleanup-store.out" 2>&1
   for d in "${args[@]}"; do [ -e "$d" ] && cl_residue "store path still present: $d"; done
 }
 
@@ -612,7 +628,7 @@ ffield() {
   *) awk -F'\t' '{ if (NF > 1) print $1; else { split($0, a, " "); print a[1] } }' ;;
   esac
 }
-norm() { grep -v -e '^## ' -e '^exit=' "$1" | LC_ALL=C sort; } # B0 carries '## dir' and 'exit=' lines
+norm() { grep -v -e '^## ' -e '^exit=' "${1:-/dev/stdin}" | LC_ALL=C sort; } # B0 carries '## dir' and 'exit=' lines
 # Pre-registered: the protected listener baseline is the TCP listener set; UDP sockets (mDNS, VPN,
 # ephemeral client ports) churn on their own, so a UDP-only change is reported as INFO, not RESIDUE.
 lfilter() { case $1 in listeners.txt) grep '^tcp' ;; *) cat ;; esac; }
@@ -727,13 +743,96 @@ cleanup() {
   evidence_scan
   [ "$EVBAD" = 1 ] && [ "$rc" = 0 ] && rc=1
   print_summary
-  # 11) remove the run root (evidence is already copied out)
+  # 11) remove the run root (evidence is already copied out; reference hashes are kept in memory)
+  ref_hashes
+  CLS_INTERMEDIATE=$CLS
   cl_remove_root
-  if [ "$ROOT_GONE" != yes ] && [ "$CLS" = CLEAN ]; then CLS=RESIDUE; fi
-  { echo "classification: $CLS"; echo "run root removed: $ROOT_GONE"; echo "exit: $rc"; } >"$EVID/final-status.txt" 2>/dev/null
-  echo "cleanup: $CLS (run root removed: $ROOT_GONE)"
+  # 12) the classification is the verified final state; intermediate notes stay in cleanup.txt
+  cl_final
+  evidence_scan
+  [ "$EVBAD" = 1 ] && [ "$rc" = 0 ] && rc=1
+  {
+    echo "classification: $CLS (verified final state after run-root removal; cleanup-final.txt)"
+    echo "intermediate classification: $CLS_INTERMEDIATE (before run-root removal; cleanup.txt keeps its notes)"
+    echo "run root removed: $ROOT_GONE"
+    echo "exit: $rc"
+  } >"$EVID/final-status.txt" 2>/dev/null
+  echo "cleanup: $CLS (intermediate: $CLS_INTERMEDIATE; run root removed: $ROOT_GONE)"
   [ "$CLS" != CLEAN ] && [ "$rc" = 0 ] && rc=3
   exit "$rc"
+}
+
+# ref_hashes: B1 (all files) and B0 (four files) reference hashes, comparable after the run root is gone
+ref_hashes() {
+  local f
+  for f in "${BASE_FILES[@]}"; do
+    [ -f "$E/obs/B1/$f" ] && REF1[$f]=$(lfilter "$f" <"$E/obs/B1/$f" | sha256sum | cut -d' ' -f1)
+  done
+  for f in openshell-config.txt openshell-state.txt ssh-meta.txt listeners.txt; do
+    [ -f "$ROOT/baseline-pre/$f" ] && REF0[$f]=$(norm "$ROOT/baseline-pre/$f" | lfilter "$f" | sha256sum | cut -d' ' -f1)
+  done
+}
+
+# cl_final: positive, detection-only verification after run-root removal (nothing is signalled or
+# deleted here). RESIDUE if anything of the run remains or a protected baseline differs, UNVERIFIED
+# if a check could not be made, otherwise CLEAN. Sets CLS.
+cl_final() {
+  local fin=CLEAN unv=0 e label pid st n=0 d anc=" $$ " q f h t
+  CL_LOG=$EVID/cleanup-final.txt
+  mkdir -p "$EVID" 2>/dev/null || { CLS=UNVERIFIED; return 0; }
+  : >"$CL_LOG"
+  cl_note "# final-state verification $(date -u +%FT%TZ); intermediate classification: $CLS_INTERMEDIATE"
+  cl_note "intermediate RESIDUE notes kept in cleanup.txt: $(grep -c '^RESIDUE' "$EVID/cleanup.txt" 2>/dev/null)"
+  if [ -e "$ROOT" ] || [ -L "$ROOT" ]; then fin=RESIDUE; cl_note "RESIDUE: run root still present"; else cl_note "run root absent"; fi
+  for e in "${PIDS[@]}" "${SWEPT[@]}"; do
+    IFS=: read -r label pid st <<<"$e"
+    [ -n "$pid" ] && [ -n "$st" ] || continue
+    if gone "$pid" "$st"; then n=$((n + 1)); else fin=RESIDUE; cl_note "RESIDUE: still alive: $label pid=$pid"; fi
+  done
+  cl_note "recorded and swept processes verified gone: $n"
+  # any other process of ours that still carries this run's markers (the sweep's criteria, on $ROOT)
+  q=$(ppid_of $$)
+  while [ -n "$q" ] && [ "$q" -gt 1 ] 2>/dev/null; do anc+="$q "; q=$(ppid_of "$q"); done
+  n=0
+  for d in /proc/[0-9]*; do
+    pid=${d#/proc/}
+    case $anc in *" $pid "*) continue ;; esac
+    [ -O "$d" ] || continue
+    if proc_env_has "$pid" "XDG_RUNTIME_DIR=$E/run" "XDG_CONFIG_HOME=$E/config"; then
+      n=$((n + 1)); cl_note "RESIDUE: pid=$pid comm=$(proc_comm "$pid") has this run's environment"
+    else
+      case $(proc_cmd "$pid") in
+      *"$ROOT/"* | *"$ROOT "*)
+        case $(proc_comm "$pid") in
+        conmon | crun | aardvark-dns | netavark | pasta* | passt* | slirp4netns | rootlessport* | catatonit | podman | openshell* | ssh | herdr)
+          n=$((n + 1)); cl_note "RESIDUE: pid=$pid comm=$(proc_comm "$pid") names the run root" ;;
+        esac
+        ;;
+      esac
+    fi
+  done
+  if [ "$n" = 0 ]; then cl_note "no process carries this run's markers"; else fin=RESIDUE; fi
+  n=$("$SS" -xan 2>/dev/null | grep -cF "$ROOT/")
+  if [ "$n" = 0 ]; then cl_note "no unix socket under the run root"; else fin=RESIDUE; cl_note "RESIDUE: $n unix socket(s) under the run root"; fi
+  if [ -n "$("$SS" -Htln "sport = :$PORT" 2>/dev/null)" ]; then fin=RESIDUE; cl_note "RESIDUE: port $PORT listening"; else cl_note "port $PORT closed"; fi
+  n=$(grep -lF -e "$ROOT/" -e "${ROOT#/tmp}/" /proc/[0-9]*/mountinfo 2>/dev/null | wc -l) # tmpfs-relative roots too
+  if [ "$n" = 0 ]; then cl_note "no mount under the run root in any readable mount namespace"
+  else fin=RESIDUE; cl_note "RESIDUE: $n mount namespace(s) with a mount under the run root"; fi
+  # protected baselines, recomputed now against the in-memory B1/B0 reference hashes
+  for f in "${BASE_FILES[@]}"; do
+    if [ -z "${REF1[$f]:-}" ]; then unv=1; cl_note "final-vs-B1 $f: no reference (UNVERIFIED)"; continue; fi
+    h=$(bl_one "$f" | lfilter "$f" | sha256sum | cut -d' ' -f1)
+    if [ "$h" = "${REF1[$f]}" ]; then cl_note "final-vs-B1 $f: identical"; else fin=RESIDUE; cl_note "RESIDUE: final-vs-B1 $f differs"; fi
+  done
+  for f in openshell-config.txt openshell-state.txt ssh-meta.txt listeners.txt; do
+    if [ -z "${REF0[$f]:-}" ]; then unv=1; cl_note "final-vs-B0 $f: no reference (UNVERIFIED)"; continue; fi
+    h=$(bl_one "$f" | norm | lfilter "$f" | sha256sum | cut -d' ' -f1)
+    if [ "$h" = "${REF0[$f]}" ]; then cl_note "final-vs-B0 $f: identical"; else fin=RESIDUE; cl_note "RESIDUE: final-vs-B0 $f differs"; fi
+  done
+  [ "$fin" = CLEAN ] && [ "$unv" = 1 ] && fin=UNVERIFIED
+  CLS=$fin
+  cl_note "FINAL CLASSIFICATION: $CLS"
+  t=$(redact <"$CL_LOG") && printf '%s\n' "$t" >"$CL_LOG"
 }
 
 cl_remove_root() {
@@ -743,7 +842,7 @@ cl_remove_root() {
       # subuid-owned leftovers: retry once from inside a user namespace, only under $ROOT
       mkdir -p "$E/run" "$E/podman/root" "$E/podman/runroot" 2>/dev/null
       if contained "$ROOT" self; then
-        tcenv 300 "$PODMAN" --root "$E/podman/root" --runroot "$E/podman/runroot" unshare rm -rf --one-file-system -- "$ROOT" >/dev/null 2>&1
+        tcenv 300 "${PENV[@]}" "$PODMAN" --root "$E/podman/root" --runroot "$E/podman/runroot" unshare rm -rf --one-file-system -- "$ROOT" >/dev/null 2>&1
         [ -e "$ROOT" ] && contained "$ROOT" self && rm -rf --one-file-system -- "$ROOT"
         sweep post-root # `podman unshare` may have started a fresh pause process
         local e; for e in "${SWEPT[@]}"; do poll 5 0.5 gone "$(cut -d: -f2 <<<"$e")" "$(cut -d: -f3 <<<"$e")" || { ROOT_GONE=no; CLS=RESIDUE; echo "STILL ALIVE after root removal: $e" >&2; }; done
@@ -783,7 +882,7 @@ cread() {
   if [ -n "$HPIDC" ] && alive_same "$HPIDC" "$HSTARTC" && cat "/proc/$HPIDC/root$OUTDIR/$rel" 2>/dev/null; then cread_note 1; return 0; fi
   mp=$(volmp) || return 1
   if cat "$mp/out/$rel" 2>/dev/null; then cread_note 2; return 0; fi
-  if tcenv 30 "$PODMAN" --root "$E/podman/root" --runroot "$E/podman/runroot" unshare cat "$mp/out/$rel" 2>/dev/null; then cread_note 3; return 0; fi
+  if tcenv 30 "${PENV[@]}" "$PODMAN" --root "$E/podman/root" --runroot "$E/podman/runroot" unshare cat "$mp/out/$rel" 2>/dev/null; then cread_note 3; return 0; fi
   return 1
 }
 clog() { cread counter.log; }
@@ -1018,7 +1117,7 @@ gw_registry_ok() { # the wrapper's own guard conditions, evaluated here too
 # =============================================================== P3 (gate)
 p3() { # p3 <item> <function>: every P3 item must pass or the run stops
   if "$2"; then echo "PASS $1" >>"$E/obs/p3-checks.txt"; log "P3 PASS $1"
-  else echo "FAIL $1" >>"$E/obs/p3-checks.txt"; record "P3-$1" FAIL "isolation gate failed"; stop "P3 $1"; fi
+  else echo "FAIL $1" >>"$E/obs/p3-checks.txt"; record "P3-$1" FAIL "P3 gate failed"; stop "P3 $1"; fi
 }
 p_empty() { local out; out=$(P "$@") || return 1; [ -z "$out" ]; }
 
@@ -1034,7 +1133,7 @@ p3_conf() {
 }
 p3_service() {
   # umask 022: volumes and layers must stay usable by the container's (subuid) user; $E itself is 0700
-  (umask 022; exec setsid env -i "${CENV_VARS[@]}" "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$UID_/bus" "$PODMAN" \
+  (umask 022; exec setsid env -i "${CENV_VARS[@]}" "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$UID_/bus" "${PENV[@]}" "$PODMAN" \
     --root "$E/podman/root" --runroot "$E/podman/runroot" system service --time=0 "unix://$E/podman.sock") \
     >>"$E/logs/podman-service.log" 2>&1 </dev/null &
   PS_PID=$!
@@ -1042,6 +1141,7 @@ p3_service() {
   PS_ENTRY=$LAST_TRACK
   wait_for 5 exe_is "$PS_PID" "$(realpath -e "$PODMAN")" || return 1
   proc_env_has "$PS_PID" "XDG_RUNTIME_DIR=$E/run" || return 1
+  proc_env_has "$PS_PID" "${PENV[@]}" || return 1
   wait_for 15 test -S "$E/podman.sock"
 }
 p3_store() {
@@ -1076,6 +1176,9 @@ p3_socket() {
   # rootless podman re-executes in its user namespace: the listener may be a child of the launched pid
   if [ "$pid" != "$PS_PID" ] && ! descendants "$PS_PID" | grep -x "$pid" >/dev/null; then return 1; fi
   proc_env_has "$pid" "XDG_RUNTIME_DIR=$E/run" || return 1
+  # the effective service environment (the listener may be the re-executed child) must carry the correction
+  proc_env_has "$pid" "${PENV[@]}" || return 1
+  echo "effective service env: $(tr '\0' '\n' <"/proc/$pid/environ" | grep -xF "${PENV[0]}")" >"$E/obs/p3-service-env.txt"
   if [ "$pid" != "$PS_PID" ]; then track podman-service-listener "$pid"; PSL_ENTRY=$LAST_TRACK; fi
   { echo "listener pid=$pid (launched pid=$PS_PID)"; echo "peers:"; unix_peers "$pid"; } >>"$E/obs/p3-socket.txt"
   ! unix_peers "$pid" | grep -F "/run/user/$UID_/podman/podman.sock" >/dev/null
@@ -1096,6 +1199,96 @@ p3_probe() { # protects the single A1 attempt: the driver applies cgroup limits 
   PT=180 P run --rm --name "exp008-probe-$RUN" --memory 256m --cpus 1 --pids-limit 100 --network none \
     --entrypoint /bin/true "$WORKLOAD" >"$E/obs/p3-probe.out" 2>&1 || return 1
   p_empty ps -a -q
+}
+# Healthcheck probe (owner-required for the retry). A disposable container created through the dedicated
+# socket with the driver's exact workload healthconfig (container.rs:1379-1394, test overridden to NONE at
+# :1674) and the driver's libpod API version (client.rs:21). It must create and start with no systemd
+# healthcheck timer and no change to the owner's user unit files; its health status is recorded for the gate.
+HC_NAME=exp008-hcprobe-$RUN
+HC_FILE=$E/obs/p3-hc-health.txt
+api() { # api <METHOD> <path> [curl args]: libpod REST on the dedicated socket; prints the body, then "http=<code>"
+  local m=$1 path=$2
+  shift 2
+  tcenv 60 "$CURL" -q -sS --max-time 50 --unix-socket "$E/podman.sock" -X "$m" -H 'Content-Type: application/json' \
+    -w '\nhttp=%{http_code}\n' "$@" "http://d/v5.0.0$path"
+}
+user_units() { timeout -k 5 30 systemctl --user list-units --all --no-legend --plain 2>/dev/null | awk '{print $1}' | LC_ALL=C sort; }
+unit_files_sum() { find "$HOME/.config/systemd/user" -printf '%P\t%y\t%s\t%T@\n' 2>&1 | LC_ALL=C sort | sha256sum | cut -d' ' -f1; }
+hc_state() { # hc_state <tag> <cid>
+  local j
+  j=$(P inspect -f '{{json .State}}' "$2" 2>>"$E/obs/p3-hc-probe.txt") || return 1
+  {
+    echo "state_$1=$("$JQ" -c '{Status, Running, Health}' <<<"$j")"
+    echo "status_$1=$("$JQ" -r '.Health.Status // "absent"' <<<"$j")" # Health is omitted when HasHealthCheck() is false
+    echo "running_$1=$("$JQ" -r '.Running' <<<"$j")"
+  } >>"$HC_FILE"
+}
+p3_hc_probe() {
+  local f=$E/obs/p3-hc-probe.txt slog=$E/obs/p3-hc-service-log.txt spec cid l0 u0 u1 uf0 tr0 tr1 bad=0
+  # shellcheck disable=SC2016 # jq variables
+  spec=$("$JQ" -cn --arg n "$HC_NAME" --arg i "$WORKLOAD" '{name: $n, image: $i, entrypoint: ["/bin/sleep"], command: ["40"],
+    netns: {nsmode: "none"}, image_pull_policy: "never",
+    healthconfig: {test: ["NONE"], Interval: 10000000000, Timeout: 2000000000, Retries: 10, StartPeriod: 5000000000}}') || return 1
+  l0=$(wc -l <"$E/logs/podman-service.log")
+  u0=$(user_units)
+  uf0=$(unit_files_sum)
+  tr0=$(find "/run/user/$UID_/systemd/transient" -maxdepth 1 -printf '%f\n' 2>/dev/null | LC_ALL=C sort)
+  { echo "# create spec"; echo "$spec"; echo "# create"; api POST /libpod/containers/create -d "$spec"; } >"$f" 2>&1
+  [ "$(tail -n 1 "$f")" = http=201 ] || return 1
+  cid=$(sed -e '1,/^# create$/d' -e '/^http=/d' "$f" | "$JQ" -r '.Id // empty' 2>/dev/null) # body may be multi-line
+  [[ $cid =~ ^[0-9a-f]{64}$ ]] || return 1
+  echo "cid=$cid" >"$HC_FILE"
+  echo "config_healthcheck=$(P inspect -f '{{json .Config.Healthcheck}}' "$cid" 2>&1)" >>"$HC_FILE"
+  { echo "# start"; api POST "/libpod/containers/$cid/start"; } >>"$f" 2>&1
+  [ "$(tail -n 1 "$f")" = http=204 ] || bad=1
+  if [ "$bad" = 0 ]; then
+    sleep 1; hc_state 1s "$cid" || bad=1
+    sleep 11; hc_state 12s "$cid" || bad=1 # past the 5 s start period and one 10 s interval
+    [ "$(kv "$HC_FILE" running_12s)" = true ] || bad=1
+  fi
+  u1=$(user_units)
+  tr1=$(find "/run/user/$UID_/systemd/transient" -maxdepth 1 -printf '%f\n' 2>/dev/null | LC_ALL=C sort)
+  # removal is attempted whatever happened above (the probe must never be left behind)
+  { echo "# delete"; api DELETE "/libpod/containers/$cid?force=true&timeout=0&v=true"; } >>"$f" 2>&1
+  case $(tail -n 1 "$f") in http=200 | http=204) ;; *) bad=1 ;; esac
+  tail -n +"$((l0 + 1))" "$E/logs/podman-service.log" >"$slog" 2>/dev/null
+  {
+    # healthcheck timers/services are named after the container id; the systemd cgroup scope
+    # (libpod-<cid>.scope, pre-registered correction 5) is reported separately and must be gone after removal
+    echo "hc_units_during=$(grep -F "$cid" <<<"$u1" | grep -vc '^libpod-.*\.scope$')"
+    echo "scope_units_during=$(grep -F "$cid" <<<"$u1" | grep -c '^libpod-.*\.scope$')"
+    echo "new_user_units_during=$(comm -13 <(printf '%s\n' "$u0") <(printf '%s\n' "$u1") | grep -c .)"
+    echo "transient_files_with_cid=$(comm -13 <(printf '%s\n' "$tr0") <(printf '%s\n' "$tr1") | grep -F "$cid" | grep -vc '^libpod-.*\.scope$')"
+    echo "transient_scope_files_during=$(comm -13 <(printf '%s\n' "$tr0") <(printf '%s\n' "$tr1") | grep -F "$cid" | grep -c '^libpod-.*\.scope$')"
+    echo "service_log_hc_lines=$(grep -ciE 'healthcheck|health check|\.timer|unable to get systemd' "$slog")"
+    echo "service_log_lines=$(grep -c . "$slog")"
+    echo "run_systemd_dir_exists=$([ -e "$E/run/systemd" ] && echo yes || echo no)"
+  } >>"$HC_FILE"
+  [ "$bad" = 0 ] || return 1
+  # pre-registered from the source review: "unhealthy" maps to HealthCheckFailed (sticky Error phase), and
+  # nothing should change the status of a NONE healthcheck; either one stops the run before A1
+  [ "$(kv "$HC_FILE" status_1s)" = "$(kv "$HC_FILE" status_12s)" ] && [ "$(kv "$HC_FILE" status_12s)" != unhealthy ] || return 1
+  [ "$(kv "$HC_FILE" hc_units_during)" = 0 ] && [ "$(kv "$HC_FILE" transient_files_with_cid)" = 0 ] &&
+    [ "$(kv "$HC_FILE" service_log_hc_lines)" = 0 ] && [ "$(kv "$HC_FILE" run_systemd_dir_exists)" = no ] || return 1
+  # nothing of the probe remains: container, volumes, cgroup scope; owner unit files unchanged
+  p_empty ps -a -q && p_empty volume ls -q || return 1
+  # shellcheck disable=SC2016 # expanded by eval, inside this function's scope
+  poll 15 1 eval '! user_units | grep -F "$cid" >/dev/null' || return 1
+  [ "$(unit_files_sum)" = "$uf0" ] || return 1
+  echo "after_removal=containers:0 volumes:0 units_with_cid:0 user_unit_files:unchanged" >>"$HC_FILE"
+}
+# Owner-required: the observed health status is assessed against OpenShell's Ready logic BEFORE A1.
+# The harness waits (bounded) for the orchestrator's decision in $ROOT/hc-gate: exactly "proceed" or "stop".
+p3_hc_gate() {
+  local g=$ROOT/hc-gate d
+  cp "$HC_FILE" "$ROOT/hc-gate.request" || return 1
+  log "HC-GATE waiting up to 600s for $g (status_1s=$(kv "$HC_FILE" status_1s) status_12s=$(kv "$HC_FILE" status_12s))"
+  poll 600 2 test -s "$g" || { echo "decision=timeout" >>"$HC_FILE"; return 1; }
+  [ -f "$g" ] && [ ! -L "$g" ] && [ "$(stat -c %u "$g")" = "$UID_" ] || { echo "decision=invalid-file" >>"$HC_FILE"; return 1; }
+  d=$(head -c 16 "$g" | tr -cd '[:lower:]')
+  echo "decision=$d (t+${SECONDS}s)" >>"$HC_FILE"
+  log "HC-GATE decision: $d"
+  [ "$d" = proceed ]
 }
 p3_tls() {
   tcenv 60 "$GW_BIN" generate-certs --output-dir "$E/tls" >"$E/obs/p3-certs.out" 2>&1 || return 1
@@ -1300,6 +1493,8 @@ p3 podman-store-isolation p3_store
 p3 podman-socket p3_socket
 p3 pinned-images p3_pull
 p3 cgroup-limits-probe p3_probe
+p3 healthcheck-probe p3_hc_probe
+p3 healthcheck-readiness-gate p3_hc_gate
 p3 tls-certs p3_tls
 p3 gateway-toml p3_toml
 p3 gateway-preflight p3_preflight
