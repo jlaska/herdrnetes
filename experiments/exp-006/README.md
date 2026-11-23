@@ -64,6 +64,13 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
   counter gaps and no exec-pod restart. A new pane in the new pod reattached to the same `pid`/start/nonce. The
   replacement Herdr started with no workspaces, so reattaching was again a manual command (consistent with FIND-072).
   → REQ-009. Evidence: [`k8s/evidence/s2a/`](k8s/evidence/s2a/).
+- **FIND-075: The stage-3 real-agent slice deploys and reaches the API, but run `s3a` measured no continuity.**
+  [observed, Kubernetes, single run `s3a`, proposed] Under PSA restricted, the pinned image started Claude Code
+  2.1.323 in tmux on the selected model, with the API key delivered as a Secret file through `apiKeyHelper` under
+  `--bare`, and showed no first-run dialog. The Cilium FQDN policy with `ndots:1` allowed `api.anthropic.com:443`
+  and blocked other destinations. The first inference request failed with *"Credit balance is too low"*: the K00b
+  models lookup checks that the key authenticates, not that it can spend. The runbook's `for shortcuts` readiness
+  match does not appear in `dontAsk` mode. → REQ-009. Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md).
 
 ## Limitations and open questions
 
@@ -121,7 +128,7 @@ The summary below is the original design.
   - K06: label-guarded namespace deletion, positive absence check, and recheck of the live baseline.
 - Untouched: the live Herdr StatefulSet and its PVCs, Argo CD and Longhorn.
 
-## Stage 3 (Kubernetes, real agent): image built, G1 package ready, NOT RUN
+## Stage 3 (Kubernetes, real agent): run `s3a` INCONCLUSIVE (stopped at K02: API credit balance too low); cleanup CLEAN
 
 The real-agent test runs in Kubernetes, not locally. The package is [`k8s/stage3/RUNBOOK.md`](k8s/stage3/RUNBOOK.md)
 with its manifests (including a Cilium FQDN egress allow for `api.anthropic.com:443` only) and the agent execution
@@ -132,6 +139,13 @@ push, and is pinned (anonymously pullable) as
 `ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18`. Nothing has
 been applied to a cluster or run, and no API key exists. G1 needs a new owner approval, and separately an owner-created
 key in a $5-limited workspace.
+
+**Run `s3a` (owner-approved G1 at `83e3471`, 2026-11-23 UTC): INCONCLUSIVE.** K00, K00b and K01 passed. Claude Code
+2.1.323 started on `claude-haiku-5-5` under PSA restricted with no dialog, and the FQDN egress probes behaved as
+designed. The first inference request was rejected with *"Credit balance is too low"*, so the agent did no work and
+K03/K04 were not run. Identity stayed `pid=25 start=31889030` throughout; spend $0.00 expected. K06 Kubernetes cleanup was CLEAN
+(baselines byte-identical); API key revocation is pending owner confirmation. Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md). Continuity of a real agent
+remains **NOT TESTED**.
 
 ## Stage 3, local bwrap harness (historical preparation, kept, not developed further)
 
