@@ -22,7 +22,7 @@ readiness). `RUN_ID=s3b`, namespace `herdrnetes-exp006-s3b`.
 | K03 pane close, reattach, Q1 | Continuity **PASS**; work while detached **INCONCLUSIVE** | The agent finished f01–f04 and said `DONE-A <CODE>` at 00:59:42Z, 6.5 s after P1, before the gated close could run (pre-close check `said=yes`). The pane was closed at 01:00:07Z anyway (`N0=4`); `tmux_clients=0` immediately; 11 s later the same `pid/start/sid`, `alive=yes`, `progress_since=0` (idle, task done) ([`status-k03-detached.txt`](status-k03-detached.txt)). New pane `w2:p1` at 01:00:25Z; Q1 answered 01:00:32Z: `Q1 CODEWORD=<CODE> DONE=4` (`said=yes`) ([`pane-k03.txt`](pane-k03.txt), [`status-k03-after.txt`](status-k03-after.txt)). |
 | K04 Herdr pod replacement, Q2 | **PASS** | `DONE-B` not yet said; PB sent 01:00:51Z (`T_PB=1795395651`). First PB progress (f05, 5/12) at 01:00:52.9Z; `T_DEL=1795395653`; `delete pod exp006-herdr --wait=true` 01:00:53–54Z; then `get pod` NotFound. Samples while absent: 01:00:54Z `passing=6 progress_since=1 tmux_clients=0`; 01:01:31Z `passing=8 progress_since=3 tmux_clients=0` ([`status-k04-absent.txt`](status-k04-absent.txt)); same `pid=25`, `alive=yes`. Recreated 01:01:42Z, Ready 01:01:44Z on `node-H` with a new pod UID; `workspace list` empty. New pane at 01:01:51Z; Q2 answered 01:01:58Z: `Q2 CODEWORD=<CODE> DONE=8` ([`pane-k04.txt`](pane-k04.txt), [`status-k04-after.txt`](status-k04-after.txt)). |
 | K05 | PASS | 01:02:14Z ([`status-final.txt`](status-final.txt)): `pid=25 start=32103078` (= `live_start`), same `sid`, `jsonl_count=1`, `entries=113`, `tool_uses=34`, `passing=8`, `check_sha_ok=yes`, `readme_sha_ok=yes`, `progress_lines=8`, `progress_bad=0`, `resume_flag=no`, `DONE-B` said at 01:00:57.0Z. Identity file byte-identical to K01. Exec pod UID unchanged, restartCount 0, `startedAt` 00:58:39Z. [`progress.log`](progress.log), [`transcript-projection.txt`](transcript-projection.txt) (codeword masked). |
-| K06 | PASS: **CLEAN** | Guarded delete 01:02:36–47Z. Namespace NotFound; no PV claimRef (`jq -e` true); no `exp-006` namespaces; `ctx_ok`/`live_ok` passed; K00/K06 baselines byte-identical (`diff` rc 0). Local SSH keys and the codeword file shredded. The owner deleted the API key in the Console; the local key file was overwritten (`shred` without `-u`: checked to no longer start with `sk-ant-`, 4096 bytes) but not removed at the time of this commit. |
+| K06 | PASS: **CLEAN** | Guarded delete 01:02:36–47Z. Namespace NotFound; no PV claimRef (`jq -e` true); no `exp-006` namespaces; `ctx_ok`/`live_ok` passed; K00/K06 baselines byte-identical (`diff` rc 0). Local SSH keys and the codeword file shredded. The owner deleted the API key in the Console. The local key file was first overwritten (`shred` without `-u`: checked to no longer start with `sk-ant-`, 4096 bytes); the owner later confirmed the key revoked and the file removed. |
 
 ### Work during the Herdr pod's absence (from the agent's own `progress.log`, pod clock)
 
@@ -47,9 +47,12 @@ Conversation memory: the codeword, present only in P1, was returned after both r
 same Herdr pod after a pane close; Q2 from a pane in a replacement Herdr pod). Final task count: 8/12 (PC was not sent;
 the runbook does not require it).
 
-**API spend:** not read from the Console at the time of this commit. Estimate: well under $0.10 (Haiku 5.5 at
-$0.10/$0.50 per MTok input/output, cache reads 0.1x; about 40 model turns plus the 1-token K00b request). The
-transcript's per-request usage was not extracted before the namespace was deleted.
+**API spend:** when the owner checked the Console after the run, usage for the key showed **zero reported tokens**.
+Inference did occur (K00b's Messages request returned `200`; the transcript has 113 entries and 34 tool uses), so the
+zero is a reporting observation (cause not investigated: for example reporting delay or attribution), not evidence that
+the run was free. Estimate: well under $0.10 (Haiku 5.5 at $0.10/$0.50 per MTok input/output, cache reads 0.1x; about
+40 model turns plus the 1-token K00b request). The transcript's per-request usage was not extracted before the
+namespace was deleted.
 
 ## Deviations from the runbook
 

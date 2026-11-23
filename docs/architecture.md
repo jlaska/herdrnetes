@@ -44,6 +44,6 @@ Use a single active Herdr writer. Longhorn RWO may suffice for the first shared 
 
 ## Future lifecycle separation
 
-Eventually let Herdr restart or upgrade while trusted agent processes continue in other pods. Feasibility depends on remote PTY/session attachment and reconnection semantics **not yet validated**. OpenShell/Kata and per-repo storage are subsequent investigations, not initial dependencies.
+Eventually let Herdr restart or upgrade while trusted agent processes continue in other pods. Feasibility depends on remote PTY/session attachment and reconnection semantics. EXP-006 has observed (single runs, not a decision) a tmux-owned agent process in a separate pod surviving Herdr pane close and Herdr pod replacement, with manual reattach over SSH (FIND-074, FIND-076 proposed); Herdr upgrades, execution-pod or node failure and automatic reattach remain **not validated**. OpenShell/Kata and per-repo storage are subsequent investigations, not initial dependencies.
 
 See [ADR-0001](decisions/ADR-0001-trusted-mvp.md) and the [experiment index](experiments/README.md).
