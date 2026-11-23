@@ -1,6 +1,6 @@
 # EXP-008: OpenShell-owned execution with Herdr as a disposable client
 
-**Status:** Planned (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Not authorized for execution; the local execution plan awaits owner review.
+**Status:** Planned (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Not authorized for execution. Stage A local execution plan: [experiments/exp-008/local/PLAN.md](../../experiments/exp-008/local/PLAN.md), awaiting owner review.
 
 **Hypothesis (not an adopted architecture).** OpenShell can replace EXP-006's custom tmux/SSH execution ownership. Its gateway would own the agent session's lifecycle, its sandbox would provide policy-based isolation, and Herdr panes would only attach to the session as disposable clients. Production integration is not authorized, and ADR-0001 is unchanged.
 
