@@ -5,7 +5,7 @@
 - **Run 1 (`1122-220034`)** stopped at `sandbox create` (Podman healthcheck timers need the user systemd socket). Cleanup was recorded as RESIDUE (details unchanged below).
 - **Run 2 (`1123-072024`, the owner-authorized retry)**:
   - **The healthcheck correction worked.** The sandbox was created and reached Ready, and the counter ran as the canonical main process, with its identity triangulated.
-  - **The run then stopped at A1's pane attach**, because of a harness defect. In a terminal, `openshell sandbox connect` replaces itself with `ssh` via `exec()`, and the harness only counted `openshell … sandbox connect` processes.
+  - **The run then stopped at A1's pane attach**, because of a harness defect: the attach predicate's argv glob (`*" sandbox "*" connect "*`) can never match the adjacent words `sandbox connect`, so it counted zero clients whatever was running. (The first diagnosis, that `connect` exec-replaces itself with `ssh`, was wrong and is corrected below; see FIND-080.)
   - **Cleanup** is CLEAN on the verified final state. The intermediate RESIDUE notes are kept.
 
 **The research question is still unanswered.**
@@ -23,10 +23,10 @@ Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../.
 
 | ID | Status | Statement (scope) |
 |---|---|---|
-| FIND-077 | **Proposed, pending validation** (owner, 2026-11-23). Run 2 supports it; recommended for acceptance at the scope stated | OpenShell v0.1.9's Podman driver gives the workload and supervisor a Podman healthconfig with `test ["NONE"]` and a 10 s interval. Rootless Podman 5.8.9 then needs `$XDG_RUNTIME_DIR/systemd/private` when the container starts. Run 1 observed this failure. In run 2, `DISABLE_HC_SYSTEMD=true` in the dedicated service's environment was sufficient: the probe and the real sandbox started with no healthcheck timer unit, and `State.Health` was absent (null). Scope: one workstation, Podman 5.8.9, a relocated runtime dir. REQ-011. |
+| FIND-077 | **Accepted** (owner, 2026-11-23) at its observed, single-workstation scope: the workaround succeeded in run 2 | OpenShell v0.1.9's Podman driver gives the workload and supervisor a Podman healthconfig with `test ["NONE"]` and a 10 s interval. Rootless Podman 5.8.9 then needs `$XDG_RUNTIME_DIR/systemd/private` when the container starts. Run 1 observed this failure. In run 2, `DISABLE_HC_SYSTEMD=true` in the dedicated service's environment was sufficient: the probe and the real sandbox started with no healthcheck timer unit, and `State.Health` was absent (null). Scope: one workstation, Podman 5.8.9, a relocated runtime dir. REQ-011. |
 | FIND-078 | **Accepted** (owner, 2026-11-23) at its documented scope | A disposable OpenShell v0.1.9 gateway can be isolated on a workstation that already has OpenShell registrations, a default rootless Podman store and agent-backed SSH. The ingredients are a dedicated store and socket, a run-local XDG/registry with `OPENSHELL_SYSTEM_GATEWAY_DIR`, a loopback mTLS listener and an agentless ssh wrapper. The protected baselines were unchanged in both runs. |
 | FIND-079 | **Accepted** (owner, 2026-11-23) at its documented scope | Verify OpenShell v0.1.9 release provenance with `gh attestation verify --owner NVIDIA`. The signer is `release-publish.yml@refs/heads/main`, and the certificate names the `main` dispatch commit `624aceea`. The build commit `ce58cf8e` comes from the promote job's `SOURCE_SHA`. Runtime images carry no GitHub attestation. Re-verified in run 2's preflight. |
-| FIND-080 | **Proposed** (source-verified; consistent with run 2's observations) | When its stdin is a terminal, `openshell sandbox connect` (v0.1.9) **replaces itself with the host `ssh`** via `exec()`: `crates/openshell-cli/src/ssh.rs:241-247`, `exec_or_wait`, on the `sandbox_connect` path. A Herdr pane's attachment is therefore an `ssh … -s sandbox openshell-main` process with a ProxyCommand `openshell ssh-proxy`, not an `openshell` process. Any client accounting or "no client remains" check has to look for that `ssh` process. With no terminal, the CLI spawns `ssh` and waits. |
+| FIND-080 | **Proposed, revised** (2026-11-23). The first version, "connect exec-replaces itself with `ssh` on a TTY", was **wrong** and is withdrawn | **Source (v0.1.9, `crates/openshell-cli/src`):** `sandbox connect` dispatches `main.rs:3665` → `run::sandbox_connect` (re-export, `run.rs:100`) → `ssh.rs:674-681` → `sandbox_connect_supervised()` (`ssh.rs:540`) → `run_main_attach_supervised()` (`ssh.rs:396-417`), which **spawns the host `ssh` as a child** (`kill_on_drop`) and stays up as its supervisor. It forwards SIGINT/SIGQUIT/SIGTERM (`ssh.rs:304-329`); SIGHUP is not caught. If ssh exits 255 after at least 2 s attached and the main process has no terminal result, it creates a new SSH session and respawns ssh, retrying for up to 60 s (`ssh.rs:57-68`, `445-455`, `593-651`). The exec-replace in `exec_or_wait()` (`ssh.rs:241-247`) is reachable only from `sandbox exec` (`ssh.rs:1027-1035` → `1021`); every connect path spawns. ssh runs the ProxyCommand `<cli> ssh-proxy --gateway … --sandbox … --token …` (`openshell-core/src/forward.rs:931-969`) via `$SHELL -c 'exec …'`. An attached pane therefore holds a three-process chain: CLI → `ssh … -s sandbox openshell-main` → `ssh-proxy`. Client accounting must recognise the chain, zero-client checks must cover all three processes, and the session token appears in two processes' argv. **Runtime (run 2):** the gateway log shows `CreateSshSession`, an allowed token `ForwardTcp` and an opened relay that stayed up until cleanup cancelled it. That is consistent with a live chain, but no process snapshot was taken, so the chain itself is unobserved. |
 
 ## Run 2: 1123-072024 (owner-authorized retry) — stopped at A1 attach
 
@@ -88,9 +88,11 @@ These are the 16 checks from run 1, plus the healthcheck probe and the readiness
 - **Pane attach (observed and source):**
   - **Observed:** the harness opened a Herdr pane and ran the wrapped `openshell -g … sandbox connect …`.
   - **Observed:** the gateway logged `CreateSshSession` at 12:30:18.662Z and an **allowed** `ForwardTcp` with `ssh_session_token` at 12:30:18.713Z, both from 127.0.0.1.
+  - **Observed:** the gateway then logged `relay opened successfully` and a claimed `RelayStream` at 12:30:18.714Z. The `ForwardTcp` stayed open until cleanup cancelled it at 12:30:38.308Z.
   - **Observed:** the connect reached the gateway. The harness's `clients_ge 1`, which looks for processes whose exe is the run's `openshell` binary with `sandbox connect` in argv, saw none within 20 s, and A1 recorded "could not attach a pane". The plan's unexpected-failure stop applied, and A2–A7 were not run.
-  - **Source:** `connect` exec-replaces itself with `ssh` when stdin is a TTY (FIND-080), so the predicate could never be true in a pane.
-  - **Inferred, not observed:** the pane then held the wrapped `/usr/bin/ssh`, which the harness's `ssh_pids` would have matched.
+  - **Cause (harness defect, reproduced offline):** `clients_pids()` tested `case " ${a[*]} " in *" sandbox "*" connect "*`. For the real argv `… -g exp008-<run> sandbox connect exp008-<run>`, the space between the adjacent words is consumed by `" sandbox "`, so `" connect "` cannot match. The predicate was false for every possible connect process; the exe and environment conditions were never the deciding factor. [tests/clients-test.sh](tests/clients-test.sh) case 2 reproduces this.
+  - **Corrected diagnosis (2026-11-23):** the first diagnosis, that `connect` exec-replaces itself with `ssh` on a TTY, was wrong. In v0.1.9, `sandbox connect` keeps the CLI and spawns ssh as its child (FIND-080, revised).
+  - **Inferred from source, not observed:** the pane held the supervising CLI, its wrapped `/usr/bin/ssh` child and an `ssh-proxy` grandchild.
   - **Not observed:** no pane content was captured, and `mark a1` was never typed, so attach, replay and `ACK a1` are unobserved.
 - **Not run:** A2, A3, A4a, A4b, A5a, A5b, A6, A7a, A7b. There are therefore **no identity comparisons across lifecycle events**, and there is **no A5 graceful or crash classification**.
 
@@ -119,24 +121,57 @@ These are the 16 checks from run 1, plus the healthcheck probe and the readiness
 | A NONE healthcheck leaves the sandbox able to reach Ready | **Confirmed** (Ready in about 1.1 s) |
 | The supervisor (host network) reaches a 127.0.0.1 mTLS gateway | **Confirmed** |
 | The canonical main process is the `--` command, identifiable by three independent sources | **Confirmed** at A1 (one sample) |
-| `sandbox connect` stays an `openshell` process while attached (implicit in the harness) | **Disproved** for a TTY (FIND-080) |
+| `sandbox connect` stays an `openshell` process while attached (implicit in the harness) | **Supported by source** (FIND-080, revised); not yet observed. An earlier version of this table said "Disproved"; that was wrong |
+| The harness's attach predicate can recognise a connect process | **Disproved**: an argv-glob defect made it always false (reproduced offline) |
 | Reattach, replay, single writer, gateway-restart, retention and delete semantics | **Not tested** |
 
-### Proposed correction (needs owner approval; not applied; no further run is authorized)
+### Correction after run 2: client detection (owner-authorized harness and documentation change; **not run**)
 
-This is the minimum change for a third attempt, with the same scope:
+An earlier version of this section proposed counting the wrapped `ssh` as the attachment, on the grounds that `connect` exec-replaces itself. That rationale was wrong (FIND-080, revised), and the proposal was not applied as written. The owner's review of 2026-11-23 authorized the correction below, but not a run. A third local execution needs separate authorization.
 
-1. Count an attachment as the run's wrapped `/usr/bin/ssh` process: `-F <run>/ssh_config` plus the `openshell-main` subsystem argument. Add the `openshell … sandbox connect` process only for a non-TTY connect, where the CLI spawns `ssh` and waits.
-2. Review every call site against this definition: A1 `pane_attach`; A2/A4 "no client remains"; A5b auto-reattach; A6 "two attachments"; and cleanup.
-3. On an attach failure, capture a pane read before stopping.
+- **Process model (source):** one attached client is a chain of three processes: the supervising CLI `-g <gw> sandbox connect <gw>` → transport `/usr/bin/ssh -F <run>/ssh_config … -s sandbox openshell-main`, whose ProxyCommand names this run's CLI, the loopback gateway port and the sandbox → `<cli> ssh-proxy --gateway https://127.0.0.1:<port> --sandbox <gw> …`. Each process must have the run's `XDG_CONFIG_HOME`. Anything else is `other`, which covers the create CLI, a CLI without the run environment and unrelated ssh or openshell processes. Any other ssh that uses the run's ssh_config is `run-ssh` and counts as a client process. Exact argv positions are compared, not globs.
+- **Matching to the pane:** `pane_attach` records a **new** complete chain whose CLI descends from the pane's shell. The shell pid comes from `herdr pane process-info`; its output format is evidenced in EXP-006 for restored panes. The chain is recorded as pid:start-time triples per pane.
+- **Privacy:** unrelated processes are counted only. Their argv is never kept and their environ is never read. The ssh and proxy argv carry `--token`, and every new evidence writer passes through `redact`.
+- **Primary versus corroborating evidence:** A1 still passes only on the PLAN criterion, `ACK a1` in the log and the pane with the recorded identity. The chain must also be found and must stay alive through the ACK. If no chain is found, A1 writes `obs/attach-a1.txt` before failing. The file contains:
+  - the class counts and run-scoped processes;
+  - the pane's `process-info`;
+  - the process tree under the pane shell, with exe paths and redacted argv;
+  - gateway session and relay log lines;
+  - the visible and recent pane text;
+  - the result of then typing `mark a1` (`mark` rc and ACK line).
 
-Source (FIND-080) suggests that no other A1–A7 predicate depends on the CLI process staying alive. The proposer should re-check this before approval.
+  A1 then stops.
+- **Client counts reconciled:**
+  - "Attached" means a complete chain.
+  - "No client remains" means no CLI, transport, proxy or run-ssh process. This applies to A2, A4a/b, `close_all_panes` and the A5b fallback.
+  - A2 and A6 also require the closed pane's own recorded chain to be gone, checked by pid and start time.
+  - A6 expects two chains, then one, because the read-only viewer has its own chain.
+  - A5b records whether the pane's supervising CLI survived the gateway kill. From source, the CLI stays up and respawns ssh. This record is diagnostic only.
+  - Cleanup, sweeps and pid-identity guards are unchanged.
+- **Tests (offline):** [tests/clients-test.sh](tests/clients-test.sh) extracts the marked client-detection region of `demo.sh` and runs it against fake `/proc` trees. It covers:
+  - normal attach;
+  - the run-2 glob regression;
+  - two clients;
+  - a terminated CLI with an orphaned ssh and proxy;
+  - lost transport during CLI recovery;
+  - the detached state and recycled pids;
+  - unrelated ssh, including the owner's own OpenShell connect to another gateway;
+  - wrong-scope processes (another port, the create CLI, another sandbox, no run environment);
+  - port-prefix collisions.
+
+  Result: 9/9 pass. A mutation check confirmed that the cases detect broken predicates. `bash -n` and shellcheck pass for both files.
+- **For the owner (not changed):**
+  - The A4a/b check "connect clients survived the server" was always vacuous before, because the CLI count was always 0. It now takes effect, requiring the CLI, ssh and proxy to be gone within 10 s of a Herdr stop or kill.
+  - From source this should hold: the PTY hangup and an uncaught SIGHUP should end the chain. But it is a harness condition, not a row in PLAN A4.
+  - Decide before a third run whether it stays a FAIL input or becomes a recorded observation.
 
 ### Remaining risks (inferred)
 
 - From source, both a graceful and a crash gateway restart are still expected to **replace** the main process (A5 would classify as `restarted`).
 - The intermediate "Device or resource busy" on overlay removal recurs; final removal succeeds.
 - The pane's attach, replay and read-only notices have never been observed.
+- **A5b (source reading, not verified):** after a gateway restart, the supervising CLI's new `CreateSshSession` may be refused with FailedPrecondition until the supervisor re-registers. That message does not appear to match `connect_error_is_retryable`'s list (`ssh.rs:516-538`). If so, the CLI exits instead of retrying, which would be recorded as `auto_reattach=no` and is a product observation, not a harness fault.
+- `pane_attach` now depends on `herdr pane process-info` returning `shell_pid` for a **fresh** pane. EXP-006 evidence shows the format only for restored panes. If the field is missing, A1 fails with diagnostics; it cannot falsely pass.
 
 ## Run 1: 1122-220034 — stopped at A1 (create)
 
@@ -281,5 +316,6 @@ The minimum next experiment is the same stage A A1–A7 run, unchanged in scope,
 
 ## Files (run 2)
 
-- [demo.sh](demo.sh): the harness as run in run 2 (commit `e7a5715`). Run 1 used commit `8102bb8`.
+- [demo.sh](demo.sh): the current harness, which includes the client-detection correction (not run). Run 2 used commit `e7a5715` (sha256 `bca278df…f759ac`), and run 1 used commit `8102bb8`.
+- [tests/clients-test.sh](tests/clients-test.sh): offline client-detection tests.
 - [evidence/1123-072024/](evidence/1123-072024/), redacted as in run 1. It includes `cleanup-final.txt` (verified final state) and the healthcheck-probe records `obs/p3-hc-*.txt`.

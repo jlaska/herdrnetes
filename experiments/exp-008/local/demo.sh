@@ -76,6 +76,7 @@ done
 [ -S "/run/user/$UID_/bus" ] || refuse "no user D-Bus at /run/user/$UID_/bus (needed for the systemd cgroup manager)"
 CLI_REAL=$(realpath -e "$CLI_BIN")
 GW_REAL=$(realpath -e "$GW_BIN")
+PROCFS=/proc # client detection reads processes here (tests/clients-test.sh points it at a fake tree)
 
 # Sed-escaped strings for redact (ERE; '#' is the sed delimiter).
 # shellcheck disable=SC2001 # needs a bracket-expression class; ${var//..//..} cannot express it
@@ -117,6 +118,9 @@ CNONCE=
 CREATE_PID=
 CREATE_START=
 PANE=
+PSHELL=
+ATT=
+declare -A PANE_CLIENT=() # pane id -> "cli:start ssh:start proxy:start" of the client attached in it
 CLS=CLEAN
 EVBAD=0
 ROOT_GONE=unknown
@@ -287,31 +291,116 @@ descendants() {
 }
 ancestors() { local p=$1; while [ -n "$p" ] && [ "$p" -gt 1 ] 2>/dev/null; do echo "$p"; p=$(ppid_of "$p"); done; }
 exe_pids() { find /proc -mindepth 2 -maxdepth 2 -name exe -lname "$1" 2>/dev/null | sed -n 's#^/proc/\([0-9]*\)/exe$#\1#p'; }
-# cli_connect_pids: this run's `openshell ... sandbox connect` processes (the CLI)
-clients_pids() {
-  local p a
-  for p in $(exe_pids "$CLI_REAL"); do
-    mapfile -d '' -t a 2>/dev/null <"/proc/$p/cmdline" || continue
-    case " ${a[*]} " in *" sandbox "*" connect "*) ;; *) continue ;; esac
-    proc_env_has "$p" "XDG_CONFIG_HOME=$E/config" && echo "$p"
+# Client detection (correction after run 1123-072024; FIND-080 as revised). In v0.1.9,
+# `sandbox connect` is sandbox_connect_supervised() -> run_main_attach_supervised() (ssh.rs):
+# the CLI stays up as a supervisor and SPAWNS ssh as its child (exec_or_wait()'s exec-replace
+# is not on this path). PATH finds wrap/ssh, which execs /usr/bin/ssh -F $E/ssh_config; ssh
+# runs ProxyCommand `$CLI_REAL ssh-proxy --gateway ... --token ...` as `$SHELL -c 'exec ...'`,
+# so the proxy is ssh's child. One attached client is that whole chain:
+#   cli (`-g GW sandbox connect GW`) -> transport ssh (`-s sandbox openshell-main`) -> proxy (`ssh-proxy`)
+# The run-1123 predicate globbed argv with *" sandbox "*" connect "*, which never matches the
+# adjacent words, so it counted 0 whatever ran. The marked region is tested by tests/clients-test.sh.
+# >>> client-detection
+# proc_table: one line per process of ours whose exe is the run's CLI or /usr/bin/ssh:
+#   pid TAB ppid TAB start TAB exe TAB runenv(0/1) TAB argv (joined by \x1f)
+# environ is only read, and argv only kept, when argv names this run ($E/ or $GW); otherwise
+# argv is recorded as "-", so unrelated ssh/openshell processes are counted but never described.
+proc_table() {
+  local d exe s st=() a=() j env
+  for d in "$PROCFS"/[0-9]*; do
+    [ -O "$d" ] || continue
+    exe=$(readlink "$d/exe" 2>/dev/null) || continue
+    case $exe in "$CLI_REAL" | /usr/bin/ssh) ;; *) continue ;; esac
+    read -r s 2>/dev/null <"$d/stat" || continue
+    read -ra st <<<"${s##*) }"
+    mapfile -d '' -t a 2>/dev/null <"$d/cmdline" || continue
+    j=$(IFS=$'\x1f'; echo "${a[*]}")
+    j=${j//[$'\t\n']/ }
+    env=0
+    case $j in
+    *"$E/"* | *"$GW"*) tr '\0' '\n' 2>/dev/null <"$d/environ" | grep -xF "XDG_CONFIG_HOME=$E/config" >/dev/null && env=1 ;;
+    *) j=- ;;
+    esac
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "${d##*/}" "${st[1]:-}" "${st[19]:-}" "$exe" "$env" "$j"
   done
 }
-# ssh_pids: /usr/bin/ssh processes started with this run's ssh_config
-ssh_pids() {
-  local p a i
-  for p in $(exe_pids /usr/bin/ssh); do
-    mapfile -d '' -t a 2>/dev/null <"/proc/$p/cmdline" || continue
-    for ((i = 0; i + 1 < ${#a[@]}; i++)); do
-      if [ "${a[i]}" = -F ] && [ "${a[i + 1]}" = "$E/ssh_config" ]; then echo "$p"; break; fi
-    done
-  done
+# client_classify: proc_table on stdin -> "<class> <pid> <start> <ppid>" per process, then
+# "attached <cli> <start> <ssh> <start> <proxy> <start>" per complete chain. Classes:
+#   cli        exe = run CLI, run env, argv exactly `-g GW sandbox connect GW`
+#   transport  /usr/bin/ssh, run env, `-F $E/ssh_config` first, ends `-s sandbox openshell-main`,
+#              ProxyCommand = `$CLI_REAL ssh-proxy --gateway https://127.0.0.1:PORT ... --sandbox GW ...`
+#   proxy      exe = run CLI, run env, `ssh-proxy`, --gateway https://127.0.0.1:PORT, --sandbox GW
+#   run-ssh    any other ssh with `-F $E/ssh_config` (never expected; counted as a client process)
+#   other      everything else: the create CLI, a CLI without the run env, unrelated ssh/openshell
+client_classify() {
+  awk -F '\t' -v E="$E" -v GW="$GW" -v PORT="$PORT" -v CLI="$CLI_REAL" '
+    function gw_ok(v) { return v == "https://127.0.0.1:" PORT || index(v, "https://127.0.0.1:" PORT "/") == 1 }
+    function pc_ok(v,   u, c) { # v: the ProxyCommand value after "--gateway " (url possibly single-quoted)
+      sub(/^\047/, "", v); u = "https://127.0.0.1:" PORT
+      if (index(v, u) != 1) return 0
+      c = substr(v, length(u) + 1, 1)
+      return c == "\047" || c == "/" || c == " "
+    }
+    function cls(exe, env, j,   a, n, i, gw, sb, rc, pfx) {
+      if (j == "-") return "other"
+      n = split(j, a, "\037")
+      if (exe == CLI) {
+        if (env != 1) return "other"
+        if (n == 6 && a[2] == "-g" && a[3] == GW && a[4] == "sandbox" && a[5] == "connect" && a[6] == GW) return "cli"
+        if (n >= 2 && a[2] == "ssh-proxy") {
+          gw = 0; sb = 0
+          for (i = 3; i < n; i++) {
+            if (a[i] == "--gateway" && gw_ok(a[i + 1])) gw = 1
+            if (a[i] == "--sandbox" && a[i + 1] == GW) sb = 1
+          }
+          if (gw && sb) return "proxy"
+        }
+        return "other"
+      }
+      rc = 0
+      for (i = 2; i < n; i++) if (a[i] == "-F" && a[i + 1] == E "/ssh_config") rc = 1
+      if (!rc) return "other"
+      if (env == 1 && n >= 6 && a[2] == "-F" && a[3] == E "/ssh_config" && a[n - 2] == "-s" && a[n - 1] == "sandbox" && a[n] == "openshell-main") {
+        pfx = "ProxyCommand=" CLI " ssh-proxy --gateway "
+        for (i = 4; i < n - 2; i++)
+          if (index(a[i], pfx) == 1 && pc_ok(substr(a[i], length(pfx) + 1)) && index(a[i], " --sandbox " GW " ") > 0) return "transport"
+      }
+      return "run-ssh"
+    }
+    NF >= 6 { c = cls($4, $5, $6); print c, $1, $3, $2; k[$1] = c; par[$1] = $2; st[$1] = $3; if (c == "proxy") px[++np] = $1 }
+    END {
+      for (i = 1; i <= np; i++) {
+        x = px[i]; s = par[x]; p = par[s]
+        if (k[s] == "transport" && k[p] == "cli") print "attached", p, st[p], s, st[s], x, st[x]
+      }
+    }'
 }
-clients() { clients_pids | grep -c .; }
+client_snap() { proc_table | client_classify; } # one consistent scan
+client_counts() {
+  client_snap | awk '{ n[$1]++ } END { printf "attached=%d cli=%d transport=%d proxy=%d run-ssh=%d other=%d", n["attached"], n["cli"], n["transport"], n["proxy"], n["run-ssh"], n["other"] }'
+}
+clients_pids() { client_snap | awk '$1 == "cli" { print $2 }'; }                    # supervising CLIs, attached or not
+ssh_pids() { client_snap | awk '$1 == "transport" || $1 == "run-ssh" { print $2 }'; } # any ssh using the run's ssh_config
+proxy_pids() { client_snap | awk '$1 == "proxy" { print $2 }'; }
+clients() { client_snap | grep -c '^attached '; } # complete cli -> ssh -> proxy chains
+client_procs() { client_snap | grep -c -E '^(cli|transport|proxy|run-ssh) '; }
 clients_eq() { [ "$(clients)" -eq "$1" ]; }
 clients_ge() { [ "$(clients)" -ge "$1" ]; }
-no_ssh() { [ "$(ssh_pids | grep -c .)" -eq 0 ]; }
-has_ssh() { [ "$(ssh_pids | grep -c .)" -ge 1 ]; }
-clients_detail() { log "clients: cli=$(clients) ssh=$(ssh_pids | grep -c .)"; }
+no_client_procs() { [ "$(client_procs)" -eq 0 ]; } # "no connect/ssh process remains": cli, ssh and proxy all gone
+clients_detail() { log "clients: $(client_counts)"; }
+# A pane's client is recorded as "cli:start ssh:start proxy:start" (ATT, PANE_CLIENT[pane]).
+att_alive() { # every process of the chain is alive with its recorded start time
+  local e n=0
+  for e in $1; do alive_same "${e%%:*}" "${e#*:}" || return 1; n=$((n + 1)); done
+  [ "$n" = 3 ]
+}
+att_gone() { # every process of the chain is gone (or its pid recycled); unknown chains are not gone
+  local e n=0
+  for e in $1; do gone "${e%%:*}" "${e#*:}" || return 1; n=$((n + 1)); done
+  [ "$n" = 3 ]
+}
+att_ssh() { local a=(); read -ra a <<<"$1"; echo "${a[1]%%:*}"; }
+# <<< client-detection
 
 # unix_peers <pid>: socket paths the process is connected to (best effort)
 unix_peers() {
@@ -333,6 +422,7 @@ snap_pids() { # pids worth a process snapshot
   for e in "${PIDS[@]}"; do p=${e#*:}; echo "${p%%:*}"; done
   clients_pids
   ssh_pids
+  proxy_pids
   exe_pids "$CLI_REAL"
   [ -n "$WPID" ] && { echo "$WPID"; ppid_of "$WPID"; }
   [ -n "$HPIDC" ] && echo "$HPIDC"
@@ -348,7 +438,7 @@ snap() { # snap <name>: process-tree snapshot, redacted
       echo "# children of herdr server $HERDR_PID"
       ps -ww -o pid,ppid,sid,pgid,uid,lstart,args --ppid "$HERDR_PID" 2>&1
     fi
-    echo "# openshell clients: $(clients)  ssh children: $(ssh_pids | grep -c .)"
+    echo "# clients: $(client_counts)"
   } 2>&1 | redact >"$f"
 }
 
@@ -1014,8 +1104,22 @@ load_counter_id() { CPID=$(kv "$E/obs/$1-identity.txt" pid); CSTART=$(kv "$E/obs
 
 # ----------------------------------------------------------------- panes
 pane_ids() { H pane list | "$JQ" -r '.result.panes[].pane_id'; }
-pane_attach() { # pane_attach <label> -> sets PANE; a NEW pane running `openshell sandbox connect`
-  local label=$1 plist base want
+pane_shell_known() { # pane_shell_known <pane> -> sets PSHELL (the pane's shell pid, from herdr)
+  PSHELL=$(H pane process-info --pane "$1" 2>/dev/null | "$JQ" -r '.result.process_info.shell_pid // empty' 2>/dev/null)
+  [[ $PSHELL =~ ^[0-9]+$ ]]
+}
+new_attach() { # new_attach <shell-pid> <attached cli pids before>: a NEW complete chain whose cli descends from the pane's shell; sets ATT
+  local c cs s ss x xs
+  while read -r _ c cs s ss x xs; do
+    case " $2 " in *" $c "*) continue ;; esac
+    ancestors "$c" | grep -xF "$1" >/dev/null || continue
+    ATT="$c:$cs $s:$ss $x:$xs"
+    return 0
+  done < <(client_snap | grep '^attached ')
+  return 1
+}
+pane_attach() { # pane_attach <label> -> sets PANE, ATT; a NEW pane whose `openshell sandbox connect` chain is up
+  local label=$1 plist base before
   plist=$(pane_ids)
   if [ -z "$plist" ]; then
     PANE=$(H workspace create --cwd "$E" --label demo --no-focus | "$JQ" -r '.result.root_pane.pane_id')
@@ -1024,16 +1128,49 @@ pane_attach() { # pane_attach <label> -> sets PANE; a NEW pane running `openshel
     PANE=$(H pane split "$base" --direction right --cwd "$E" --no-focus | "$JQ" -r '.result.pane.pane_id')
   fi
   [ -n "$PANE" ] && [ "$PANE" != null ] || { echo "could not create pane" >&2; return 1; }
-  want=$(($(clients) + 1))
+  PSHELL=
+  ATT=
+  poll 5 0.5 pane_shell_known "$PANE" || { echo "no shell pid for $PANE" >&2; attach_diag "$label"; return 1; }
+  before=$(client_snap | awk '$1 == "attached" { print $2 }' | tr '\n' ' ')
   H pane run "$PANE" "$E/wrap/openshell -g $GW sandbox connect $GW" >/dev/null
-  wait_for 20 clients_ge "$want" || { echo "connect client did not appear in $PANE" >&2; return 1; }
-  log "pane $PANE ($label): connect attached (clients=$(clients))"
+  if ! wait_for 20 new_attach "$PSHELL" "$before"; then
+    echo "no new cli -> ssh -> proxy chain under $PANE's shell $PSHELL ($(client_counts))" >&2
+    attach_diag "$label"
+    return 1
+  fi
+  PANE_CLIENT[$PANE]=$ATT
+  log "pane $PANE ($label): attached cli/ssh/proxy=$ATT under shell $PSHELL ($(client_counts))"
+}
+# attach_diag <label>: appended to obs/attach-<label>.txt, redacted. Run-scoped processes only
+# (unrelated ones are counted, never described); ssh/proxy argv carry --token, which redact masks.
+attach_diag() {
+  local p tree=()
+  if [[ ${PSHELL:-} =~ ^[0-9]+$ ]]; then mapfile -t tree < <({ echo "$PSHELL"; descendants "$PSHELL"; }); fi
+  {
+    echo "# attach diagnostics $1: pane=$PANE shell=${PSHELL:-unknown} $(date -u +%FT%TZ)"
+    echo "## counts: $(client_counts)"
+    echo "## run-scoped client processes (class pid start ppid) and chains"
+    client_snap | awk '$1 != "other"'
+    echo "## pane process-info"
+    H pane process-info --pane "$PANE" 2>&1 | "$JQ" -c '.result.process_info|{shell_pid,fg:[.foreground_processes[]|.cmdline]}' 2>&1
+    if [ "${#tree[@]}" -gt 0 ]; then
+      echo "## process tree under the pane shell: exe paths, then ps"
+      for p in "${tree[@]}"; do echo "$p ppid=$(ppid_of "$p") start=$(proc_start "$p") exe=$(readlink "/proc/$p/exe" 2>/dev/null)"; done
+      ps -ww -o pid,ppid,pgid,lstart,args -p "$(IFS=,; echo "${tree[*]}")" 2>&1
+    fi
+    echo "## gateway SSH-session / relay log lines (last 20)"
+    grep -E 'CreateSshSession|ForwardTcp|relay' "$E/logs/gateway.log" 2>/dev/null | tail -n 20
+    echo "## pane visible text"
+    H pane read "$PANE" --source visible --lines 40 2>&1
+    echo "## pane recent text (last 80 of 300 lines)"
+    H pane read "$PANE" --source recent --lines 300 2>&1 | tail -n 80
+  } 2>&1 | redact >>"$E/obs/attach-$1.txt"
 }
 close_all_panes() {
   local p plist=()
   mapfile -t plist < <(pane_ids)
   for p in "${plist[@]}"; do [ -n "$p" ] && H pane close "$p" >/dev/null 2>&1; done
-  wait_for 15 clients_eq 0
+  wait_for 15 no_client_procs
 }
 type_line() { H pane send-text "$1" "$2" >/dev/null; H pane send-keys "$1" Enter >/dev/null; } # <pane> <text>
 mark() { # mark <pane> <word>: type "mark <word>"; wait for ACK in the log and in the pane
@@ -1514,7 +1651,7 @@ snap 00-initial
 
 # ====================================================================== A1
 run_a1() {
-  local out=$E/obs/create.out err=$E/obs/create.err n_ack why='' sp i bad=0 p d centry chain=() others=()
+  local out=$E/obs/create.out err=$E/obs/create.err n_ack why='' sp i rc bad=0 p d centry chain=() others=()
   step A1
   # create in the background so its pid+start can be recorded (A7a needs them)
   env -i "${CENV_VARS[@]}" "$E/wrap/openshell" -g "$GW" sandbox create --detach --tty --name "$GW" --from "$WORKLOAD" \
@@ -1544,14 +1681,23 @@ run_a1() {
   load_counter_id a1
   save_out a1
   log "fd0 of the counter: $(kv "$E/obs/a1-identity.txt" fd0)"
-  # attach the first pane
-  pane_attach a1 || { record A1 FAIL "could not attach a pane"; stop "A1 attach"; }
-  wait_for 20 has_ssh || why="$why;no ssh child with $E/ssh_config"
+  # attach the first pane. The ACK is the primary evidence; the process chain corroborates it.
+  # If the chain is not found, still type `mark a1` and record whether it ACKs before stopping.
+  if ! pane_attach a1; then
+    rc=0
+    mark "$PANE" a1 || rc=$?
+    { echo "## after typing 'mark a1': mark rc=$rc (0: ACK in log and pane; 1: no ACK in log; 2: ACK in log only)"
+      echo "ack line: $(ack_line a1)"; } | redact >>"$E/obs/attach-a1.txt"
+    attach_diag a1
+    snap 01-a1-attach-failed
+    record A1 FAIL "attach not corroborated by process accounting ($(client_counts)); mark a1 rc=$rc$([ "$rc" = 0 ] && echo ' (ACK seen: process model wrong, later client assertions unreliable)'); see obs/attach-a1.txt"
+    stop "A1 attach"
+  fi
   clients_detail
   snap 01-a1-attached
   # the counter chain (hpid -> wpid -> conmon -> ...) must have no herdr/ssh/CLI ancestor
   mapfile -t chain < <(ancestors "$HPIDC")
-  mapfile -t others < <({ echo "$HERDR_PID"; echo "$CREATE_PID"; clients_pids; ssh_pids; })
+  mapfile -t others < <({ echo "$HERDR_PID"; echo "$CREATE_PID"; clients_pids; ssh_pids; proxy_pids; })
   for p in "${chain[@]}"; do echo "$p $(proc_comm "$p")"; done >"$E/snaps/a1-counter-chain.txt"
   for p in "${chain[@]}"; do
     for d in "${others[@]}"; do [ "$p" = "$d" ] && bad=1; done
@@ -1560,17 +1706,18 @@ run_a1() {
   echo "chain-check: $([ "$bad" = 0 ] && echo no-herdr-ssh-cli-ancestor || echo UNEXPECTED-ANCESTOR)" >>"$E/snaps/a1-counter-chain.txt"
   echo "counter chain: $(tr '\n' ';' <"$E/snaps/a1-counter-chain.txt")" >>"$E/setup-lineage.txt"
   [ "$bad" = 0 ] || why="$why;counter has a herdr/ssh/cli ancestor"
-  sp=$(ssh_pids | sed -n '1p')
+  sp=$(att_ssh "$ATT") # this pane's transport ssh
   if [ -n "$sp" ]; then
     { echo "ssh pid=$sp peers:"; unix_peers "$sp"; } >"$E/obs/a1-ssh-peers.txt"
     if unix_peers "$sp" | grep -E -e "/run/user/$UID_/" -e 'agent' -e 'gnupg' >/dev/null; then why="$why;ssh has an agent-like unix peer"; fi
   fi
   mark "$PANE" a1 || why="$why;mark a1 rc=$?"
   verify_ack a1 0 || why="$why;ACK identity mismatch: $(ack_line a1)"
+  att_alive "$ATT" || why="$why;the pane's cli/ssh/proxy ($ATT) did not stay up through the ACK"
   n_ack=$ACKN
   save_out a1-acked
   if [ -z "$why" ]; then
-    record A1 PASS "ACK in log and pane: pid=$CPID start=$CSTART nonce=$CNONCE n=$n_ack; instance=$(kv "$E/obs/a1-identity.txt" instance_id) hpid=$HPIDC hstart=$(kv "$E/obs/a1-identity.txt" hstart) cread=$(tail -n 1 "$E/obs/cread-method.txt")"
+    record A1 PASS "ACK in log and pane: pid=$CPID start=$CSTART nonce=$CNONCE n=$n_ack; instance=$(kv "$E/obs/a1-identity.txt" instance_id) hpid=$HPIDC hstart=$(kv "$E/obs/a1-identity.txt" hstart) cread=$(tail -n 1 "$E/obs/cread-method.txt"); client cli/ssh/proxy=$ATT"
   else
     record A1 FAIL "${why#;}"
   fi
@@ -1583,8 +1730,8 @@ run_a2() {
   step A2
   n0=$(last_n)
   H pane close "$PANE" >/dev/null
-  wait_for 10 clients_eq 0 || why="$why;connect client still present"
-  wait_for 10 no_ssh || why="$why;ssh child still present"
+  wait_for 10 att_gone "${PANE_CLIENT[$PANE]:-}" || why="$why;the pane's cli/ssh/proxy (${PANE_CLIENT[$PANE]:-unknown}) still present"
+  wait_for 10 no_client_procs || why="$why;connect/ssh/proxy processes still present ($(client_counts))"
   clients_detail
   sbx_json a2 && [ "$(sbx_phase a2)" = Ready ] || why="$why;phase not Ready"
   ident_wait a2 30 || why="$why;identity not collectable"
@@ -1593,7 +1740,7 @@ run_a2() {
   N_A2=$(last_n)
   save_out a2
   snap 02-a2-detached
-  if [ -z "$why" ]; then record A2 PASS "pane closed, clients=0, ssh=0, phase Ready, identity unchanged, n $n0 -> $N_A2 with no client"
+  if [ -z "$why" ]; then record A2 PASS "pane closed, no cli/ssh/proxy left, phase Ready, identity unchanged, n $n0 -> $N_A2 with no client"
   else record A2 FAIL "${why#;}"; fi
   if ident_changed a1 a2; then stop "A2 identity change in A1-A4"; fi
 }
@@ -1648,9 +1795,9 @@ restart_test() { # restart_test <a|b> <clean|kill>
   fi
   GUARD_OK=0
   wait_for 10 gone "$old" "$old_start" || why="$why;old server pid $old still alive"
-  wait_for 10 clients_eq 0 || {
-    why="$why;connect clients survived the server ($(clients))"
-    mapfile -t strays < <({ clients_pids; ssh_pids; })
+  wait_for 10 no_client_procs || {
+    why="$why;connect clients survived the server ($(client_counts))"
+    mapfile -t strays < <({ clients_pids; ssh_pids; proxy_pids; })
     for p in "${strays[@]}"; do [ -n "$p" ] && track "stray-$p" "$p"; done # cleanup signals them (verified)
   }
   # the counter must keep progressing without Herdr and without any client
@@ -1661,7 +1808,7 @@ restart_test() { # restart_test <a|b> <clean|kill>
   snap "04$id-herdr-restarted"
   {
     echo "pane ids before stop: $(cat "$E/obs/a4$id-panes-before.json")"
-    echo "connect clients after herdr restart (before new pane): $(clients)"
+    echo "connect clients after herdr restart (before new pane): $(client_counts)"
     mapfile -t rpanes < <(pane_ids)
     for rp in "${rpanes[@]}"; do
       echo "--- restored pane $rp process-info:"
@@ -1773,6 +1920,7 @@ run_a5a() {
 }
 
 A5B_TICK_DOWN=
+a5b_cli_alive() { local e=${PANE_CLIENT[$PANE]:-}; e=${e%% *}; [ -n "$e" ] && alive_same "${e%%:*}" "${e#*:}" && echo yes || echo no; } # supervised CLI survives a transport loss
 a5b_pane_ticks() { H pane read "$PANE" --source visible --lines 40 2>/dev/null | ticks_last; }
 run_a5b() {
   local n_pre t_kill t_gw rr ready=no auto=no tn now cls note='' pane_before=$PANE
@@ -1789,9 +1937,9 @@ run_a5b() {
   sig KILL "$(printf 'gateway:%s:%s' "$GWPID" "$GWSTART")" || { record A5b FAIL "refusing to signal an unverified gateway pid"; stop "A5b gateway pid"; }
   poll 10 0.5 gone "$GWPID" "$GWSTART" || note="$note;gateway still alive after SIGKILL"
   sleep 2; a5_sample a5b down+2s
-  { echo "clients=$(clients) ssh=$(ssh_pids | grep -c .)"; H pane read "$PANE" --source visible --lines 40 2>&1; } >"$E/panes/a5b-down+2s.txt"
+  { echo "$(client_counts); this pane's cli ${PANE_CLIENT[$PANE]:-unknown} alive=$(a5b_cli_alive)"; H pane read "$PANE" --source visible --lines 40 2>&1; } | redact >"$E/panes/a5b-down+2s.txt"
   sleep 8; a5_sample a5b down+10s
-  { echo "clients=$(clients) ssh=$(ssh_pids | grep -c .)"; H pane read "$PANE" --source visible --lines 40 2>&1; } >"$E/panes/a5b-down+10s.txt"
+  { echo "$(client_counts); this pane's cli ${PANE_CLIENT[$PANE]:-unknown} alive=$(a5b_cli_alive)"; H pane read "$PANE" --source visible --lines 40 2>&1; } | redact >"$E/panes/a5b-down+10s.txt"
   A5B_TICK_DOWN=$(a5b_pane_ticks)
   snap 05b-gateway-down
   # restart immediately after the +10 s sample
@@ -1820,7 +1968,7 @@ run_a5b() {
   fi
   if [ "$auto" = no ]; then
     H pane close "$pane_before" >/dev/null 2>&1
-    wait_for 15 clients_eq 0
+    wait_for 15 no_client_procs
     pane_attach a5b || note="$note;new pane could not attach"
     mark "$PANE" a5b2 || note="$note;mark a5b2 rc=$?"
     verify_ack a5b2 0 || note="$note;ACK check failed: $(ack_line a5b2)"
@@ -1849,7 +1997,9 @@ run_a6() {
   mark "$p1" a6w || why="$why;owner mark a6w rc=$?"
   verify_ack a6w "${n0:-0}" || why="$why;a6w ACK mismatch"
   H pane close "$p1" >/dev/null
-  wait_for 15 clients_eq 1 || why="$why;clients != 1 after closing pane 1 ($(clients))"
+  wait_for 15 att_gone "${PANE_CLIENT[$p1]:-}" || why="$why;pane 1's cli/ssh/proxy (${PANE_CLIENT[$p1]:-unknown}) still present"
+  wait_for 15 clients_eq 1 || why="$why;clients != 1 after closing pane 1 ($(client_counts))"
+  log "A6: pane 2's chain ${PANE_CLIENT[$p2]:-unknown} unchanged after pane 1 closed: $(att_alive "${PANE_CLIENT[$p2]:-}" && echo yes || echo no)"
   type_line "$p2" "mark a6ro2"
   wait_for 5 ack_present a6ro2 || { sleep 1; type_line "$p2" "mark a6ro2"; wait_for 10 ack_present a6ro2 || why="$why;no ACK a6ro2 after owner released"; }
   H pane read "$p2" --source recent --lines 300 >"$E/panes/a6-viewer.txt" 2>&1 # scrollback: the notices may have scrolled off

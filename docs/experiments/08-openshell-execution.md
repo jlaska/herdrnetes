@@ -2,7 +2,7 @@
 
 **Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan [PLAN.md](../../experiments/exp-008/local/PLAN.md); two authorized attempts, **both stopped at A1**; A2–A7 have not run and the research question is unanswered.
 - Run `1122-220034` stopped at `sandbox create`: Podman healthcheck timers need the user systemd socket.
-- The retry, run `1123-072024`, applied the owner-approved correction. The sandbox reached Ready with the counter as its canonical main process, and its identity was recorded. It then stopped at the first pane attach on a harness defect: in a terminal, `sandbox connect` exec-replaces itself with `ssh`.
+- The retry, run `1123-072024`, applied the owner-approved correction. The sandbox reached Ready with the counter as its canonical main process, and its identity was recorded. It then stopped at the first pane attach on a harness defect: an argv glob in the attach predicate could never match `sandbox connect`. The first diagnosis (that `connect` exec-replaces itself with `ssh`) was wrong. In v0.1.9 the CLI supervises a child `ssh` (FIND-080, revised). The harness correction is committed but has not been run; a third run needs separate authorization.
 
 Results, findings and a proposed correction (not authorized to run): [experiments/exp-008/local/README.md](../../experiments/exp-008/local/README.md).
 
@@ -29,8 +29,7 @@ Reattaching was manual (FIND-072). The OpenShell properties this experiment reli
 - **C:** a real agent with an egress-substituted credential. It covers work through a pane close (the EXP-006 K03 gap) and workload-pod loss, classified as resume rather than continuity.
 
 **Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/), [run 1123-072024](../../experiments/exp-008/local/evidence/1123-072024/).
-- FIND-078 and FIND-079 are accepted at their stated scopes.
-- FIND-077 is proposed, pending validation.
-- FIND-080 is proposed.
+- FIND-077, FIND-078 and FIND-079 are accepted at their stated scopes (FIND-077: observed, single workstation).
+- FIND-080 is proposed (revised: supervised `connect` spawns `ssh`; the earlier exec-replace statement is withdrawn).
 
 **Requirements:** REQ-009, REQ-011. **Related:** EXP-006 ([#7](https://github.com/jlaska/herdrnetes/issues/7)), FIND-071/074/076.
