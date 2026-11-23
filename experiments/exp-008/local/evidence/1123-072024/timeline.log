@@ -1,0 +1,33 @@
+07:29:26.191 run 1123-072024 root=/tmp/hx8/1123-072024 port=23886 gateway=exp008-1123-072024 budget=1800s
+07:29:26.197 STEP P3 (t+1s)
+07:29:26.202 run 1123-072024: herdr=herdr 0.9.5
+07:29:26.207 P3 PASS tools
+07:29:26.571 P3 PASS baseline-B1
+07:29:26.572 P3 PASS containers-conf
+07:29:26.782 P3 PASS podman-service
+07:29:27.025 P3 PASS podman-store-isolation
+07:29:27.139 P3 PASS podman-socket
+07:29:32.980 P3 PASS pinned-images
+07:29:33.195 P3 PASS cgroup-limits-probe
+07:29:45.680 P3 PASS healthcheck-probe
+07:29:45.687 HC-GATE waiting up to 600s for /tmp/hx8/1123-072024/hc-gate (status_1s=absent status_12s=absent)
+07:30:15.741 HC-GATE decision: proceed
+07:30:15.745 P3 PASS healthcheck-readiness-gate
+07:30:15.811 P3 PASS tls-certs
+07:30:15.813 P3 PASS gateway-toml
+07:30:15.820 P3 PASS gateway-preflight
+07:30:16.143 gateway (gateway-1) pid=1405059 start=41653538 listening on 127.0.0.1:23886
+07:30:16.144 P3 PASS gateway-start
+07:30:16.276 P3 PASS gateway-register
+07:30:16.289 P3 PASS mtls-negative
+07:30:16.303 P3 PASS ssh-no-agent
+07:30:16.325 herdr server (initial) pid=1405204 start=41653587
+07:30:16.605 P3 PASS herdr-start
+07:30:16.790 RESULT P3 PASS isolation gate: dedicated store+socket, loopback mTLS gateway, ssh without agent, herdr under /tmp/hx8/1123-072024/e
+07:30:16.984 STEP A1 (t+51s)
+07:30:16.988 create CLI pid=1405372 start=41653655
+07:30:18.104 sandbox Ready id=7d329b8a-f42c-4c99-82fd-39cf1d444686
+07:30:18.559 fd0 of the counter: unreadable
+07:30:38.178 RESULT A1 FAIL could not attach a pane
+07:30:38.180 STOP A1 attach
+07:30:38.182 cleanup start (exit=1)

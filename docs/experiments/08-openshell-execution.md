@@ -1,6 +1,10 @@
 # EXP-008: OpenShell-owned execution with Herdr as a disposable client
 
-**Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan [PLAN.md](../../experiments/exp-008/local/PLAN.md) was approved for one run. Run `1122-220034` (2026-11-23) passed the P1–P3 isolation gate and **stopped at A1**: `sandbox create` failed in the isolated Podman service (Podman healthcheck timers need the user systemd socket). A2–A7 were not run, and the research question is unanswered. Results and a proposed correction for owner review: [experiments/exp-008/local/README.md](../../experiments/exp-008/local/README.md).
+**Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan [PLAN.md](../../experiments/exp-008/local/PLAN.md); two authorized attempts, **both stopped at A1**; A2–A7 have not run and the research question is unanswered.
+- Run `1122-220034` stopped at `sandbox create`: Podman healthcheck timers need the user systemd socket.
+- The retry, run `1123-072024`, applied the owner-approved correction. The sandbox reached Ready with the counter as its canonical main process, and its identity was recorded. It then stopped at the first pane attach on a harness defect: in a terminal, `sandbox connect` exec-replaces itself with `ssh`.
+
+Results, findings and a proposed correction (not authorized to run): [experiments/exp-008/local/README.md](../../experiments/exp-008/local/README.md).
 
 **Hypothesis (not an adopted architecture).** OpenShell can replace EXP-006's custom tmux/SSH execution ownership. Its gateway would own the agent session's lifecycle, its sandbox would provide policy-based isolation, and Herdr panes would only attach to the session as disposable clients. Production integration is not authorized, and ADR-0001 is unchanged.
 
@@ -24,4 +28,9 @@ Reattaching was manual (FIND-072). The OpenShell properties this experiment reli
 - **B:** the Kubernetes driver in a scratch namespace (cluster-scoped Agent Sandbox controller/CRD and gateway RBAC).
 - **C:** a real agent with an egress-substituted credential. It covers work through a pane close (the EXP-006 K03 gap) and workload-pod loss, classified as resume rather than continuity.
 
-**Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/) (stopped at A1; proposed FIND-077–079, not accepted). **Requirements:** REQ-009, REQ-011. **Related:** EXP-006 ([#7](https://github.com/jlaska/herdrnetes/issues/7)), FIND-071/074/076.
+**Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/), [run 1123-072024](../../experiments/exp-008/local/evidence/1123-072024/).
+- FIND-078 and FIND-079 are accepted at their stated scopes.
+- FIND-077 is proposed, pending validation.
+- FIND-080 is proposed.
+
+**Requirements:** REQ-009, REQ-011. **Related:** EXP-006 ([#7](https://github.com/jlaska/herdrnetes/issues/7)), FIND-071/074/076.

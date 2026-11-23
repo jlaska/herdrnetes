@@ -1,0 +1,2 @@
+#!/usr/bin/bash
+exec /usr/bin/ssh -F "/tmp/hx8/1123-072024/e/ssh_config" -o IdentityAgent=none -o IdentitiesOnly=yes -o IdentityFile=none -o PKCS11Provider=none -o ForwardAgent=no "$@"

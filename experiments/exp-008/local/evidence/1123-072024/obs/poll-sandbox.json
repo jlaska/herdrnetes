@@ -1,0 +1,92 @@
+{
+  "annotations": {
+    "internal.openshell.ai/auth-epoch": "1",
+    "internal.openshell.ai/gateway-token-id": "9be4717a-f544-4fda-84c8-f637a6c2379b",
+    "internal.openshell.ai/isolation-backend": "openshell-sandbox",
+    "internal.openshell.ai/runtime-generation": "8f3e7195-9183-438e-a326-04ab8d73c58e"
+  },
+  "conditions": [
+    {
+      "last_transition_time": "",
+      "message": "Supervisor session connected",
+      "reason": "DependenciesReady",
+      "status": "True",
+      "type": "Ready"
+    },
+    {
+      "last_transition_time": "",
+      "message": "",
+      "reason": "ConfigurationAccepted",
+      "status": "True",
+      "type": "ConfigurationReady"
+    }
+  ],
+  "configuration_admission": {
+    "config_revision": 16709790733110020355,
+    "error": "",
+    "policy_hash": "a45a8ff3564f00ae26cbd66f1131f37eedd8b54a66fbfec103d65a204c19c6e8",
+    "policy_version": 1,
+    "provider_env_revision": 3176606324465211593,
+    "state": "accepted"
+  },
+  "created_at": "2026-11-23 12:30:17",
+  "created_from_workload_template": null,
+  "current_policy_version": 1,
+  "endpoint_statuses": [],
+  "exit_code": null,
+  "host_key_fingerprint": "SHA256:/YqdJri2hj4SWXsIikGkcj+tPorbNhN8q/P3IUcn8oY",
+  "id": "7d329b8a-f42c-4c99-82fd-39cf1d444686",
+  "labels": {
+    "exp008.run": "1123-072024"
+  },
+  "last_token_grant_failure": null,
+  "main_process_instance_id": "1c8ae6af-20d8-41d4-aa07-2410b9ca2f5a",
+  "main_process_started_at_ms": 1795437017729,
+  "name": "exp008-1123-072024",
+  "next_restart_at_ms": 0,
+  "phase": "Ready",
+  "policy": {
+    "filesystem_policy": {
+      "include_workdir": true,
+      "read_only": [
+        "/bin",
+        "/usr",
+        "/lib",
+        "/proc",
+        "/dev/urandom",
+        "/etc",
+        "/var/log"
+      ],
+      "read_write": [
+        "/tmp",
+        "/dev/null"
+      ]
+    },
+    "landlock": {
+      "compatibility": "best_effort"
+    },
+    "version": 1
+  },
+  "policy_source": "sandbox",
+  "provisioning": {
+    "admission_start_time": "2026-11-23T12:30:17.688Z",
+    "attempt_id": "52228cd9-1938-48be-96e8-ff48a20c5e47",
+    "cleanup_completed_time": null,
+    "cleanup_error": "",
+    "cleanup_retry_time": null,
+    "configuration_change_id": "aac38bec6d921248b546901450130641b8101bd1535ed36dc455bf28f5771c3f",
+    "configuration_change_time": "2026-11-23T12:30:17.694Z",
+    "deadline": null,
+    "driver_operation_id": "ea1e119c-72c6-4003-b493-9e2a88f511cc",
+    "driver_operation_pending": false,
+    "first_rejection_time": null,
+    "phase": "ready",
+    "preparation_deadline": "2026-11-23T13:00:17.060Z",
+    "timeout_time": null
+  },
+  "resource_version": 16,
+  "restart_count": 0,
+  "restart_policy": "never",
+  "revision": 1,
+  "workspace": "default"
+}

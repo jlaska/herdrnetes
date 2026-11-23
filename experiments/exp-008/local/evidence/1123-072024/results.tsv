@@ -1,0 +1,3 @@
+P3	PASS	isolation gate: dedicated store+socket, loopback mTLS gateway, ssh without agent, herdr under /tmp/hx8/1123-072024/e
+A1	FAIL	could not attach a pane
+STOP	STOP	A1 attach

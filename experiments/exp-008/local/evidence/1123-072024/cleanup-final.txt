@@ -1,0 +1,19 @@
+# final-state verification 2026-11-23T12:30:49Z; intermediate classification: RESIDUE
+intermediate RESIDUE notes kept in cleanup.txt: 2
+run root absent
+recorded and swept processes verified gone: 10
+no process carries this run's markers
+no unix socket under the run root
+port 23886 closed
+no mount under the run root in any readable mount namespace
+final-vs-B1 openshell-config.txt: identical
+final-vs-B1 openshell-state.txt: identical
+final-vs-B1 ssh-meta.txt: identical
+final-vs-B1 listeners.txt: identical
+final-vs-B1 podman-default.txt: identical
+final-vs-B1 systemd-units.txt: identical
+final-vs-B0 openshell-config.txt: identical
+final-vs-B0 openshell-state.txt: identical
+final-vs-B0 ssh-meta.txt: identical
+final-vs-B0 listeners.txt: identical
+FINAL CLASSIFICATION: CLEAN
