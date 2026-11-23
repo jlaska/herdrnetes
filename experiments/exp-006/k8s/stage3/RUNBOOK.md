@@ -1,4 +1,4 @@
-# EXP-006 stage 3: Kubernetes real-agent G1 package and runbook (run `s3a`: INCONCLUSIVE, stopped at K02 on API credit; see [`../evidence/s3a/`](../evidence/s3a/README.md))
+# EXP-006 stage 3: Kubernetes real-agent G1 package and runbook (run `s3a`: INCONCLUSIVE, no API credit, [`../evidence/s3a/`](../evidence/s3a/README.md); run `s3b`: continuity PASS, K03 work-while-detached INCONCLUSIVE, [`../evidence/s3b/`](../evidence/s3b/README.md))
 
 Issue [#7](https://github.com/jlaska/herdrnetes/issues/7) · REQ-009 · ADR-0001 unchanged · **Status: the execution image is built, smoke-tested and published (see Image). Nothing has been applied to a cluster or run, and no API key exists. G1 needs a new owner approval, and separately the owner-created key and $5 budget.**
 Reviewed commit: the PR head SHA named in the G1 approval (a file cannot name its own commit). Stage 2 ([`../RUNBOOK.md`](../RUNBOOK.md), run `s2a`, CLEAN) is unchanged.

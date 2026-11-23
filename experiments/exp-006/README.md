@@ -71,10 +71,17 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
   and blocked other destinations. The first inference request failed with *"Credit balance is too low"*: the K00b
   models lookup checks that the key authenticates, not that it can spend. The runbook's `for shortcuts` readiness
   match does not appear in `dontAsk` mode. → REQ-009. Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md).
+- **FIND-076: A real Claude Code process and its conversation survive pane closure and Herdr pod replacement.**
+  [observed, Kubernetes, single real-agent run `s3b` on Claude Haiku 5.5, proposed] With tmux owning the PTY in the exec
+  pod, the same `pid`/start time and session ID persisted across a pane close and a scratch Herdr pod delete/recreate.
+  The agent answered with the codeword from its first prompt after each reattachment, and kept editing and testing
+  while the Herdr pod was absent and no client was attached. Limits: the work observed during absence lasted about 3 s.
+  Work through a pane close while busy was not observed, because the task finished first. One run. This extends
+  FIND-074 from a synthetic counter to a real agent. → REQ-009. Evidence: [`k8s/evidence/s3b/`](k8s/evidence/s3b/README.md).
 
 ## Limitations and open questions
 
-- Stage 1 is local only. Stage 2 (Kubernetes over SSH) passed once with the synthetic counter. No real agent has been tested yet (stage 3 is **NOT TESTED**).
+- Stage 1 is local only. Stage 2 (Kubernetes over SSH) passed once with the synthetic counter. A real agent was tested once in stage 3 (run `s3b`, FIND-076).
 - Herdr shows the attached session as an ordinary pane. It has no agent status or transcript integration. These are
   future enhancements and were not attempted.
 - Reattach after a Herdr restart is manual. Automating it (pane command, shell rc, or Herdr's own agent-resume
@@ -128,7 +135,7 @@ The summary below is the original design.
   - K06: label-guarded namespace deletion, positive absence check, and recheck of the live baseline.
 - Untouched: the live Herdr StatefulSet and its PVCs, Argo CD and Longhorn.
 
-## Stage 3 (Kubernetes, real agent): run `s3a` INCONCLUSIVE (stopped at K02: API credit balance too low); cleanup CLEAN, key revoked
+## Stage 3 (Kubernetes, real agent): run `s3b` PASS for process and conversation continuity (K03 work-while-detached INCONCLUSIVE); `s3a` INCONCLUSIVE (no API credit)
 
 The real-agent test runs in Kubernetes, not locally. The package is [`k8s/stage3/RUNBOOK.md`](k8s/stage3/RUNBOOK.md)
 with its manifests (including a Cilium FQDN egress allow for `api.anthropic.com:443` only) and the agent execution
@@ -136,16 +143,23 @@ image in [`exec-image-agent/`](exec-image-agent/) (Claude Code 2.1.323 under tmu
 no-key, no-egress smoke test). The image was built from `b6e3c92` by owner-dispatched
 [CI run 45083319378](https://github.com/jlaska/herdrnetes/actions/runs/45083319378), passed smoke tests A–E before the
 push, and is pinned (anonymously pullable) as
-`ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18`. Nothing has
-been applied to a cluster or run, and no API key exists. G1 needs a new owner approval, and separately an owner-created
-key in a $5-limited workspace.
+`ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18`. Each run
+used an owner-created temporary key in a dedicated workspace capped at $5, deleted after the run.
 
 **Run `s3a` (owner-approved G1 at `83e3471`, 2026-11-23 UTC): INCONCLUSIVE.** K00, K00b and K01 passed. Claude Code
 2.1.323 started on `claude-haiku-5-5` under PSA restricted with no dialog, and the FQDN egress probes behaved as
 designed. The first inference request was rejected with *"Credit balance is too low"*, so the agent did no work and
 K03/K04 were not run. Identity stayed `pid=25 start=31889030` throughout; spend $0.00 (owner saw no token spend for the key). K06 cleanup was CLEAN
-(baselines byte-identical; the owner revoked the key and shredded the key file). Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md). Continuity of a real agent
-remains **NOT TESTED**.
+(baselines byte-identical; the owner revoked the key and shredded the key file). Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md). It was not a test of continuity.
+
+**Run `s3b` (owner-approved retry at `f4197df`, 2026-11-23 UTC): PASS for process and conversation continuity; K03
+work-while-detached INCONCLUSIVE; cleanup CLEAN, key deleted.** The runbook gained a billable K00b check and a
+footer-independent K02 readiness check. One Claude Code process (`pid=25 start=32103078`, one session, one transcript,
+no `--resume`, no exec-pod restart) survived a pane close and the deletion and recreation of the scratch Herdr pod. It
+returned the P1-only codeword after both reattachments (Q1, Q2). It completed f07, f08 and `DONE-B` while the Herdr pod
+was deleted and no tmux client was attached, about 3 s of work. Haiku finished P1 in 6.5 s, before the pane could be
+closed, so work during the pane close itself was not observed. Final task count 8/12. Evidence:
+[`k8s/evidence/s3b/`](k8s/evidence/s3b/README.md).
 
 ## Stage 3, local bwrap harness (historical preparation, kept, not developed further)
 

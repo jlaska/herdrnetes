@@ -1,0 +1,15 @@
+--- allowed
+allowed ok 443
+rc=0
+--- 1.1.1.1:443 (must fail)
+TimeoutError: timed out
+command terminated with exit code 1
+rc=1
+--- example.com (must fail)
+command terminated with exit code 1
+rc=1
+--- PSA labels
+{"pod-security.kubernetes.io/audit":"restricted","pod-security.kubernetes.io/enforce":"restricted","pod-security.kubernetes.io/warn":"restricted"}
+--- exec pod hardening
+{"sa_token":false,"pod":{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"c":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true},"dns":{"options":[{"name":"ndots","value":"1"}]}}
+options ndots:1
