@@ -147,11 +147,12 @@ anything is committed.
 
 **K00 read-only preflight.** `ctx_ok && live_ok && run_ok && baseline >"$WORK/ev/k00.txt"` (no output file means stop); `$K get ns "$NS"` must print `Error from server (NotFound)`; `$K get ns -l herdrnetes.io/experiment=exp-006` lists none; `$K get crd ciliumnetworkpolicies.cilium.io` exists. Expected: all guards pass (rendered manifests name only `$NS` and no placeholder remains, so the exec image digest is pinned), all nodes Ready, at least 3 schedulable nodes (two besides the live Herdr node), `herdr-0` Running, Argo CD app Synced/Healthy.
 
-**K00b model check (credentialed approval only; no Kubernetes access).** `KEY_FILE` is owner-supplied, mode 0600, outside the repo, and never printed. The key goes through a process substitution, not argv:
+**K00b model and billing check (credentialed approval only; no Kubernetes access).** `KEY_FILE` is owner-supplied, mode 0600, outside the repo, and never printed. The key goes through a process substitution, not argv, and response bodies go to `/dev/null` (only the HTTP status is printed). The models lookup shows the key authenticates and the model exists, but it is not billed, so it does not show the key can spend (run `s3a` passed it and then failed on credit). The second request is a minimal billable inference (`max_tokens: 1`, thinking off; a fraction of a cent):
 ```
 curl -sS -o /dev/null -w '%{http_code}\n' -H @<(printf 'x-api-key: %s\nanthropic-version: 2023-06-01\n' "$(cat "$KEY_FILE")") https://api.anthropic.com/v1/models/claude-haiku-5-5
+curl -sS -o /dev/null -w '%{http_code}\n' -H @<(printf 'x-api-key: %s\nanthropic-version: 2023-06-01\ncontent-type: application/json\n' "$(cat "$KEY_FILE")") -d '{"model":"claude-haiku-5-5","max_tokens":1,"thinking":{"type":"disabled"},"messages":[{"role":"user","content":"ok"}]}' https://api.anthropic.com/v1/messages
 ```
-Expected `200`. Anything else: stop (nothing has been created).
+Expected `200` from both. Anything else: stop (nothing has been created).
 
 **K01 namespace, network, secrets, exec pod.**
 ```
@@ -186,10 +187,11 @@ MN create -f "$WORK/m/herdr-pod.yaml" && $K -n "$NS" wait --for=condition=Ready 
 ATTACH='ssh -i /run/exp006/client/id_ed25519 -o IdentitiesOnly=yes -o IdentityAgent=none -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/run/exp006/client/known_hosts -o HostKeyAlias=exp006-exec -o UpdateHostKeys=no -p 2222 -t herdr@exp006-exec'
 newpane() { H workspace create --cwd /tmp --label "$1" --no-focus | jq -r .result.root_pane.pane_id; }
 attach() { P=$(newpane "$1") && [ -n "$P" ] && [ "$P" != null ] && H pane run "$P" "$ATTACH" && sleep 5; }
-attach k02 && H pane wait-output "$P" --match 'for shortcuts' --source visible --timeout 60000
+attach k02 && H pane wait-output "$P" --match 'Claude Code v2.1.323' --source visible --timeout 60000 && sleep 5
 H pane read "$P" --source visible --lines 45 >"$WORK/ev/pane-k02-ready.txt"; grep -iE 'log ?in|sign ?in|api key|trust|onboarding|theme|select|choose' "$WORK/ev/pane-k02-ready.txt"
+grep -c '^─\{20,\}' "$WORK/ev/pane-k02-ready.txt"   # the input box: a rule line above and below the prompt line
 ```
-The `grep` must print nothing and the pane must show the Claude Code prompt; a login, onboarding, trust or other dialog is a stop condition (never click through it). Then, still one command at a time:
+Readiness does not depend on footer text (the footer changes with the permission mode; in `dontAsk` it reads `don't ask on (shift+tab to cycle)`, not `? for shortcuts`, run `s3a`). Expected: the wait finds the Claude Code banner; the dialog `grep` prints nothing (exit 1); the rule-line count is at least 2, meaning the empty input box is drawn; and a review of `pane-k02-ready.txt` shows the banner with the model line, the input box and no dialog. A login, onboarding, trust or other dialog is a stop condition (never click through it). Then, still one command at a time:
 ```
 CODE=$(od -An -N6 -tx1 /dev/urandom | tr -d ' \n')    # operator shell only; never written to a file or committed
 T0=$(X date +%s)                                       # the pod's clock: progress and transcript timestamps are in pod time
@@ -284,5 +286,5 @@ No changes to `herdrnetes-exp`, Argo CD or Longhorn (only reads). No owner SSH o
 5. A Secret file with a trailing newline is accepted by `apiKeyHelper`; the model id `claude-haiku-5-5` is valid for the key (K00b), and Claude Code 2.1.323 accepts it with `--effort medium`.
 6. Cilium rejects disallowed names with REFUSED (default) or NXDOMAIN; `ndots: 1` works for either. If the API name returns AAAA records, Claude Code falls back to IPv4 on this IPv4-only cluster (the K01 probe uses Python, not Claude Code).
 7. Cilium merges the CiliumNetworkPolicy with the stage-2 NetworkPolicies additively, its DNS proxy handles the `matchName` rule, and the policy does not break the kubelet's `tcpSocket` readiness probe.
-8. The Herdr pod can attach to a tmux session whose client is a full-screen TUI, and `herdr pane wait-output --match` matches the literal text `for shortcuts`.
+8. The Herdr pod can attach to a tmux session whose client is a full-screen TUI (shown in run `s3a`); the 2.1.323 input box is drawn between two `─` rule lines (seen in `s3a`).
 9. The Debian pins are those of the live index on 2026-11-22; any later point release fails the build until re-reviewed. `python3.13-minimal`, `libpython3.13-minimal` and `openssl` float within the suite.
