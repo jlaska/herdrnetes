@@ -1,0 +1,50 @@
+##### nvidia/openshell/sandbox:0.1.9
+token_len=64
+HEAD status=200
+HTTP/2 200 
+content-type: application/vnd.oci.image.index.v1+json
+docker-content-digest: sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f
+GET exit=0
+mediaType=application/vnd.oci.image.index.v1+json schemaVersion=2 manifests=4
+platform=linux/amd64 digest=sha256:a22db0292463d7bbdbbac0bc16625c1d2fc60a1d86b77638169f9d6c11035920 mediaType=application/vnd.oci.image.manifest.v1+json
+platform=linux/arm64 digest=sha256:d98317857f33ddb05e02ab8a9cbe58b2826e516335571a30a92e2e63de39f710 mediaType=application/vnd.oci.image.manifest.v1+json
+platform=unknown/unknown digest=sha256:86bc532481ff1f455abe38d40354b168b997a9bfcd7cb8ff034b5edacd004a55 mediaType=application/vnd.oci.image.manifest.v1+json
+platform=unknown/unknown digest=sha256:b28ca0c1ba0d10ac369c1dc1d91191394e28c24263a6dfa6ffb1f09dfa1302ba mediaType=application/vnd.oci.image.manifest.v1+json
+
+##### nvidia/openshell/supervisor:0.1.9
+token_len=68
+HEAD status=200
+HTTP/2 200 
+content-type: application/vnd.oci.image.index.v1+json
+docker-content-digest: sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3
+GET exit=0
+mediaType=application/vnd.oci.image.index.v1+json schemaVersion=2 manifests=4
+platform=linux/amd64 digest=sha256:e93c39c4afe715ae5409b19d20cea74db767c51ac8cf1f92970d7925efe925e5 mediaType=application/vnd.oci.image.manifest.v1+json
+platform=linux/arm64 digest=sha256:9f22d88fb8266938694576d8fd9903bdbf5b19dc5e8a17c33561e9bd69f53d30 mediaType=application/vnd.oci.image.manifest.v1+json
+platform=unknown/unknown digest=sha256:c00d3281818533747a34b698c93e1412405d3222852d4f5536e47e8f90e5acc6 mediaType=application/vnd.oci.image.manifest.v1+json
+platform=unknown/unknown digest=sha256:5c49b3cd2de2e5f5ec90f28a160d2ef2fdff8558ee33fca6dfbe09f7e4690352 mediaType=application/vnd.oci.image.manifest.v1+json
+
+##### USER/herdrnetes-exec@sha256:9c8f...
+token_len=60
+HTTP/2 200 
+content-type: application/vnd.docker.distribution.manifest.v2+json
+docker-content-digest: sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16
+GET exit=0
+mediaType=application/vnd.docker.distribution.manifest.v2+json manifests=n/a config=sha256:c295a1ecad26937c271f7b43b38995e5576090d353ecf485c8d5a251a7a46795
+##### herdrnetes-exec config sha256:c295a1ecad26937c271f7b43b38995e5576090d353ecf485c8d5a251a7a46795 (keys/fields only, no Env values)
+architecture=amd64 os=linux
+Entrypoint=["/usr/bin/tini","--","/usr/local/bin/exp006-entrypoint"]
+Cmd=unset
+User=1000:1000
+WorkingDir=unset
+Env keys=PATH
+
+##### attestation (informational)
+== gh attestation verify oci://ghcr.io/nvidia/openshell/sandbox@sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f -R ai-openshell/openshell
+exit=1
+
+Error: HTTP 404: Not Found (https://api.github.com/repos/ai-openshell/openshell/attestations/sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+== gh attestation verify oci://ghcr.io/nvidia/openshell/supervisor@sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3 -R ai-openshell/openshell
+exit=1
+
+Error: HTTP 404: Not Found (https://api.github.com/repos/ai-openshell/openshell/attestations/sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)

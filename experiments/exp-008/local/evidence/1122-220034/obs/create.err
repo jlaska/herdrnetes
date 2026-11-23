@@ -1,0 +1,5 @@
+Error:   × code: 'Internal error', message: "create sandbox failed: podman API error
+  │ (500): create healthcheck: unable to get systemd connection to add
+  │ healthchecks: lstat /tmp/hx8/1122-220034/e/run/systemd: no such file or
+  │ directory"
+

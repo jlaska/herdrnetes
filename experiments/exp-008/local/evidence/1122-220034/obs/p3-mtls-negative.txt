@@ -1,0 +1,2 @@
+http=404
+curl exit=0 (informational: expect handshake/auth failure without a client certificate)

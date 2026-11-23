@@ -1,0 +1,27 @@
+SIGTERM gateway-1 pid=1313852
+SIGTERM podman-service-listener pid=1313171
+SWEPT[pre-store] pid=1313176 start=38579838 comm=catatonit via=environ
+RESIDUE: store path still present: /tmp/hx8/1122-220034/e/podman/root
+RESIDUE: store path still present: /tmp/hx8/1122-220034/e/podman/runroot
+SWEPT[final] pid=1315385 start=38581063 comm=catatonit via=environ
+verified gone: watchdog pid=1313008
+verified gone: podman-service pid=1313151
+verified gone: podman-service-listener pid=1313171
+verified gone: gateway-1 pid=1313852
+verified gone: herdr-server-initial pid=1313984
+verified gone: create-cli pid=1314150
+verified gone: sweep-catatonit pid=1313176
+verified gone: sweep-catatonit pid=1315385
+port 21123 closed
+B2-vs-B1 openshell-config.txt: identical
+B2-vs-B1 openshell-state.txt: identical
+B2-vs-B1 ssh-meta.txt: identical
+B2-vs-B1 listeners.txt: identical
+INFO B2-vs-B1 listeners.txt: UDP listener set changed (not classified)
+B2-vs-B1 podman-default.txt: identical
+B2-vs-B1 systemd-units.txt: identical
+B2-vs-B0 openshell-config.txt: identical
+B2-vs-B0 openshell-state.txt: identical
+B2-vs-B0 ssh-meta.txt: identical
+B2-vs-B0 listeners.txt: identical
+CLASSIFICATION: RESIDUE
