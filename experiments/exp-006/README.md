@@ -44,7 +44,7 @@ binaries, and a cleanup record showing that every recorded PID was positively go
 
 Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…affc66`), tmux 3.8, bash 5.3.9.
 
-## Findings (owner review 2026-11-22: FIND-071/072 accepted as local findings; FIND-073 limited to the CLI-help survey; FIND-074 accepted as a one-run synthetic Kubernetes result; FIND-075/076 proposed)
+## Findings (owner review 2026-11-22: FIND-071/072 accepted as local findings; FIND-073 limited to the CLI-help survey; FIND-074 accepted as a one-run synthetic Kubernetes result; closeout 2026-11-22: FIND-075/076 accepted at the scopes stated)
 
 - **FIND-071: A tmux-owned process outlives Herdr pane closure, clean server stop and server SIGKILL, and a new
   pane reattaches to the same process.** [observed, local] This contrasts with in-pane processes (FIND-002). The
@@ -66,14 +66,15 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
   replacement Herdr started with no workspaces, so reattaching was again a manual command (consistent with FIND-072).
   → REQ-009. Evidence: [`k8s/evidence/s2a/`](k8s/evidence/s2a/).
 - **FIND-075: The stage-3 real-agent slice deploys and reaches the API, but run `s3a` measured no continuity.**
-  [observed, Kubernetes, single run `s3a`, proposed] Under PSA restricted, the pinned image started Claude Code
+  [observed, Kubernetes, single run `s3a`; accepted 2026-11-22 for real-agent Kubernetes setup, credential delivery,
+  network isolation and the billing-preflight lesson; `s3a` did not test continuity] Under PSA restricted, the pinned image started Claude Code
   2.1.323 in tmux on the selected model, with the API key delivered as a Secret file through `apiKeyHelper` under
   `--bare`, and showed no first-run dialog. The Cilium FQDN policy with `ndots:1` allowed `api.anthropic.com:443`
   and blocked other destinations. The first inference request failed with *"Credit balance is too low"*: the K00b
   models lookup checks that the key authenticates, not that it can spend. The runbook's `for shortcuts` readiness
   match does not appear in `dontAsk` mode. → REQ-009. Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md).
 - **FIND-076: A real Claude Code process and its conversation survive pane closure and Herdr pod replacement.**
-  [observed, Kubernetes, single real-agent run `s3b` on Claude Haiku 5.5, proposed for owner acceptance] With tmux owning the PTY in the exec
+  [observed, Kubernetes, single real-agent run `s3b` on Claude Haiku 5.5; accepted 2026-11-22 at the scope below] With tmux owning the PTY in the exec
   pod, the same `pid`/start time and session ID persisted across a pane close and a scratch Herdr pod delete/recreate,
   with one transcript, no `--resume` and no exec-pod restart. The agent answered with the codeword from its first
   prompt after each reattachment (Q1 from a new pane in the same Herdr pod; Q2 from a pane in the replacement pod).
@@ -87,7 +88,7 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
   - one run, one agent, one model.
 
   This extends FIND-074 from a synthetic counter to a real agent. → REQ-009. Evidence: [`k8s/evidence/s3b/`](k8s/evidence/s3b/README.md).
-  Proposed acceptance scope: *observed, one-run, real-agent Kubernetes result for process and conversation
+  Accepted scope: *observed, one-run, real-agent Kubernetes result for process and conversation
   continuity across Herdr pane close and Herdr pod replacement; active work shown only during the ~3 s Herdr pod
   absence.*
 
@@ -101,10 +102,12 @@ Environment: Fedora 44, Linux 7.3.4, Herdr 0.9.5 (Homebrew, sha256 `32f81aa0…a
 - Only the tmux server's lifetime was tested. A tmux server crash would still lose the process. Survival of the
   execution host or pod itself is out of scope.
 
-## Closeout review (2026-11-22, proposed; owner decides)
+## Closeout (owner decision 2026-11-22)
 
-No further EXP-006 runs are planned. This section is a proposal for owner review. It changes no decision; ADR-0001
-is unchanged.
+EXP-006 is complete; no further runs. The owner accepted FIND-075 and FIND-076 at the scopes stated above. This
+accepts experiment evidence, not a final OpenShell architecture. REQ-009 and REQ-011 remain *Future*; ADR-0001 is
+unchanged. Follow-up: [EXP-008, #39](https://github.com/jlaska/herdrnetes/issues/39)
+([plan](../../docs/experiments/08-openshell-execution.md)).
 
 **Issue #7 test matrix**
 
@@ -113,33 +116,29 @@ is unchanged.
 | Herdr remote PTY/session attach and reconnect | Answered | Herdr 0.9.5 has no reviewed native way to detach a pane process from its server (FIND-073, help-text survey). A tmux client in a pane reconnects to the same process; reattach is manual (FIND-071/072). |
 | Separate agent process/pod surviving Herdr churn | Answered for pane close and Herdr pod replacement; **Herdr upgrade not tested** | FIND-074 (synthetic), FIND-076 (real agent). A Herdr image change was not run; it would also replace the pod, but that is an inference. |
 | Agent status, transcript and client reconnection | Reconnection and transcript continuity answered; **Herdr agent-status integration not attempted** | One transcript, same session ID, no `--resume` (s3b K05). Herdr shows the session as a plain pane. |
-| OpenShell/Kata boundaries | **Not tested** | Out of EXP-006 scope by owner decision (2026-11-21). Follow-up. |
-| Revisit `agent-runner` | **Not done here** | Follow-up, together with OpenShell. |
+| OpenShell/Kata boundaries | **Not tested**; deferred to #39 | Out of EXP-006 scope by owner decision (2026-11-21). |
+| Revisit `agent-runner` | **Not done here**; deferred to #39 | Its lifecycle, credential and policy lessons feed the EXP-008 design. |
 
 **Completion criteria**
 - Reproducible results committed: met. Stage 1 is a script (`local/demo.sh`); stages 2 and 3 are runbooks with
   sanitized evidence (`s2a`, `s3a`, `s3b`). Kubernetes results are single runs.
 - Findings linked to requirements: met for REQ-009 (FIND-071..076). REQ-011 has no finding.
-- Architecture/ADR implications reviewed: proposed below; needs owner review.
-- Follow-up issues recorded and linked: proposed below; no issues created yet.
+- Architecture/ADR implications reviewed: owner reviewed 2026-11-22 (below).
+- Follow-up issues recorded and linked: #39.
 
-**Requirement and ADR implications (proposals)**
+**Requirement and ADR implications (owner-reviewed)**
 - REQ-009 stays *Future*. EXP-006 shows feasibility with tmux plus SSH. It does not yet show automatic reattach,
   survival of an exec-pod or node failure, or a Herdr upgrade.
 - REQ-011 is unchanged and untested.
 - ADR-0001 needs no change: independent process continuity remains an MVP non-goal. Adopting a separate execution
-  pod would be a new ADR, after the follow-up below.
+  pod would be a new ADR, after EXP-008.
 
-**Proposed follow-up (not yet filed)**
-- *Next experiment (proposed EXP-008): an OpenShell-owned agent session with Herdr as a client only.* OpenShell
-  documents (not verified here) a gateway-owned sandbox lifecycle, and `openshell sandbox connect`, which reattaches to the sandbox's
-  single main process and PTY. If that holds, OpenShell could replace this experiment's tmux and sshd. Smallest
-  slice: rerun this experiment's stage-1 tests with the synthetic counter as the sandbox's main command, using the
-  local Podman driver, no credential and no cluster. Add one test for an OpenShell gateway restart. The Kubernetes
-  driver and a real agent with egress-substituted credentials would follow, each with its own approval.
-- Automatic reattach and session discovery from Herdr (FIND-072); exec-pod and node failure semantics (the process
-  is lost; recovery would be a resume, not continuity).
-- A Herdr image upgrade with an external agent; long-running work through a pane close (the K03 gap).
+**Deferred, not tested in EXP-006 (tracked in [#39](https://github.com/jlaska/herdrnetes/issues/39))**
+- OpenShell-owned execution with Herdr as a disposable client: #39 stage A (local), stage B (Kubernetes driver).
+- Long-running work through a pane close (the K03 gap); execution-pod and node loss, where the process is lost and
+  recovery would be a resume, not continuity: #39 stage C.
+- Automatic reattach and session discovery from Herdr (FIND-072); a Herdr upgrade with an external agent; Herdr
+  agent-status integration; Kata: open questions carried in #39, not yet test items.
 
 ## Stage 2: Kubernetes slice: PASS (run `s2a`, 2026-11-22; cleanup CLEAN)
 

@@ -150,7 +150,7 @@ This was captured with `kubectl get`/`version`/`auth can-i` only. K00 must re-ca
 |---|---|
 | Server / nodes | v1.36.6; 3 nodes Ready (Talos 1.14.6, kernel 6.18.63, containerd 2.3.7) |
 | Target namespace | `herdrnetes-exp006-g1rev` NotFound; no `herdrnetes-exp006*` namespaces; no objects labelled `herdrnetes.io/experiment=exp-006`; no PV claimRef into one |
-| Live `herdrnetes-exp/herdr-0` | UID `fe7cd780-06ae-4756-ad8e-d22deb410a38`, Running since 2026-11-19T07:45:51Z, restarts 0/0. `herdr` at `ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae…8e277`, `ovis` at `ghcr.io/jlaska/herdrnetes-ovis@sha256:8e31cc27…0db`. Labels include `app.kubernetes.io/name=herdr` (the anti-affinity selector) |
+| Live `herdrnetes-exp/herdr-0` | UID prefix `fe7cd780`, Running since 2026-11-19T07:45:51Z, restarts 0/0. `herdr` at `ghcr.io/jlaska/herdrnetes-herdr@sha256:c5a235ae…8e277`, `ovis` at `ghcr.io/jlaska/herdrnetes-ovis@sha256:8e31cc27…0db`. Labels include `app.kubernetes.io/name=herdr` (the anti-affinity selector) |
 | Argo CD | `argo-system/<cluster>-herdrnetes-exp` Synced/Healthy |
 | DNS | `kube-system` pods labelled `k8s-app=kube-dns` (matches `herdr-egress`) |
 | `auth can-i` (owner admin context) | yes for namespaces, pods, secrets, services, networkpolicies and pods/exec |
