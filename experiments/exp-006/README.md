@@ -143,7 +143,7 @@ key in a $5-limited workspace.
 **Run `s3a` (owner-approved G1 at `83e3471`, 2026-11-23 UTC): INCONCLUSIVE.** K00, K00b and K01 passed. Claude Code
 2.1.323 started on `claude-haiku-5-5` under PSA restricted with no dialog, and the FQDN egress probes behaved as
 designed. The first inference request was rejected with *"Credit balance is too low"*, so the agent did no work and
-K03/K04 were not run. Identity stayed `pid=25 start=31889030` throughout; spend $0.00 expected. K06 cleanup was CLEAN
+K03/K04 were not run. Identity stayed `pid=25 start=31889030` throughout; spend $0.00 (owner saw no token spend for the key). K06 cleanup was CLEAN
 (baselines byte-identical; the owner revoked the key and shredded the key file). Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md). Continuity of a real agent
 remains **NOT TESTED**.
 

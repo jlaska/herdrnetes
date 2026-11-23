@@ -30,11 +30,11 @@ INCONCLUSIVE, not FAIL: no continuity break was observed, and none could be test
 
 **API key revocation: confirmed.** The owner reported at about 00:39Z that the key was deleted in the Console and the
 local key file shredded; the agent saw the key file absent at 00:39:26Z. With the Kubernetes checks above, the run
-is **CLEAN** per the runbook. The owner did not report the Console usage figure; spend remains $0.00 expected.
+is **CLEAN** per the runbook. The owner checked the Console afterwards and saw no token spend for the key.
 
 Process identity in every observation: `pid=25 start=31889030 sid=0c2ad2da-8511-4600-86c0-48e6544e0ff3`.
-Task progress: none (`passing=0`, `progress_lines=0`). API spend: **$0.00** expected (the only inference request was
-rejected for insufficient credit; the K00b models lookup is not billed). The owner should confirm in the Console.
+Task progress: none (`passing=0`, `progress_lines=0`). API spend: **$0.00**: the only inference request was rejected
+for insufficient credit, the K00b models lookup is not billed, and the owner saw no token spend for the key in the Console.
 
 ## Deviations from the runbook as written
 
