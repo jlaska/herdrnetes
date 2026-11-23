@@ -1,4 +1,4 @@
-# EXP-006 stage 3, run `s3a` (G1, 2026-11-23 UTC): INCONCLUSIVE, stopped at K02 (API credit balance too low); cluster cleanup CLEAN, key revocation pending
+# EXP-006 stage 3, run `s3a` (G1, 2026-11-23 UTC): INCONCLUSIVE, stopped at K02 (API credit balance too low); cleanup CLEAN
 
 The owner approved one G1 run of K00–K06 from [`../../stage3/RUNBOOK.md`](../../stage3/RUNBOOK.md) at PR #37 commit
 `83e34712c97ad760d443a79510c041bcbe87c2ee`, with a temporary workspace-scoped API key. The agent executed it. The
@@ -26,10 +26,11 @@ INCONCLUSIVE, not FAIL: no continuity break was observed, and none could be test
 | K03 pane close, reattach, Q1 | NOT RUN | stopped at K02 |
 | K04 Herdr pod replacement, Q2 | NOT RUN | stopped at K02 |
 | K05 evidence | partial | Final status at 00:31:11Z: same `pid=25 start=31889030 sid`, `alive=yes`, `jsonl_count=1`, `entries=13`, `tool_uses=0`, `passing=0`, hashes `yes`, `resume_flag=no` ([`status-final.txt`](status-final.txt)). Exec pod restartCount 0, `startedAt` 00:22:59Z, unchanged. |
-| K06 cleanup | PASS: **CLEAN** (cluster); key revocation: see below | One-line guard passed; namespace delete 00:31:18–00:31:29Z. Namespace NotFound; no PV claimRef into it (`jq -e` true); no `exp-006` labelled namespaces; `ctx_ok`/`live_ok` passed; K00 and K06 baselines byte-identical (`diff` rc 0, same sha256, which also equals run `s2a`'s baseline hash). Local SSH keys shredded; the codeword file shredded. |
+| K06 cleanup | PASS: **CLEAN** (key revoked; see below) | One-line guard passed; namespace delete 00:31:18–00:31:29Z. Namespace NotFound; no PV claimRef into it (`jq -e` true); no `exp-006` labelled namespaces; `ctx_ok`/`live_ok` passed; K00 and K06 baselines byte-identical (`diff` rc 0, same sha256, which also equals run `s2a`'s baseline hash). Local SSH keys shredded; the codeword file shredded. |
 
-**API key revocation: PENDING.** At the time of this commit the owner had not yet revoked the key or removed the
-local key file. Per the runbook, the run is not CLEAN until that is confirmed; the Kubernetes side is CLEAN.
+**API key revocation: confirmed.** The owner reported at about 00:39Z that the key was deleted in the Console and the
+local key file shredded; the agent saw the key file absent at 00:39:26Z. With the Kubernetes checks above, the run
+is **CLEAN** per the runbook. The owner did not report the Console usage figure; spend remains $0.00 expected.
 
 Process identity in every observation: `pid=25 start=31889030 sid=0c2ad2da-8511-4600-86c0-48e6544e0ff3`.
 Task progress: none (`passing=0`, `progress_lines=0`). API spend: **$0.00** expected (the only inference request was

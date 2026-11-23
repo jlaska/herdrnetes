@@ -128,7 +128,7 @@ The summary below is the original design.
   - K06: label-guarded namespace deletion, positive absence check, and recheck of the live baseline.
 - Untouched: the live Herdr StatefulSet and its PVCs, Argo CD and Longhorn.
 
-## Stage 3 (Kubernetes, real agent): run `s3a` INCONCLUSIVE (stopped at K02: API credit balance too low); cleanup CLEAN
+## Stage 3 (Kubernetes, real agent): run `s3a` INCONCLUSIVE (stopped at K02: API credit balance too low); cleanup CLEAN, key revoked
 
 The real-agent test runs in Kubernetes, not locally. The package is [`k8s/stage3/RUNBOOK.md`](k8s/stage3/RUNBOOK.md)
 with its manifests (including a Cilium FQDN egress allow for `api.anthropic.com:443` only) and the agent execution
@@ -143,8 +143,8 @@ key in a $5-limited workspace.
 **Run `s3a` (owner-approved G1 at `83e3471`, 2026-11-23 UTC): INCONCLUSIVE.** K00, K00b and K01 passed. Claude Code
 2.1.323 started on `claude-haiku-5-5` under PSA restricted with no dialog, and the FQDN egress probes behaved as
 designed. The first inference request was rejected with *"Credit balance is too low"*, so the agent did no work and
-K03/K04 were not run. Identity stayed `pid=25 start=31889030` throughout; spend $0.00 expected. K06 Kubernetes cleanup was CLEAN
-(baselines byte-identical); API key revocation is pending owner confirmation. Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md). Continuity of a real agent
+K03/K04 were not run. Identity stayed `pid=25 start=31889030` throughout; spend $0.00 expected. K06 cleanup was CLEAN
+(baselines byte-identical; the owner revoked the key and shredded the key file). Evidence: [`k8s/evidence/s3a/`](k8s/evidence/s3a/README.md). Continuity of a real agent
 remains **NOT TESTED**.
 
 ## Stage 3, local bwrap harness (historical preparation, kept, not developed further)
