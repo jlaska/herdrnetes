@@ -1,0 +1,23 @@
+run-id: 1123-122157
+date-utc: 2026-11-23T17:25:14Z
+port: 25319
+openshell: openshell 0.1.9
+openshell-gateway: openshell-gateway 0.1.9
+herdr: herdr 0.9.5
+podman client: podman version 5.8.9
+podman service (info): 5.8.9
+cgroup manager: systemd cgroup version: v2
+bash: 5.3.9(1)-release
+kernel: Linux 7.3.4-200.fc44.x86_64
+openshell sha256: 2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69
+openshell-gateway sha256: 865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978
+herdr sha256: 32f81aa0797c6361d074263d22db478762ec9950c0315e32f9b4309359affc66
+demo.sh sha256: ecd188ade50c05ad675963514885e3727a018ec742384f7f5a9ae17faab1ba7a
+counter.sh sha256 (repo copy, EXP-006): e1fef6038d8c690f85ee3d060da83dbcad2ac9a1b9f989703715b4d18691c52c
+workload image (pinned): ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16
+runtime image (pinned): ghcr.io/nvidia/openshell/sandbox@sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f
+supervisor image (pinned): ghcr.io/nvidia/openshell/supervisor@sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3
+images as pulled:
+ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16 -> c295a1ecad26937c271f7b43b38995e5576090d353ecf485c8d5a251a7a46795 sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16 ["ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16"]
+ghcr.io/nvidia/openshell/sandbox@sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f -> 97fbd882be7f0f538e9496ad17ae0c0f2bda049947fa0cb6e1af7d55f7f999e4 sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f ["ghcr.io/nvidia/openshell/sandbox@sha256:a22db0292463d7bbdbbac0bc16625c1d2fc60a1d86b77638169f9d6c11035920","ghcr.io/nvidia/openshell/sandbox@sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f"]
+ghcr.io/nvidia/openshell/supervisor@sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3 -> 85489edcbb82529a034420b8a9c5d8b0f775532b6a222013f3a649a0f5412fd7 sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3 ["ghcr.io/nvidia/openshell/supervisor@sha256:e93c39c4afe715ae5409b19d20cea74db767c51ac8cf1f92970d7925efe925e5","ghcr.io/nvidia/openshell/supervisor@sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3"]

@@ -1,0 +1,4 @@
+/tmp/hx8/1123-122157/dl/openshell-x86_64-unknown-linux-musl.tar.gz owner=NVIDIA exit=0
+/tmp/hx8/1123-122157/dl/openshell-gateway-x86_64-unknown-linux-gnu.tar.gz owner=NVIDIA exit=0
+oci://ghcr.io/nvidia/openshell/sandbox@sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f owner=NVIDIA exit=1
+oci://ghcr.io/nvidia/openshell/supervisor@sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3 owner=NVIDIA exit=1

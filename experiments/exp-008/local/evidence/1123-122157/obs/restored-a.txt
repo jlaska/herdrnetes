@@ -1,0 +1,6 @@
+pane ids before stop: ["w3:p1"]
+connect clients after herdr restart (before new pane): attached=0 cli=0 transport=0 proxy=0 run-ssh=0 other=0
+--- restored pane w3:p1 process-info:
+{"shell_pid":1583985,"fg":["/usr/bin/bash --noprofile --rcfile /tmp/hx8/1123-122157/e/pane-bashrc -i"]}
+--- restored pane w3:p1 visible text (non-empty lines):
+$

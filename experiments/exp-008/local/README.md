@@ -1,21 +1,30 @@
-# EXP-008 stage A (local): runs 1122-220034 and 1123-072024 — both stopped at A1
+# EXP-008 stage A (local): three authorized runs; run 3 (`1123-122157`) reached A4b
 
-**Result:** two authorized attempts, both **stopped at A1**; A2–A7 have never run. No further attempt is authorized.
+**Result.**
+- **Run 3 (`1123-122157`, the third and last authorized attempt)** passed P3, A1, A2, A3 and A4a.
+- It **recorded A4b as FAIL and stopped**. The cause is a harness check defect, not a process-continuity failure:
+  - `ACK a4b` arrived with the correct identity, in the counter log and in the new pane.
+  - The pane was about 27 columns wide, so the ACK line wrapped onto three lines.
+  - `verify_ack`'s exact-line grep of the pane capture could not match it.
+- The new A4 stop rule ("ACK did not satisfy the primary criterion") then applied.
+- **A5, A6 and A7 did not run.** Gateway restart, single writer, and retention/delete are still unobserved.
+- Cleanup is **CLEAN** on the verified final state. The recurring overlay "Device or resource busy" made the intermediate classification RESIDUE.
+- **Runs 1 and 2** both stopped at A1 (details below).
+- No further run is authorized.
 
-- **Run 1 (`1122-220034`)** stopped at `sandbox create` (Podman healthcheck timers need the user systemd socket). Cleanup was recorded as RESIDUE (details unchanged below).
-- **Run 2 (`1123-072024`, the owner-authorized retry)**:
-  - **The healthcheck correction worked.** The sandbox was created and reached Ready, and the counter ran as the canonical main process, with its identity triangulated.
-  - **The run then stopped at A1's pane attach**, because of a harness defect: the attach predicate's argv glob (`*" sandbox "*" connect "*`) can never match the adjacent words `sandbox connect`, so it counted zero clients whatever was running. (The first diagnosis, that `connect` exec-replaces itself with `ssh`, was wrong and is corrected below; see FIND-080.)
-  - **Cleanup** is CLEAN on the verified final state. The intermediate RESIDUE notes are kept.
-
-**The research question is still unanswered.**
-- Nothing has yet observed the following:
-  - reattach and replay through a Herdr pane;
-  - survival of pane closure or a Herdr restart;
+**What run 3 shows (one local run, OpenShell v0.1.9, Podman 5.8.9, Herdr 0.9.5).**
+- The canonical main process kept one identity, on all three sources and through every lifecycle event:
+  - pane attach and abrupt pane close;
+  - reattach with replay;
+  - a clean Herdr server stop/start;
+  - a SIGKILL of the Herdr server.
+- The counter ran without a gap (n=1–41).
+- In both Herdr restarts, the whole client chain (CLI → ssh → proxy) was gone at the first scan after the server exited. Two scans found zero client processes while the counter advanced.
+- **Not shown:**
+  - the A4b pane criterion as the harness defines it;
+  - any gateway-restart behaviour;
   - single-writer behaviour;
-  - gateway restart;
   - retention and delete.
-- None of the three candidate conclusions in [PLAN.md](PLAN.md) can be selected.
 
 Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../../docs/experiments/08-openshell-execution.md) · REQ-009, REQ-011 (both remain **Future**) · ADR-0001 unchanged.
 
@@ -27,6 +36,95 @@ Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../.
 | FIND-078 | **Accepted** (owner, 2026-11-23) at its documented scope | A disposable OpenShell v0.1.9 gateway can be isolated on a workstation that already has OpenShell registrations, a default rootless Podman store and agent-backed SSH. The ingredients are a dedicated store and socket, a run-local XDG/registry with `OPENSHELL_SYSTEM_GATEWAY_DIR`, a loopback mTLS listener and an agentless ssh wrapper. The protected baselines were unchanged in both runs. |
 | FIND-079 | **Accepted** (owner, 2026-11-23) at its documented scope | Verify OpenShell v0.1.9 release provenance with `gh attestation verify --owner NVIDIA`. The signer is `release-publish.yml@refs/heads/main`, and the certificate names the `main` dispatch commit `624aceea`. The build commit `ce58cf8e` comes from the promote job's `SOURCE_SHA`. Runtime images carry no GitHub attestation. Re-verified in run 2's preflight. |
 | FIND-080 | **Proposed, revised** (2026-11-23). The first version, "connect exec-replaces itself with `ssh` on a TTY", was **wrong** and is withdrawn | **Source (v0.1.9, `crates/openshell-cli/src`):** `sandbox connect` dispatches `main.rs:3665` → `run::sandbox_connect` (re-export, `run.rs:100`) → `ssh.rs:674-681` → `sandbox_connect_supervised()` (`ssh.rs:540`) → `run_main_attach_supervised()` (`ssh.rs:396-417`), which **spawns the host `ssh` as a child** (`kill_on_drop`) and stays up as its supervisor. It forwards SIGINT/SIGQUIT/SIGTERM (`ssh.rs:304-329`); SIGHUP is not caught. If ssh exits 255 after at least 2 s attached and the main process has no terminal result, it creates a new SSH session and respawns ssh, retrying for up to 60 s (`ssh.rs:57-68`, `445-455`, `593-651`). The exec-replace in `exec_or_wait()` (`ssh.rs:241-247`) is reachable only from `sandbox exec` (`ssh.rs:1027-1035` → `1021`); every connect path spawns. ssh runs the ProxyCommand `<cli> ssh-proxy --gateway … --sandbox … --token …` (`openshell-core/src/forward.rs:931-969`) via `$SHELL -c 'exec …'`. An attached pane therefore holds a three-process chain: CLI → `ssh … -s sandbox openshell-main` → `ssh-proxy`. Client accounting must recognise the chain, zero-client checks must cover all three processes, and the session token appears in two processes' argv. **Runtime (run 2):** the gateway log shows `CreateSshSession`, an allowed token `ForwardTcp` and an opened relay that stayed up until cleanup cancelled it. That is consistent with a live chain, but no process snapshot was taken, so the chain itself is unobserved. |
+| FIND-081 | **Proposed** (run 3, 2026-11-23; one local run) | An OpenShell v0.1.9 sandbox's canonical main process (`counter.sh` from `sandbox create --detach --tty … --`) is independent of Herdr. The process and session continued, with identity unchanged on all three sources (counter pid/start/nonce, `main_process_instance_id`/`main_process_started_at_ms`, host PID and `/proc` start) and `restart_count` 0, through each of: pane close with no client (n 6→11), reattach with replay from tick 1, clean Herdr server stop/start, and SIGKILL of the server (n advanced while Herdr was down). A new pane's `sandbox connect` accepted input (`ACK a4a`, `ACK a4b`). Scope: Podman driver, loopback gateway, synthetic counter; A4b's pane check is recorded FAIL by a harness wrap defect. REQ-009, REQ-011. |
+| FIND-082 | **Proposed** (run 3, 2026-11-23; two observations) | When the Herdr 0.9.5 server stops cleanly or is SIGKILLed, the attached `openshell sandbox connect` client chain (supervising CLI, ssh transport, `ssh-proxy`) ends with it. In both cases no client process was present at the first scan (0 s wait), and none appeared before the next scan. No disconnected supervising CLI lingered; v0.1.9's 60 s reconnect did not keep it alive. Inferred mechanism (not traced): the pty hangup reaches the chain's foreground process group, and the CLI does not catch SIGHUP. |
+
+## Run 3: 1123-122157 (owner-authorized third attempt) — A1–A4a PASS, A4b recorded FAIL (harness), stopped
+
+### Identity
+
+| Item | Value |
+|---|---|
+| Run id / time | `1123-122157`. Harness 2026-11-23T17:24:39Z to cleanup start 17:25:56Z (t+77 s), final verification 17:26:06Z; exit 1. 30-minute budget not approached |
+| Harness | `demo.sh` at commit `b09789b4e8bac5faa6f4bbe9a1e939f90dcc09d6`, sha256 `ecd188ad…1ba7a`. Base: reviewed commit `0cadef7` plus the A4 adjustment below |
+| Host / software | Fedora 44, kernel 7.3.4-200.fc44, cgroup v2, Landlock ABI 11, seccomp `user_notif`. Podman 5.8.9 (dedicated service). Herdr 0.9.5 `32f81aa0…affc66`. OpenShell CLI 0.1.9 `2db8e54f…7e69` and gateway 0.1.9 `865e8c5a…3978` (tarballs `3856ac7b…bd2d`, `c32085d6…c6a3`). Same pinned sandbox `e57d07cd…866f`, supervisor `f1ec231b…99d3` and workload `ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d0…7a16` as runs 1–2 ([versions.txt](evidence/1123-122157/versions.txt)) |
+| Fresh preflight | New run root and port (25319). P1 host checks pass; new B0. P2: tag `v0.1.9` → `ce58cf8e`; tarball checksums match; `--owner NVIDIA` attestations verify (signer `release-publish.yml@refs/heads/main`, run 44149201744, cert commit `624aceea`); promote job log `SOURCE_SHA: ce58cf8e…`; binary sha256 match; help texts byte-identical to run 2 except an example IP that run 2's copy shows redacted; registry tags resolve to the pinned digests. Two preflight-script FAIL lines are explained in [preflight.txt](evidence/1123-122157/preflight.txt) (a redaction artefact, and a `gh run view --log` fetch that returned nothing; re-fetched through the jobs API) |
+
+### A4 adjustment (owner-authorized for run 3; commit `b09789b`)
+
+- **Recording.** A client process that outlives the Herdr server is recorded, not an automatic A4 failure. After the server is gone, two scans are written to `obs/a4<id>-clients.txt`: one after up to 10 s for clients to end, one after counter progress. Each scan records:
+  - class, pid:start, ppid, state and fd0;
+  - role: supervising CLI with or without a transport child, or SSH transport with a proxy and its gateway TCP sessions;
+  - whether the original connection can still take input (its terminal's ptmx-master holders, named; a heuristic).
+
+  The counter tail while Herdr is down is also saved, as is whether the new pane showed a read-only notice.
+- **"Zero clients" claims.** One is made only if both scans found none and the counter advanced between them.
+- **PASS** rests on PLAN's criteria: same identity, progress while Herdr is down, and a new pane's ACK with the same identity.
+- **Survivors** are never signalled during the test. The run stops in any of these cases:
+  - a survivor may have blocked the new pane;
+  - survivors outside the new chain remain 75 s after reattach;
+  - the A4 ACK fails;
+  - a Herdr stop or restart fails.
+- **Stop alignment** with the authorization's stop conditions: an attach failure in A3 or A6 now stops the run instead of continuing.
+- **Review and checks.** An independent review (Sonnet) found two minor defects: an rc misreport in A3, and an over-claimed "capable of input". Both were fixed before commit. `bash -n`, shellcheck and the 9 offline client-detection tests (including the run-2 glob regression) pass.
+
+### Results
+
+| Step | Result | Observation |
+|---|---|---|
+| P3 | PASS | All 18 checks ([obs/p3-checks.txt](evidence/1123-122157/obs/p3-checks.txt)). The healthcheck probe matched run 2: `Health` null at 1 s and 12 s, no healthcheck units, no `$XDG_RUNTIME_DIR/systemd`. Orchestrator gate decision `proceed` (FIND-077 scope) |
+| A1 | **PASS** | Ready about 1 s after create. `ACK a1` (n=5) in the log and the pane. The client chain was found and stayed up through the ACK. The counter's ancestors include no herdr, ssh or CLI process. The transport ssh has no agent-like unix peer |
+| A2 | **PASS** | Pane closed. The pane's chain was gone and no CLI, ssh or proxy remained. Phase Ready, identity unchanged, n 6→11 with no client |
+| A3 | **PASS** | A new pane reattached. Replay was visible (tick 1 shown after connecting at n=12). `ACK a3` at n=13, same identity |
+| A4a (clean) | **PASS** | Server stop. Both scans: zero client processes, n 18→20 between them. Identity unchanged; n 16→20 while Herdr was down. Herdr restored the one earlier pane as a plain shell with no client (A4b: two). A new pane got `ACK a4a` n=25 |
+| A4b (SIGKILL) | **FAIL (recorded) → STOP** | Identity unchanged; n advanced while Herdr was down; both scans zero (n 31→33). In the new pane, `mark` returned 0: the ACK was in the log and Herdr's `wait-output` matched `ACK a4b pid=52`. `verify_ack` then failed on its exact-line grep of the pane capture, because the line wrapped: `ACK a4b pid=52 start=434236` / `22 nonce=fdf5d2b339358279 n` / `=38` ([panes/a4b.txt](evidence/1123-122157/panes/a4b.txt)). The log line is exact: `ACK a4b pid=52 start=43423622 nonce=fdf5d2b339358279 n=38`. The new stop rule applied |
+| A5a, A5b, A6, A7a, A7b | **not run** | Stopped after A4b |
+
+**Identity throughout A1–A4b (all equal; [obs/](evidence/1123-122157/obs/)):**
+- (i) counter `pid=52 start=43423622 nonce=fdf5d2b339358279`;
+- (ii) `main_process_instance_id=94eb529c-993e-4cb4-98a9-9ceef48fa78e`, `main_process_started_at_ms=1795454716668`, `restart_count` 0;
+- (iii) host PID 1564241 with `/proc` start 43423622.
+
+The full counter log runs n=1…41 with no gap or reset, with four ACKs ([out/counter-final-full.log](evidence/1123-122157/out/counter-final-full.log)).
+
+**Client process chain (observed):**
+- A1: CLI `1565134` → `/usr/bin/ssh -F <run>/ssh_config -o IdentityAgent=none …` `1565254` → `<cli> ssh-proxy --gateway https://127.0.0.1:25319 --sandbox exp008-1123-122157 …` `1565262`, all in the pane shell's session ([snaps/01-a1-attached.txt](evidence/1123-122157/snaps/01-a1-attached.txt)).
+- At the end of each A4 step, the new chain was the only client. Its proxy had one established TCP session to the gateway, and its stdin was a pipe; the CLI's and ssh's stdin was the pane pty.
+- The gateway log shows `CreateSshSession` and `relay opened successfully` per attach.
+
+**A4 client-lifecycle observations ([a4a](evidence/1123-122157/obs/a4a-clients.txt), [a4b](evidence/1123-122157/obs/a4b-clients.txt)):**
+- **Control before each stop.** The original CLI's fd0 was a pts whose single ptmx-master holder was the Herdr server, which shows the holder probe works.
+- **After the clean stop and after the SIGKILL, the result was the same:**
+  - Scan 1 was taken with 0 s of waiting and counted cli=0 transport=0 proxy=0 run-ssh=0.
+  - The original connection was "ended (cli, ssh and proxy all gone); capable of input: no".
+  - Scan 2, 2–3 s later and after counter progress, was also zero.
+- **What this means.** No surviving supervising CLI, SSH transport or proxy was observed, so nothing could have blocked or interfered with the new pane, and no "read-only" notice appeared. The counter progressed with zero clients, as verified by those two scans. Clients that might have started and ended between the scans would not have been seen.
+
+**Cleanup.**
+- Intermediate RESIDUE ([cleanup.txt](evidence/1123-122157/cleanup.txt)): the in-namespace store removal again hit `rm: cannot remove '…/podman/root/overlay': Device or resource busy`, and two `catatonit` pause processes were swept.
+- Final ([cleanup-final.txt](evidence/1123-122157/cleanup-final.txt)): the run root is absent; all 12 recorded and swept processes are gone; no run markers, sockets or mounts remain; port 25319 is closed.
+- Protected baselines are identical: final vs B1 for 6 listings, and final vs B0 for 4. These cover OpenShell config/state metadata, `~/.ssh` metadata, TCP listeners, the default Podman store, and the user systemd `libpod*`/`podman*` units.
+- Classification: **CLEAN**.
+- Post-run evidence scan: no key material, JWT, token, home path, hostname or non-loopback IP.
+
+### Harness defect found (not corrected; no further run authorized)
+
+`verify_ack` requires the exact ACK line in the pane capture (`grep "ACK <w> pid=… start=… nonce=…" panes/<w>.txt`). `pane_attach` splits an existing pane for each new pane, and Herdr restores the earlier panes after each restart, so by A4b the new pane was narrow. A minimal fix would be either of these:
+- join the pane's wrapped lines before matching;
+- create each new pane in a fresh workspace instead of splitting.
+
+The ACK identity check against the counter log is unaffected. This is proposed only.
+
+### Assumptions (run 3)
+
+| Assumption | Status |
+|---|---|
+| The corrected client detection recognises a real attach | **Confirmed** (A1, A3, A4a, A4b chains found; A2 chain gone) |
+| `sandbox connect` keeps the CLI and spawns ssh, which runs the proxy (FIND-080) | **Observed** in process snapshots (FIND-080 stays proposed for owner review) |
+| The main process survives pane close and Herdr clean/forced restart, and a new pane reattaches with replay and input | **Observed** once each (FIND-081, proposed); the A4b pane check is recorded FAIL by the wrap defect |
+| A client chain may outlive the Herdr server | **Not observed**: it ended at once in both cases (FIND-082, proposed) |
+| Gateway restart replaces the main process (source reading) | **Not tested** (A5 not run) |
+| Single writer and read-only viewers; retention and delete | **Not tested** (A6, A7 not run) |
 
 ## Run 2: 1123-072024 (owner-authorized retry) — stopped at A1 attach
 
@@ -163,7 +261,7 @@ An earlier version of this section proposed counting the wrapped `ssh` as the at
 - **For the owner (not changed):**
   - The A4a/b check "connect clients survived the server" was always vacuous before, because the CLI count was always 0. It now takes effect, requiring the CLI, ssh and proxy to be gone within 10 s of a Herdr stop or kill.
   - From source this should hold: the PTY hangup and an uncaught SIGHUP should end the chain. But it is a harness condition, not a row in PLAN A4.
-  - Decide before a third run whether it stays a FAIL input or becomes a recorded observation.
+  - Decide before a third run whether it stays a FAIL input or becomes a recorded observation. **Decided by the owner before run 3:** a recorded observation (applied in commit `b09789b`; see run 3).
 
 ### Remaining risks (inferred)
 
@@ -314,8 +412,13 @@ The minimum next experiment is the same stage A A1–A7 run, unchanged in scope,
   - no keys, certificates, gateway database or raw protected listings are included;
   - post-run scan: no key material, JWTs, tokens, non-loopback IPs or hostname.
 
+## Files (run 3)
+
+- [demo.sh](demo.sh): the harness as run in run 3 (commit `b09789b`).
+- [evidence/1123-122157/](evidence/1123-122157/), redacted as in runs 1–2. It also has [preflight.txt](evidence/1123-122157/preflight.txt) and [preflight.sh](evidence/1123-122157/preflight.sh), the orchestrator's P1/P2 script (its repo path line generalised).
+
 ## Files (run 2)
 
-- [demo.sh](demo.sh): the current harness, which includes the client-detection correction (not run). Run 2 used commit `e7a5715` (sha256 `bca278df…f759ac`), and run 1 used commit `8102bb8`.
+- Run 2 used commit `e7a5715` (sha256 `bca278df…f759ac`), and run 1 used commit `8102bb8`.
 - [tests/clients-test.sh](tests/clients-test.sh): offline client-detection tests.
 - [evidence/1123-072024/](evidence/1123-072024/), redacted as in run 1. It includes `cleanup-final.txt` (verified final state) and the healthcheck-probe records `obs/p3-hc-*.txt`.

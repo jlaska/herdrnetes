@@ -1,0 +1,67 @@
+# Preflight for run 1123-122157 (P1 host, B0, P2 release), orchestrator script, 2026-11-23
+# Output as produced (home path, hostname and user redacted).
+## P1 2026-11-23T17:21:57Z
+PASS rootless (uid 1000)
+PASS cgroup v2
+PASS landlock in LSM list
+PASS landlock ABI 11
+PASS seccomp user_notif
+PASS user bus
+PASS podman version 5.8.9
+PASS port 25319 free
+PASS herdr 0.9.5 sha256 match
+7.3.4-200.fc44.x86_64
+## B0
+PASS B0 captured (39 listener lines)
+## P2
+PASS tag v0.1.9 -> ce58cf8e9b953281352d98a637e41616295b1318
+PASS checksum openshell-x86_64-unknown-linux-musl.tar.gz 3856ac7b6b2e33d6c8ab72a1036444156516e7303da85a9b13f661a2aa63bd2d
+PASS checksum openshell-gateway-x86_64-unknown-linux-gnu.tar.gz c32085d64ccef037121c0e87bee1a57d6e886d77f77bb8b260cb08f0a6cce6a3
+PASS attestation openshell-x86_64-unknown-linux-musl.tar.gz (624aceea32934f73c350ede3f2185880816a030c)
+PASS attestation openshell-gateway-x86_64-unknown-linux-gnu.tar.gz (624aceea32934f73c350ede3f2185880816a030c)
+INFO runtime image sandbox attestation exit=1 (run 2 observed exit=1, 404: none published)
+INFO runtime image supervisor attestation exit=1 (run 2 observed exit=1, 404: none published)
+FAIL promote job log SOURCE_SHA not found
+PASS binary sha256 cli/openshell
+PASS binary sha256 gw/openshell-gateway
+PASS p2 cli-version identical to run 2
+PASS p2 create-help identical to run 2
+PASS p2 connect-help identical to run 2
+FAIL p2 gateway-add-help differs from run 2
+41c41
+<           Gateway endpoint URL (for example `http://127.0.0.1:8080`, `https://IP_REDACTED:8080`, or `ssh://user@host:8080`)
+---
+>           Gateway endpoint URL (for example `http://127.0.0.1:8080`, `https://IP_REDACTED:8080`, or `ssh://user@host:8080`)
+PASS p2 gw-version identical to run 2
+PASS p2 gw-generate-certs-help identical to run 2
+PASS p2 gw-config-help identical to run 2
+PASS create --help semantics (--detach/--tty/--no-keep/--restart-policy)
+INFO help calls wrote: 
+PASS registry nvidia/openshell/sandbox:0.1.9 -> sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f
+PASS registry nvidia/openshell/supervisor:0.1.9 -> sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3
+PASS registry USER/herdrnetes-exec:sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16 -> sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16
+## summary RUN=1123-122157 PORT=25319 root=/tmp/hx8/1123-122157 fails=2
+/tmp/hx8/1123-122157:
+total 0
+drwx------. 6 USER USER 120 Nov 23 12:22 .
+drwx------. 3 USER USER  60 Nov 23 12:21 ..
+drwx------. 2 USER USER 140 Nov 23 12:21 baseline-pre
+drwx------. 4 USER USER  80 Nov 23 12:21 bin
+drwx------. 2 USER USER 120 Nov 23 12:21 dl
+drwx------. 2 USER USER 320 Nov 23 12:22 p2
+
+/tmp/hx8/1123-122157/bin/cli:
+total 26136
+drwx------. 2 USER USER       60 Nov 23 12:22 .
+drwx------. 4 USER USER       80 Nov 23 12:21 ..
+-rwxr-xr-x. 1 USER USER 26760616 Nov 17 13:56 openshell
+
+/tmp/hx8/1123-122157/bin/gw:
+total 112704
+drwx------. 2 USER USER        60 Nov 23 12:22 .
+drwx------. 4 USER USER        80 Nov 23 12:21 ..
+-rwxr-xr-x. 1 USER USER 115408216 Nov 17 13:56 openshell-gateway
+
+# Orchestrator notes on the two FAIL lines (2026-11-23T17:2xZ, before the run)
+- 'p2 gateway-add-help differs from run 2': the only difference is the help text's example IP (a private-range example address), which run 2's committed copy shows as IP_REDACTED. Not a semantic change.
+- 'promote job log SOURCE_SHA not found': 'gh run view --log' returned nothing. Re-fetched with 'gh api --allow-escape-sequences repos/ai-openshell/openshell/actions/jobs/134272530203/logs' (job 'Select Qualified Prerelease', run 44149201744): it contains 'SOURCE_SHA: ce58cf8e9b953281352d98a637e41616295b1318' and creates refs/tags/v0.1.9 at that commit (p2/provenance.txt). P2 provenance verified.

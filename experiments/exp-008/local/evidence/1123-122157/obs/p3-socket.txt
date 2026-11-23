@@ -1,0 +1,5 @@
+listener: u_str LISTEN 0      4096                                                    /tmp/hx8/1123-122157/e/podman.sock 8294218            * 0    users:(("exe",pid=1560396,fd=8))                                       
+listener pid=1560396 (launched pid=1560373)
+peers:
+/run/dbus/system_bus_socket
+/tmp/hx8/1123-122157/e/podman.sock

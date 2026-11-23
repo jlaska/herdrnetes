@@ -1,10 +1,17 @@
 # EXP-008: OpenShell-owned execution with Herdr as a disposable client
 
-**Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan [PLAN.md](../../experiments/exp-008/local/PLAN.md); two authorized attempts, **both stopped at A1**; A2–A7 have not run and the research question is unanswered.
-- Run `1122-220034` stopped at `sandbox create`: Podman healthcheck timers need the user systemd socket.
-- The retry, run `1123-072024`, applied the owner-approved correction. The sandbox reached Ready with the counter as its canonical main process, and its identity was recorded. It then stopped at the first pane attach on a harness defect: an argv glob in the attach predicate could never match `sandbox connect`. The first diagnosis (that `connect` exec-replaces itself with `ssh`) was wrong. In v0.1.9 the CLI supervises a child `ssh` (FIND-080, revised). The harness correction is committed but has not been run; a third run needs separate authorization.
+**Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan: [PLAN.md](../../experiments/exp-008/local/PLAN.md). Three authorized attempts; no further run is authorized.
 
-Results, findings and a proposed correction (not authorized to run): [experiments/exp-008/local/README.md](../../experiments/exp-008/local/README.md).
+- **Run `1122-220034`** stopped at `sandbox create`: Podman healthcheck timers need the user systemd socket.
+- **Run `1123-072024`** stopped at the first pane attach. An argv glob in the attach predicate could never match `sandbox connect` (FIND-080, revised).
+- **Run `1123-122157`** (third attempt, with the owner's A4 client-lifecycle adjustment) passed A1, A2, A3 and A4a.
+  - The canonical main process kept one identity on all three sources through pane close, reattach with replay, and a clean Herdr restart. It also did so through the SIGKILL Herdr restart.
+  - The `connect` client chain ended with the Herdr server both times.
+  - A4b is **recorded FAIL**, which stopped the run. The ACK arrived with the correct identity, but it wrapped in a narrow pane, so the harness's exact-line pane check could not match it (a harness defect).
+  - A5 (gateway restart), A6 (single writer) and A7 (retention/delete) **did not run**.
+  - Cleanup was CLEAN on the verified final state.
+
+Results, findings and proposals: [experiments/exp-008/local/README.md](../../experiments/exp-008/local/README.md).
 
 **Hypothesis (not an adopted architecture).** OpenShell can replace EXP-006's custom tmux/SSH execution ownership. Its gateway would own the agent session's lifecycle, its sandbox would provide policy-based isolation, and Herdr panes would only attach to the session as disposable clients. Production integration is not authorized, and ADR-0001 is unchanged.
 
@@ -28,8 +35,10 @@ Reattaching was manual (FIND-072). The OpenShell properties this experiment reli
 - **B:** the Kubernetes driver in a scratch namespace (cluster-scoped Agent Sandbox controller/CRD and gateway RBAC).
 - **C:** a real agent with an egress-substituted credential. It covers work through a pane close (the EXP-006 K03 gap) and workload-pod loss, classified as resume rather than continuity.
 
-**Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/), [run 1123-072024](../../experiments/exp-008/local/evidence/1123-072024/).
+**Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/), [run 1123-072024](../../experiments/exp-008/local/evidence/1123-072024/), [run 1123-122157](../../experiments/exp-008/local/evidence/1123-122157/).
 - FIND-077, FIND-078 and FIND-079 are accepted at their stated scopes (FIND-077: observed, single workstation).
-- FIND-080 is proposed (revised: supervised `connect` spawns `ssh`; the earlier exec-replace statement is withdrawn).
+- FIND-080 is proposed (revised: supervised `connect` spawns `ssh`; the earlier exec-replace statement is withdrawn). Run 3 observed the CLI → ssh → proxy chain in process snapshots; it awaits owner review.
+- FIND-081 (proposed): the main process is independent of Herdr pane close and of clean and forced Herdr restart; a new pane reattaches with replay and input. One local run.
+- FIND-082 (proposed): the `connect` client chain ends when the Herdr server stops or is killed; no lingering CLI was observed.
 
 **Requirements:** REQ-009, REQ-011. **Related:** EXP-006 ([#7](https://github.com/jlaska/herdrnetes/issues/7)), FIND-071/074/076.

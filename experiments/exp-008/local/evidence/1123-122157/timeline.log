@@ -1,0 +1,49 @@
+12:24:39.413 run 1123-122157 root=/tmp/hx8/1123-122157 port=25319 gateway=exp008-1123-122157 budget=1800s
+12:24:39.420 STEP P3 (t+0s)
+12:24:39.426 run 1123-122157: herdr=herdr 0.9.5
+12:24:39.431 P3 PASS tools
+12:24:39.733 P3 PASS baseline-B1
+12:24:39.735 P3 PASS containers-conf
+12:24:39.944 P3 PASS podman-service
+12:24:40.184 P3 PASS podman-store-isolation
+12:24:40.303 P3 PASS podman-socket
+12:24:47.026 P3 PASS pinned-images
+12:24:47.240 P3 PASS cgroup-limits-probe
+12:24:59.666 P3 PASS healthcheck-probe
+12:24:59.672 HC-GATE waiting up to 600s for /tmp/hx8/1123-122157/hc-gate (status_1s=absent status_12s=absent)
+12:25:13.715 HC-GATE decision: proceed
+12:25:13.723 P3 PASS healthcheck-readiness-gate
+12:25:13.797 P3 PASS tls-certs
+12:25:13.799 P3 PASS gateway-toml
+12:25:13.806 P3 PASS gateway-preflight
+12:25:14.123 gateway (gateway-1) pid=1561941 start=43423337 listening on 127.0.0.1:25319
+12:25:14.124 P3 PASS gateway-start
+12:25:14.249 P3 PASS gateway-register
+12:25:14.261 P3 PASS mtls-negative
+12:25:14.276 P3 PASS ssh-no-agent
+12:25:14.295 herdr server (initial) pid=1562080 start=43423384
+12:25:14.543 P3 PASS herdr-start
+12:25:14.672 RESULT P3 PASS isolation gate: dedicated store+socket, loopback mTLS gateway, ssh without agent, herdr under /tmp/hx8/1123-122157/e
+12:25:15.902 STEP A1 (t+36s)
+12:25:15.906 create CLI pid=1563950 start=43423547
+12:25:16.985 sandbox Ready id=e6ae6553-8346-4937-924a-3198c3a6340a
+12:25:17.450 fd0 of the counter: unreadable
+12:25:19.079 pane w2:p1 (a1): attached cli/ssh/proxy=1565134:43423733 1565254:43423740 1565262:43423740 under shell 1564682 (attached=1 cli=1 transport=1 proxy=1 run-ssh=0 other=0)
+12:25:19.364 clients: attached=1 cli=1 transport=1 proxy=1 run-ssh=0 other=0
+12:25:21.710 RESULT A1 PASS ACK in log and pane: pid=52 start=43423622 nonce=fdf5d2b339358279 n=5; instance=94eb529c-993e-4cb4-98a9-9ceef48fa78e hpid=1564241 hstart=43423622 cread=method 3 (2026-11-23T17:25:21Z); client cli/ssh/proxy=1565134:43423733 1565254:43423740 1565262:43423740
+12:25:21.712 STEP A2 (t+42s)
+12:25:22.329 clients: attached=0 cli=0 transport=0 proxy=0 run-ssh=0 other=0
+12:25:27.916 RESULT A2 PASS pane closed, no cli/ssh/proxy left, phase Ready, identity unchanged, n 6 -> 11 with no client
+12:25:27.945 STEP A3 (t+48s)
+12:25:29.455 pane w3:p1 (a3): attached cli/ssh/proxy=1574442:43424785 1574553:43424791 1574561:43424791 under shell 1573998 (attached=1 cli=1 transport=1 proxy=1 run-ssh=0 other=0)
+12:25:31.162 RESULT A3 PASS replay visible (min tick K=1 <= n at connect 12); ACK n=13 > n(A2)=11; same identity
+12:25:31.191 STEP A4a (t+52s)
+12:25:37.472 herdr server (restart-a) pid=1583970 start=43425702
+12:25:41.127 pane w3:p2 (A4a): attached cli/ssh/proxy=1586663:43425884 1586778:43425890 1586785:43425891 under shell 1586218 (attached=1 cli=1 transport=1 proxy=1 run-ssh=0 other=0)
+12:25:43.548 RESULT A4a PASS clean: old server 1562080 gone; identity unchanged, n 16 -> 20 while herdr down; clients while down: verified zero (two scans, n 18 -> 20 between them); new server 1583970; ACK n=25
+12:25:43.576 STEP A4b (t+64s)
+12:25:50.291 herdr server (restart-b) pid=1597182 start=43426984
+12:25:53.635 pane w3:p3 (A4b): attached cli/ssh/proxy=1599936:43427186 1600047:43427191 1600056:43427192 under shell 1599458 (attached=1 cli=1 transport=1 proxy=1 run-ssh=0 other=0)
+12:25:56.276 RESULT A4b FAIL kill:;ACK mismatch: 1795454753.667934 2026-11-23T17:25:53 ACK a4b pid=52 start=43423622 nonce=fdf5d2b339358279 n=38; clients while down: verified zero (two scans, n 31 -> 33 between them)
+12:25:56.304 STOP A4b: the new pane's ACK did not satisfy the primary criterion (mark rc=0)
+12:25:56.306 cleanup start (exit=1)

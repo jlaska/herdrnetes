@@ -1,0 +1,16 @@
+Host *
+    IdentityAgent none
+    IdentitiesOnly yes
+    IdentityFile none
+    PKCS11Provider none
+    ForwardAgent no
+    ForwardX11 no
+    GSSAPIAuthentication no
+    HostbasedAuthentication no
+    PasswordAuthentication no
+    KbdInteractiveAuthentication no
+    UserKnownHostsFile /dev/null
+    GlobalKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    UpdateHostKeys no
+    VerifyHostKeyDNS no

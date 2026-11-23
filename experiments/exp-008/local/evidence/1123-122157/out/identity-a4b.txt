@@ -1,0 +1,3 @@
+pid=52
+start=43423622
+nonce=fdf5d2b339358279

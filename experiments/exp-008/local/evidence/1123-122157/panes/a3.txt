@@ -1,0 +1,19 @@
+$ /tmp/hx8/1123-122157/e/wrap/openshell -g exp008-1123-122157 sandbox connect exp008-1123-122157
+tick n=1
+tick n=2
+tick n=3
+tick n=4
+tick n=5
+mark a1
+ACK a1 pid=52 start=43423622 nonce=fdf5d2b339358279 n=5
+tick n=6
+tick n=7
+tick n=8
+tick n=9
+tick n=10
+tick n=11
+tick n=12
+tick n=13
+mark a3
+ACK a3 pid=52 start=43423622 nonce=fdf5d2b339358279 n=13
+tick n=14
