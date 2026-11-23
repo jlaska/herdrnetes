@@ -1,0 +1,13 @@
+[
+  {
+    "active": true,
+    "auth": "mtls",
+    "endpoint": "https://127.0.0.1:24117",
+    "is_remote": false,
+    "name": "exp008-1123-142020",
+    "remote_host": null,
+    "resolved_host": null,
+    "source": "user",
+    "type": "local"
+  }
+]

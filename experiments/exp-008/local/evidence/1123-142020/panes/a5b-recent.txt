@@ -1,0 +1,79 @@
+$ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-142020 sandbox connect exp008-1123-142020
+tick n=1
+tick n=2
+tick n=3
+tick n=4
+tick n=5
+tick n=6
+tick n=7
+tick n=8
+tick n=9
+tick n=10
+tick n=11
+tick n=12
+tick n=13
+tick n=14
+tick n=15
+tick n=16
+tick n=17
+tick n=18
+tick n=19
+tick n=20
+mark a5a
+ACK a5a pid=52 start=44125793 nonce=ae0dd3b6bd8ea999 n=20
+tick n=21
+tick n=22
+mark a5b0
+ACK a5b0 pid=52 start=44125793 nonce=ae0dd3b6bd8ea999 n=22
+tick n=23
+tick n=24
+Error:   × code: 'Unknown error', message: "h2 protocol error: error reading a body from connection", source:
+                                                                                                               │ hyper:
+:Error(Body, Error { kind: Io(Custom { kind: UnexpectedEof, error: "peer closed connection without sending
+                                                                                                            │ TLS close
+_notify: https://docs.rs/rustls/latest/rustls/manual/_03_howto/index.html#unexpected-eof" }) })
+                                                                                                 ├─▶ error reading a bo
+dy from connection
+                    ╰─▶ peer closed connection without sending TLS close_notify: https://docs.rs/rustls/latest/rustls/m
+anual/_03_howto/
+                      index.html#unexpected-eof
+
+                                               Connection to sandbox closed by remote host.
+client_loop: send disconnect: Broken pipe
+Connection to sandbox lost; reconnecting. To disconnect, press Ctrl-D or Ctrl-P then Ctrl-Q after reattachment; press C
+trl-C while retrying to cancel.
+2026-11-23T19:22:41.254044Z  WARN openshell_cli::ssh: failed to create replacement SSH session; retrying sandbox="exp00
+8-1123-142020" error=connect error: transport error
+2026-11-23T19:22:41.756409Z  WARN openshell_cli::ssh: failed to create replacement SSH session; retrying sandbox="exp00
+8-1123-142020" error=connect error: transport error
+2026-11-23T19:22:42.758534Z  WARN openshell_cli::ssh: failed to create replacement SSH session; retrying sandbox="exp00
+8-1123-142020" error=connect error: transport error
+2026-11-23T19:22:44.760804Z  WARN openshell_cli::ssh: failed to create replacement SSH session; retrying sandbox="exp00
+8-1123-142020" error=connect error: transport error
+2026-11-23T19:22:48.763013Z  WARN openshell_cli::ssh: failed to create replacement SSH session; retrying sandbox="exp00
+8-1123-142020" error=connect error: transport error
+2026-11-23T19:22:53.764883Z  WARN openshell_cli::ssh: failed to create replacement SSH session; retrying sandbox="exp00
+8-1123-142020" error=connect error: transport error
+tick n=1
+tick n=2
+tick n=3
+tick n=4
+tick n=5
+tick n=6
+tick n=7
+tick n=8
+tick n=9
+tick n=10
+tick n=11
+tick n=12
+tick n=13
+tick n=14
+tick n=15
+tick n=16
+tick n=17
+tick n=18
+tick n=19
+tick n=20
+mark a5b
+ACK a5b pid=52 start=44129737 nonce=5582d34cefdb31e3 n=20
+tick n=21

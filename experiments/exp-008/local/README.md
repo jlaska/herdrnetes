@@ -1,7 +1,28 @@
-# EXP-008 stage A (local): three authorized runs; run 3 (`1123-122157`) reached A4b
+# EXP-008 stage A (local): four authorized runs; run 4 (`1123-142020`) completed A1, A6, A7a, A5a, A5b and A7b
 
-**Result.**
-- **Run 3 (`1123-122157`, the third and last authorized attempt)** passed P3, A1, A2, A3 and A4a.
+**Run 4 result (`1123-142020`, the fourth and last authorized attempt; exit 0).**
+
+| Step | Result |
+|---|---|
+| P3 | PASS |
+| A1 | PASS |
+| A6 | PASS |
+| A7a | PASS |
+| A5a | **restarted** |
+| A5b | **restarted**, with supervised client recovery |
+| A7b | PASS (explicit deletion) |
+
+Cleanup was **CLEAN** on the verified final state.
+- **Single writer (A6):** the first attachment owned input. The second was read-only: its input was discarded, it still received output, and it gained input after the owner's pane closed.
+- **Gateway restart, graceful (A5a) and forced (A5b):** each **replaced the canonical main process**. A restarted process is not continuity.
+  - **Graceful (SIGTERM):** the gateway stopped the containers.
+  - **Forced (SIGKILL):** the process kept running while the gateway was down, and startup recovery restarted the containers when the gateway came back.
+  - In A5b, the pane's supervising `connect` CLI reattached by itself and accepted input, but the process behind it was a new one.
+- **Retention and delete (A7):** the sandbox outlived its creating CLI. An explicit `sandbox delete` removed its containers, volumes and secrets. Natural completion did not occur.
+- No fifth attempt is authorized. Details: [Run 4](#run-4-1123-142020-results).
+
+**Run 3 result (historical).**
+- **Run 3 (`1123-122157`, the third authorized attempt)** passed P3, A1, A2, A3 and A4a.
 - It **recorded A4b as FAIL and stopped**. The cause is a harness check defect, not a process-continuity failure:
   - `ACK a4b` arrived with the correct identity, in the counter log and in the new pane.
   - The pane was about 27 columns wide, so the ACK line wrapped onto three lines.
@@ -10,7 +31,7 @@
 - **A5, A6 and A7 did not run.** Gateway restart, single writer, and retention/delete are still unobserved.
 - Cleanup is **CLEAN** on the verified final state. The recurring overlay "Device or resource busy" made the intermediate classification RESIDUE.
 - **Runs 1 and 2** both stopped at A1 (details below).
-- No further run is authorized.
+- At the time, no further run was authorized. The owner later authorized run 4 (above).
 
 **What run 3 shows (one local run, OpenShell v0.1.9, Podman 5.8.9, Herdr 0.9.5).**
 - The canonical main process kept one identity, on all three sources and through every lifecycle event:
@@ -38,6 +59,11 @@ Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../.
 | FIND-080 | **Accepted** (owner, 2026-11-23) at its revised, documented scope: source reading plus run 3's process snapshots of the chain. The first version, "connect exec-replaces itself with `ssh` on a TTY", was **wrong** and stays withdrawn | **Source (v0.1.9, `crates/openshell-cli/src`):** `sandbox connect` dispatches `main.rs:3665` → `run::sandbox_connect` (re-export, `run.rs:100`) → `ssh.rs:674-681` → `sandbox_connect_supervised()` (`ssh.rs:540`) → `run_main_attach_supervised()` (`ssh.rs:396-417`), which **spawns the host `ssh` as a child** (`kill_on_drop`) and stays up as its supervisor. It forwards SIGINT/SIGQUIT/SIGTERM (`ssh.rs:304-329`); SIGHUP is not caught. If ssh exits 255 after at least 2 s attached and the main process has no terminal result, it creates a new SSH session and respawns ssh, retrying for up to 60 s (`ssh.rs:57-68`, `445-455`, `593-651`). The exec-replace in `exec_or_wait()` (`ssh.rs:241-247`) is reachable only from `sandbox exec` (`ssh.rs:1027-1035` → `1021`); every connect path spawns. ssh runs the ProxyCommand `<cli> ssh-proxy --gateway … --sandbox … --token …` (`openshell-core/src/forward.rs:931-969`) via `$SHELL -c 'exec …'`. An attached pane therefore holds a three-process chain: CLI → `ssh … -s sandbox openshell-main` → `ssh-proxy`. Client accounting must recognise the chain, zero-client checks must cover all three processes, and the session token appears in two processes' argv. **Runtime (run 2):** the gateway log shows `CreateSshSession`, an allowed token `ForwardTcp` and an opened relay that stayed up until cleanup cancelled it. That is consistent with a live chain, but no process snapshot was taken, so the chain itself is unobserved. |
 | FIND-081 | **Accepted** (owner, 2026-11-23) at its proposed scope: one local run, one synthetic process, not a real agent or a production deployment. See the A4b note below | An OpenShell v0.1.9 sandbox's canonical main process (`counter.sh` from `sandbox create --detach --tty … --`) is independent of Herdr. The process and session continued, with identity unchanged on all three sources (counter pid/start/nonce, `main_process_instance_id`/`main_process_started_at_ms`, host PID and `/proc` start) and `restart_count` 0, through each of: pane close with no client (n 6→11), reattach with replay from tick 1, clean Herdr server stop/start, and SIGKILL of the server (n advanced while Herdr was down). A new pane's `sandbox connect` accepted input (`ACK a4a`, `ACK a4b`). Scope: Podman driver, loopback gateway, synthetic counter; A4b's pane check is recorded FAIL by a harness wrap defect. REQ-009, REQ-011. |
 | FIND-082 | **Accepted** (owner, 2026-11-23) at its proposed scope: two observations in one local run; the mechanism stays inferred | When the Herdr 0.9.5 server stops cleanly or is SIGKILLed, the attached `openshell sandbox connect` client chain (supervising CLI, ssh transport, `ssh-proxy`) ends with it. In both cases no client process was present at the first scan (0 s wait), and none appeared before the next scan. No disconnected supervising CLI lingered; v0.1.9's 60 s reconnect did not keep it alive. Inferred mechanism (not traced): the pty hangup reaches the chain's foreground process group, and the CLI does not catch SIGHUP. |
+| FIND-083 | **Proposed** (run 4, 2026-11-23; one observation) | **Graceful gateway restart replaces the main process.**<br>OpenShell v0.1.9 gateway SIGTERM with the Podman driver: the gateway exited 2 s after the signal, and the sandbox's workload and supervisor containers had already exited by the first sample (+2 s). That ended the canonical main process.<br>On restart with the same database:<ul><li>the gateway started the **same** containers (same sandbox and container IDs);</li><li>`sandbox get` read Ready 3 s after the gateway started, with no client action;</li><li>the main command ran again as a **new** process: new `main_process_instance_id`, start time, nonce and host PID; `restart_count` 0; a 14.4 s gap;</li><li>the workspace volume and its counter log persisted.</li></ul>Classification: **restarted**. A graceful gateway restart interrupts the agent process. REQ-009, REQ-011. |
+| FIND-084 | **Proposed** (run 4; one observation) | **Forced gateway restart replaces the main process after the fact.**<br>While the gateway was SIGKILLed, the workload and supervisor containers and the main process kept running: same host PID and start time, n 27→36.<br>When the gateway restarted (it logged "gateway-minted sandbox JWT enabled"), startup recovery restarted both containers and replaced the main process: a 3.3 s gap, new instance id, start time and nonce, `restart_count` 0.<br>`sandbox get` reported **Ready on the first poll** after the gateway listened, about 2 s before the new process's first tick. Phase Ready is therefore evidence neither of continuity nor of a running main process.<br>Source (`driver-podman/src/driver.rs:2063-2078`) predicts that the process survives when the gateway has no JWT authority. **Not tested.** |
+| FIND-085 | **Proposed** (run 4; one observation) | **Supervised client recovery is not process continuity.**<br>The attached pane's `sandbox connect` CLI survived the gateway SIGKILL: it had no transport child at +3 s and +12 s, and it printed its reconnect notice.<br>It reattached **the same pane** within 20 s of the kill, about 5 s after the gateway restarted, with a new ssh and proxy. The pane accepted input (`ACK a5b`), but that input went to the **replaced** main process. |
+| FIND-086 | **Proposed** (run 4; one observation) | **Single writer with read-only viewers.**<br>With two `sandbox connect` clients, the first attachment owned input. The second printed `openshell: canonical main process already has an input owner; attached read-only; …` and showed the owner's output.<br>The viewer's typed `mark a6ro` never reached the process, either while read-only or after the owner left.<br>After the owner's pane was closed, the viewer's first typed line was accepted, with `openshell: input enabled`. Identity was the same throughout.<br>Not tested: release by Ctrl-D or Ctrl-P Ctrl-Q; more than one viewer. |
+| FIND-087 | **Proposed** (run 4; one observation) | **Retention and explicit delete.**<br>A `create --detach` sandbox outlived its creating CLI (which exited 0 at create) and kept running with no client attached.<br>`sandbox delete` printed `✓ Deleted sandbox …` and returned. Afterwards:<ul><li>`sandbox get` reported `sandbox not found`;</li><li>all three main-process incarnations and both container main processes were gone;</li><li>the dedicated store held no containers, volumes or secrets;</li><li>the gateway-scoped network remained until cleanup, as pre-registered.</li></ul>Not tested: natural completion; `--no-keep`. |
 
 **A4b: recorded result versus evidence (owner acceptance, 2026-11-23).**
 - The **recorded** A4b result stays **FAIL**. The harness's exact-line parser could not match an ACK that the terminal had wrapped. Run 3's `results.tsv` is not rewritten, and the harness is not claimed to have passed A4b.
@@ -46,6 +72,91 @@ Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../.
   - the same text across three rows of [panes/a4b.txt](evidence/1123-122157/panes/a4b.txt);
   - identity on all three sources, unchanged from A1.
 - FIND-081 is accepted on that evidence, at its narrow scope: one local synthetic process, not a real agent or a production deployment.
+
+## Run 4: 1123-142020 results
+
+### Identity
+
+| Item | Value |
+|---|---|
+| Run id / time | `1123-142020`. Harness 2026-11-23T19:20:58Z, cleanup start 19:23:20Z (t+142 s), final verification 19:23:29Z. Exit 0. The 30-minute budget was not approached |
+| Harness | `demo.sh` at commit `e8a8548317a463cc4aa61c8e33e3d8ff85682d19`, sha256 `0c9b1c2c5be08da26e763c404585466f260ba38e3e63083928b9f1aa0c086bde` (corrections below; reviewed before the run) |
+| Host / software | The same as run 3: Fedora 44, kernel 7.3.4-200.fc44, cgroup v2, Landlock ABI 11, seccomp `user_notif`; Podman 5.8.9 (dedicated service, `DISABLE_HC_SYSTEMD=true` on it only); Herdr 0.9.5 `32f81aa0…affc66`; OpenShell CLI 0.1.9 `2db8e54f…7e69` and gateway 0.1.9 `865e8c5a…3978`; the same pinned sandbox, supervisor and workload digests ([versions.txt](evidence/1123-142020/versions.txt)) |
+| Fresh preflight | New run root and port (24117). **P1:** host checks pass; new B0. **P2:** tag `v0.1.9` → `ce58cf8e`; tarball checksums and `--owner NVIDIA` attestations verify; promote-job log `SOURCE_SHA: ce58cf8e…` (jobs API); binary sha256 match; help texts identical to run 3 after IPv4 normalisation; registry tags resolve to the pinned digests. **0 FAIL lines** ([preflight.txt](evidence/1123-142020/preflight.txt), [preflight.sh](evidence/1123-142020/preflight.sh)) |
+| Gateway | Each of the three gateway starts logged "gateway-minted sandbox JWT enabled" |
+
+### Results
+
+| Step | Result | Observation |
+|---|---|---|
+| P3 | PASS | All 18 checks. The healthcheck probe matched run 3 key for key. Orchestrator gate decision `proceed` (FIND-077 scope) |
+| A1 | **PASS** | Ready after create. `ACK a1` (n=5) in the log and the pane. Identity: counter `pid=52 start=44121744 nonce=f2ca193317e6d72a`, `main_process_instance_id=0bd02d08-…`, host PID 1707470 |
+| A6 | **PASS** | Pane 1 attached and showed live output with no read-only notice, so it held the lease; then pane 2 attached. Pane 2 showed the full read-only notice, which wrapped at 57 columns. The viewer's `mark a6ro` produced no ACK, either while read-only or after the owner left. The owner's `ACK a6w` (n=16) arrived while pane 2 was attached, and pane 2 showed it. After pane 1 closed, pane 2's first `mark a6ro2` gave `ACK a6ro2` (n=19, one attempt) and `openshell: input enabled`. Same identity (a1) |
+| A7a | **PASS** | The create CLI (pid 1707179, exited 0 at create) was gone. With no client of any kind: phase Ready, same identity, n 22→26 |
+| A5a (SIGTERM) | **restarted** | Gateway exit 2 s after SIGTERM. Both containers had `exited` by +2 s; the counter's last tick was n=28. The restarted gateway read Ready 3 s after start with no action. **New process:** start 44125793, nonce `ae0dd3b6…`, instance `be9641fe-…`, host PID 1729308. **Unchanged:** sandbox id `51419c17-…`, container id `8dda09d2fe33`, `restart_count` 0. Log gap 14.4 s (n reset to 1). The identity settled at the first comparison. A new pane got `ACK a5a` with the new identity, so the sandbox was usable and A5b ran |
+| A5b (SIGKILL) | **restarted**, supervised client recovery | A5a's attached pane got `ACK a5b0`, then the gateway was SIGKILLed. While it was down (+2 s, +10 s): both containers running, the same counter host PID alive, n 27→36. The pane's CLI was alive with no transport child. The gateway restarted about 14 s after the kill, and `sandbox get` read Ready on the first poll (0 s). The old counter's last tick was n=38 at 19:22:54.49Z; the new counter's first tick was at 19:22:57.82Z (gap 3.3 s), about 2 s after that Ready. **New process:** start 44129737, nonce `5582d34c…`, instance `ca53fbdb-…`, host PID 1741776; same container id; `restart_count` 0. At +20 s the **original** CLI headed a complete chain again, with a new ssh and proxy, and its reconnect notice was in the pane. The same pane then got `ACK a5b` (n=20) from the **restarted** process ([obs/a5b-clients.txt](evidence/1123-142020/obs/a5b-clients.txt), [obs/a5b-classification.txt](evidence/1123-142020/obs/a5b-classification.txt)) |
+| A7b | **PASS** (explicit deletion) | Phase before delete: Ready, `exit_code` null, so no natural completion. `sandbox delete` printed `✓ Deleted sandbox exp008-1123-142020`, and `sandbox get` then reported `sandbox not found`. All tracked counter and container-main processes, across the three incarnations, were gone. No containers, volumes or secrets remained. Networks: the gateway-scoped `exp008-1123-142020` and `podman`, as pre-registered. No `C-delete` (emergency deletion) row: cleanup found no sandbox |
+
+**Identity sequence:** a1 (A1, A6, A7a) → a5a (after the SIGTERM restart) → a5b (after the SIGKILL restart).
+- Within each incarnation, all three sources agreed: the counter's own pid, start and nonce; OpenShell's instance id and start; the host PID and `/proc` start.
+- The counter log has three runs, n=1–28, 1–38 and 1–…, with two resets ([out/counter-final-full.log](evidence/1123-142020/out/counter-final-full.log)).
+
+**Wrap-aware verification in use.** In the half-width viewer pane, the `ACK a6ro2` line wrapped at 57 columns, and so did the read-only notice. The raw captures matched `wrapped:57:2`, and Herdr's `recent-unwrapped` matched as a whole line ([obs/ack-a6ro2.txt](evidence/1123-142020/obs/ack-a6ro2.txt)). Run 3's check would have failed A6 here.
+
+**Cleanup.**
+- **Intermediate RESIDUE:** the store paths were still present before run-root removal, the same pattern as runs 1–3.
+- **Final:** CLEAN ([cleanup-final.txt](evidence/1123-142020/cleanup-final.txt)).
+  - The run root is absent.
+  - All 16 recorded and swept processes are gone.
+  - No run markers, sockets or mounts remain, and port 24117 is closed.
+  - Protected baselines are identical: final vs B1 for six listings, and final vs B0 for four. They cover OpenShell config/state metadata, `~/.ssh` metadata, TCP listeners, the default Podman store and the user systemd `libpod*`/`podman*` units.
+- **Independent post-run scan:**
+  - no home path, hostname, key material, JWT, unredacted token, non-loopback IP or email address;
+  - `/tmp/hx8` absent, nothing listening, no mounts.
+
+### What stage A now shows, and what it does not
+
+| Criterion | Status |
+|---|---|
+| Main process independent of Herdr (pane close, reattach with replay, clean and forced Herdr restart) | Observed once (run 3, FIND-081, accepted) |
+| Single writer; read-only viewers; input after the owner releases | Observed once (FIND-086, proposed). Release only by closing the owner's pane |
+| Detached sandbox outlives its creating CLI; explicit delete removes its resources | Observed once (FIND-087, proposed) |
+| Gateway graceful restart | **Replaces** the main process (FIND-083, proposed) |
+| Gateway crash and restart | **Replaces** the main process at gateway startup recovery, with JWT minting enabled (FIND-084, proposed). Supervised client recovery reaches the new process (FIND-085, proposed) |
+
+**Not tested:**
+- natural completion, and `--no-keep`;
+- `--restart-policy`;
+- supervisor-container loss (the 30 s freeze/terminate);
+- host reboot;
+- a crash restart **without** JWT authority (source predicts survival);
+- gateway version upgrade and rollback;
+- a client attached during a *graceful* restart (source: FailedPrecondition is not retryable);
+- release by Ctrl-D or Ctrl-P Ctrl-Q;
+- more than two clients;
+- the A1 `/tmp/out` fallback;
+- any real agent, credential or Kubernetes driver.
+
+Each result is from one local run with one synthetic process.
+
+### Architectural implications (proposal for owner review; ADR-0001 unchanged; REQ-009 and REQ-011 stay Future)
+
+**Taking over tmux's role.** For the role EXP-006 gave tmux, the OpenShell v0.1.9 sandbox's canonical main process is a working owner. It outlives Herdr and its clients, and it gives a single writer with read-only viewers and reattach. Herdr can be a disposable client.
+
+**The gateway becomes the continuity boundary.** Under the Podman driver, both a graceful and a forced gateway restart replaced the agent process, and phase Ready did not mean the process was running.
+- Adopting OpenShell would therefore move the MVP's "may interrupt agents on Herdr upgrades" constraint onto the OpenShell gateway, its upgrades and its crash recovery.
+- Herdr upgrades would become non-interrupting, which the current architecture lists as future work.
+
+**Recommendation.**
+- Do not treat OpenShell as solving process continuity across its own lifecycle.
+- If it is pursued, treat every gateway restart as an agent-interrupting event, and keep native session-resume behaviour as the recovery path, measured as resume rather than continuity.
+- Whether the Kubernetes driver behaves differently, for example because sandbox pods are not tied to the gateway process, is a **hypothesis** for a separately approved stage B, not a result.
+- Making process survival a requirement would need an owner decision on REQ-009/REQ-011.
+
+**Next steps (none authorized).**
+- Owner review of FIND-083 to FIND-087 at their stated scopes.
+- A decision on stage B (Kubernetes driver; gateway-restart semantics there).
+- Optionally, a bounded local check of a crash restart without gateway JWT. That would need its own approval; no further local execution is approved.
 
 ## Run 4 (owner-authorized fourth and last attempt): corrections, reviewed before the run
 
@@ -506,9 +617,15 @@ The minimum next experiment is the same stage A A1–A7 run, unchanged in scope,
   - no keys, certificates, gateway database or raw protected listings are included;
   - post-run scan: no key material, JWTs, tokens, non-loopback IPs or hostname.
 
+## Files (run 4)
+
+- [demo.sh](demo.sh): the harness as run in run 4 (commit `e8a8548`).
+- [tests/ack-test.sh](tests/ack-test.sh) and [tests/fixtures/ack/](tests/fixtures/ack/): offline wrap-aware ACK tests.
+- [evidence/1123-142020/](evidence/1123-142020/), redacted as in runs 1–3. Includes `preflight.sh` and `preflight.txt`.
+
 ## Files (run 3)
 
-- [demo.sh](demo.sh): the harness as run in run 3 (commit `b09789b`).
+- `demo.sh` as run in run 3: commit `b09789b`.
 - [evidence/1123-122157/](evidence/1123-122157/), redacted as in runs 1–2. It also has [preflight.txt](evidence/1123-122157/preflight.txt) and [preflight.sh](evidence/1123-122157/preflight.sh), the orchestrator's P1/P2 script (its repo path line generalised).
 
 ## Files (run 2)

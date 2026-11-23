@@ -1,0 +1,19 @@
+class=restarted
+post identity sources consistent: yes
+pid: old=52 new=52
+start: old=44125793 new=44129737
+nonce: old=ae0dd3b6bd8ea999 new=5582d34cefdb31e3
+instance_id: old=be9641fe-d798-4948-88b2-b49e07a13128 new=ca53fbdb-660e-4b8f-8051-2df1326cb200
+started_at_ms: old=1795461738375 new=1795461777814
+restart_count: old=0 new=0
+sandbox_id: old=51419c17-0cee-4431-97b9-adbe6a2f2a28 new=51419c17-0cee-4431-97b9-adbe6a2f2a28
+cid: old=8dda09d2fe33 new=8dda09d2fe33
+hpid: old=1729308 new=1741776
+hstart: old=44125793 new=44129737
+phase: old=Ready new=Ready
+reset: old last n=28 at 1795461723.952317, new first n=1 at 1795461738.376920, gap=14.42s
+reset: old last n=38 at 1795461774.485332, new first n=1 at 1795461777.815244, gap=3.33s
+ready_after_gateway_start_s=see timeline; ready_without_action=yes (only sandbox get polled)
+original supervising CLI alive after the window: yes
+auto_reattach=yes (+20s after the kill)
+client_recovery=supervised: the original CLI reattached the same pane, which accepted input (ACK a5b) from the restarted main process; usable_after_restart=yes

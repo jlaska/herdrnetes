@@ -1,0 +1,4 @@
+classification: CLEAN (verified final state after run-root removal; cleanup-final.txt)
+intermediate classification: RESIDUE (before run-root removal; cleanup.txt keeps its notes)
+run root removed: yes
+exit: 0

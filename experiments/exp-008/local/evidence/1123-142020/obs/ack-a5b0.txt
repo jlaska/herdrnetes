@@ -1,0 +1,6 @@
+word=a5b0 expected=ACK a5b0 pid=52 start=44125793 nonce=ae0dd3b6bd8ea999 n=22 min_n_exclusive=0
+log: 1795461759.467942 2026-11-23T19:22:39 ACK a5b0 pid=52 start=44125793 nonce=ae0dd3b6bd8ea999 n=22
+source=unwrapped match=line
+source=recent match=line
+source=visible match=line
+verify=pass

@@ -1,0 +1,6 @@
+word=a1 expected=ACK a1 pid=52 start=44121744 nonce=f2ca193317e6d72a n=5 min_n_exclusive=0
+log: 1795461702.571398 2026-11-23T19:21:42 ACK a1 pid=52 start=44121744 nonce=f2ca193317e6d72a n=5
+source=unwrapped match=line
+source=recent match=line
+source=visible match=line
+verify=pass

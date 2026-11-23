@@ -1,0 +1,1 @@
+reconnect notice ('Connection to sandbox lost; reconnecting') in the pane: yes

@@ -1,6 +1,6 @@
 # EXP-008: OpenShell-owned execution with Herdr as a disposable client
 
-**Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan: [PLAN.md](../../experiments/exp-008/local/PLAN.md). Three authorized attempts; no further run is authorized.
+**Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan: [PLAN.md](../../experiments/exp-008/local/PLAN.md). Four authorized attempts; no fifth is authorized.
 
 - **Run `1122-220034`** stopped at `sandbox create`: Podman healthcheck timers need the user systemd socket.
 - **Run `1123-072024`** stopped at the first pane attach. An argv glob in the attach predicate could never match `sandbox connect` (FIND-080, revised).
@@ -10,6 +10,17 @@
   - A4b is **recorded FAIL**, which stopped the run. The ACK arrived with the correct identity, but it wrapped in a narrow pane, so the harness's exact-line pane check could not match it (a harness defect).
   - A5 (gateway restart), A6 (single writer) and A7 (retention/delete) **did not run**.
   - Cleanup was CLEAN on the verified final state.
+- **Run `1123-142020`** (fourth and last attempt, with a reviewed wrap-aware ACK check and the owner-approved order A1 → A6 → A7a → A5a → A5b → A7b) recorded:
+  - A1, A6, A7a and A7b PASS;
+  - A5a **restarted** and A5b **restarted**.
+
+  Exit 0; cleanup CLEAN.
+  - The first attachment owned input. A second client was read-only, its input was discarded, and it gained input after the owner's pane closed.
+  - Both a graceful (SIGTERM) and a forced (SIGKILL) gateway restart **replaced the canonical main process**.
+    - The graceful stop stopped the containers.
+    - After the SIGKILL, the process kept running until gateway startup recovery restarted the containers. `sandbox get` read Ready before the new process ran.
+    - The supervising `connect` CLI reattached its pane by itself, but to the new process.
+  - A detached sandbox outlived its creating CLI, and an explicit delete removed its resources. Natural completion was not exercised.
 
 Results, findings and proposals: [experiments/exp-008/local/README.md](../../experiments/exp-008/local/README.md).
 
@@ -35,10 +46,18 @@ Reattaching was manual (FIND-072). The OpenShell properties this experiment reli
 - **B:** the Kubernetes driver in a scratch namespace (cluster-scoped Agent Sandbox controller/CRD and gateway RBAC).
 - **C:** a real agent with an egress-substituted credential. It covers work through a pane close (the EXP-006 K03 gap) and workload-pod loss, classified as resume rather than continuity.
 
-**Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/), [run 1123-072024](../../experiments/exp-008/local/evidence/1123-072024/), [run 1123-122157](../../experiments/exp-008/local/evidence/1123-122157/).
+**Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/), [run 1123-072024](../../experiments/exp-008/local/evidence/1123-072024/), [run 1123-122157](../../experiments/exp-008/local/evidence/1123-122157/), [run 1123-142020](../../experiments/exp-008/local/evidence/1123-142020/).
 - FIND-077, FIND-078 and FIND-079 are accepted at their stated scopes (FIND-077: observed, single workstation).
-- FIND-080 is proposed (revised: supervised `connect` spawns `ssh`; the earlier exec-replace statement is withdrawn). Run 3 observed the CLI → ssh → proxy chain in process snapshots; it awaits owner review.
-- FIND-081 (proposed): the main process is independent of Herdr pane close and of clean and forced Herdr restart; a new pane reattaches with replay and input. One local run.
-- FIND-082 (proposed): the `connect` client chain ends when the Herdr server stops or is killed; no lingering CLI was observed.
+- FIND-080, FIND-081 and FIND-082 are accepted (owner, 2026-11-23) at their documented scopes: one local run and one synthetic process.
+  - FIND-080: supervised `connect` spawns `ssh`.
+  - FIND-081: the main process is independent of Herdr. Run 3's A4b stays recorded FAIL because of the harness wrap defect; its committed evidence shows the correct ACK and an unchanged identity.
+  - FIND-082: the client chain ends with the Herdr server.
+- FIND-083 to FIND-087 (proposed, run 4, one observation each):
+  - FIND-083: a graceful gateway restart replaces the main process.
+  - FIND-084: a crash restart with JWT minting replaces it at startup recovery, and Ready precedes the new process.
+  - FIND-085: supervised client recovery reaches the new process.
+  - FIND-086: single writer with read-only viewers.
+  - FIND-087: retention and explicit delete.
+- **Proposal (owner review):** OpenShell can own execution independently of Herdr, but its gateway becomes the continuity boundary. Gateway restarts should be treated as agent-interrupting events, with native resume as the recovery path.
 
 **Requirements:** REQ-009, REQ-011. **Related:** EXP-006 ([#7](https://github.com/jlaska/herdrnetes/issues/7)), FIND-071/074/076.

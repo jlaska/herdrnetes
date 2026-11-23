@@ -1,0 +1,11 @@
+Inspect gateway configuration without starting the service
+
+Usage: openshell-gateway config <COMMAND>
+
+Commands:
+  preflight  Validate the selected configuration without modifying it or starting the gateway
+  help       Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+exit=0
