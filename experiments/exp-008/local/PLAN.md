@@ -1,4 +1,10 @@
-# EXP-008 stage A: local execution plan (NOT RUN; for owner review)
+# EXP-008 stage A: local execution plan (approved; executed in four runs; stage A complete)
+
+> **Status (2026-11-23).**
+> - The owner approved this plan at commit `55a4b9e`. It was executed in four authorized runs: `1122-220034`, `1123-072024`, `1123-122157` and `1123-142020`.
+> - Stage A is complete. The results, the owner's conclusion and the accepted findings FIND-077 to FIND-087 are in [README.md](README.md).
+> - The pre-registered corrections, made from source before the first run, and the owner-authorized harness changes between runs are recorded in the README. Run 4 used the owner-approved order A1 → A6 → A7a → A5a → A5b → A7b instead of the order below, and did not repeat A2–A4.
+> - The plan below is preserved as written for the historical record. Its "not yet executed" and "NOT RUN" wording describes the state at approval time.
 
 Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · plan record [08-openshell-execution.md](../../../docs/experiments/08-openshell-execution.md) · REQ-009, REQ-011 · follows EXP-006 FIND-071/074/076 · ADR-0001 unchanged
 

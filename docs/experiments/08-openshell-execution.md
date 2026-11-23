@@ -1,6 +1,6 @@
 # EXP-008: OpenShell-owned execution with Herdr as a disposable client
 
-**Status:** In progress (issue [#39](https://github.com/jlaska/herdrnetes/issues/39)). Stage A local plan: [PLAN.md](../../experiments/exp-008/local/PLAN.md). Four authorized attempts; no fifth is authorized.
+**Status:** Stage A **complete** (four authorized local runs; owner conclusion 2026-11-23). Stage B is a research proposal, not authorized ([STAGE-B-PROPOSAL.md](../../experiments/exp-008/STAGE-B-PROPOSAL.md)). Stage C is deferred. Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) remains the parent tracker. Stage A plan: [PLAN.md](../../experiments/exp-008/local/PLAN.md).
 
 - **Run `1122-220034`** stopped at `sandbox create`: Podman healthcheck timers need the user systemd socket.
 - **Run `1123-072024`** stopped at the first pane attach. An argv glob in the attach predicate could never match `sandbox connect` (FIND-080, revised).
@@ -52,12 +52,19 @@ Reattaching was manual (FIND-072). The OpenShell properties this experiment reli
   - FIND-080: supervised `connect` spawns `ssh`.
   - FIND-081: the main process is independent of Herdr. Run 3's A4b stays recorded FAIL because of the harness wrap defect; its committed evidence shows the correct ACK and an unchanged identity.
   - FIND-082: the client chain ends with the Herdr server.
-- FIND-083 to FIND-087 (proposed, run 4, one observation each):
+- FIND-083 to FIND-087 are accepted (owner, 2026-11-23) at their documented scopes: one local run, one synthetic process, OpenShell v0.1.9 with the Podman driver as tested.
   - FIND-083: a graceful gateway restart replaces the main process.
   - FIND-084: a crash restart with JWT minting replaces it at startup recovery, and Ready precedes the new process.
   - FIND-085: supervised client recovery reaches the new process.
   - FIND-086: single writer with read-only viewers.
   - FIND-087: retention and explicit delete.
-- **Proposal (owner review):** OpenShell can own execution independently of Herdr, but its gateway becomes the continuity boundary. Gateway restarts should be treated as agent-interrupting events, with native resume as the recovery path.
+- **Stage A conclusion (owner, 2026-11-23):**
+  - For the tested local configuration, OpenShell provides independent execution ownership, terminal reattachment and single-writer semantics. At that scope it is a viable replacement for EXP-006's custom tmux/SSH-server execution mechanism.
+  - OpenShell gateway lifecycle events can interrupt the canonical agent process: both tested restart modes replaced it under the Podman driver.
+  - A connection that recovers automatically is not evidence that the original process survived.
+  - Agent recovery through native session resume is a separate capability that stage A did not demonstrate.
+  - These results do not extend to the Kubernetes driver, gateway upgrades, real agents or other configurations.
+  - REQ-009 and REQ-011 remain Future, and ADR-0001 is unchanged.
+- Run 3's A4b remains **recorded FAIL**. A harness exact-line check missed an ACK that the terminal had wrapped. Its committed evidence separately shows the correct ACK and an unchanged identity, which the owner accepted as part of FIND-081.
 
 **Requirements:** REQ-009, REQ-011. **Related:** EXP-006 ([#7](https://github.com/jlaska/herdrnetes/issues/7)), FIND-071/074/076.
