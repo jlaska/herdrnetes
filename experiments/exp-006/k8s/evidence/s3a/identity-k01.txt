@@ -1,0 +1,7 @@
+pid=25
+start=31889030
+sid=0c2ad2da-8511-4600-86c0-48e6544e0ff3
+model=claude-haiku-5-5
+effort=medium
+claude_version=2.1.323
+key_present=yes

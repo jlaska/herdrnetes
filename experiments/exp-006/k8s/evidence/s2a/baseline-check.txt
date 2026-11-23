@@ -1,0 +1,7 @@
+# K00 vs K06 live-system baseline comparison (contents withheld; see session-log.md)
+# Produced locally after the run, during sanitization, in the evidence dir: wc -l k00.txt k06.txt; sha256sum k00.txt k06.txt; cmp k00.txt k06.txt && echo "cmp: identical"
+ 1100 k00.txt
+ 1100 k06.txt
+f177d785d77c6eaeb765a309dfaa1e593fa6a1d78d069e847b9b8c4820c763b2  k00.txt
+f177d785d77c6eaeb765a309dfaa1e593fa6a1d78d069e847b9b8c4820c763b2  k06.txt
+cmp: identical

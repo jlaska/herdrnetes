@@ -11,6 +11,7 @@ GitHub Issues coordinate work. These Markdown records capture reproducible proce
 | EXP-005 | Repository lifecycle / storage | [05-repository-storage](05-repository-storage.md) |
 | EXP-006 | Independent agent execution / OpenShell/Kata | [06-isolated-execution](06-isolated-execution.md) |
 | EXP-007 | Full-cluster hibernation and recovery | [07-cluster-hibernation](07-cluster-hibernation.md) |
+| EXP-008 | OpenShell-owned execution with Herdr as a disposable client | [08-openshell-execution](08-openshell-execution.md) |
 
 ## Record for every run
 

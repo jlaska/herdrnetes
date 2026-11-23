@@ -1,0 +1,40 @@
+      50 +    while b:
+      51 +        a, b = b, a % b
+      52 +    return a
+      53
+      54
+      55  def f08(n):
+
+  Ran 1 shell command
+
+_ Update(kata.py)
+  _ _Added 4 lines, removed 1 line
+      54
+      55  def f08(n):
+      56      """Return the n-th Fibonacci number for n >= 0, with f08(0) == 0 and f08(1) == 1."""
+      57 -    raise NotImplementedError
+      57 +    a, b = 0, 1
+      58 +    for _ in range(n):
+      59 +        a, b = b, a + b
+      60 +    return a
+      61
+      62
+      63  def f09(s):
+
+  Ran 1 shell command
+
+_ DONE-B
+
+_ Brewed for 5s · done 1:00 AM
+
+_ Reply with exactly one line: Q2 CODEWORD=<the session codeword from my first message> DONE=<number of functions
+  passing per your last check>
+
+_ Q2 CODEWORD=<CODE> DONE=8
+
+_ Brewed for 0s · done 1:01 AM
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+__
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  __ don't ask on (shift+tab to cycle)

@@ -1,0 +1,16 @@
+18:08:39.901 run v2 root=/tmp/hx6/v2 herdr=herdr 0.9.5 tmux 3.8
+18:08:40.045 tmux server pid=931952 ppid=1 sid=931952
+18:08:40.049 counter pid=931953 start=28203948 nonce=73d029d5d1f74fd0 (parent=931952, tmux server=931952)
+18:08:40.102 herdr server (initial) pid=932015 start=28203962
+18:08:40.233 pane w1:p1 (t1): tmux client attached (clients=1)
+18:08:40.261 RESULT T1-attach PASS ACK in log and pane read: pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=1
+18:08:45.418 RESULT T2-disconnect PASS pane closed, clients=0, counter pid=931953 start=28203948 nonce=73d029d5d1f74fd0 unchanged; n at disconnect=2, now 7, 5 counter lines over 4.0s with no client
+18:08:45.498 pane w2:p1 (t3): tmux client attached (clients=1)
+18:08:45.522 RESULT T3-reconnect PASS ACK pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=7 (> n at disconnect 2)
+18:08:48.712 herdr server (restart-4a) pid=932787 start=28204823
+18:08:48.914 pane w2:p2 (T4a): tmux client attached (clients=1)
+18:08:48.981 RESULT T4a PASS clean: old server pid 932015 gone, clients dropped to 0 (was 1), counter unchanged and advanced n=8->11 while Herdr down; after restart (new server pid 932787, restored-pane tmux clients=0) new pane ACK pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=11
+18:08:52.135 herdr server (restart-4b) pid=933187 start=28205165
+18:08:52.334 pane w2:p2 (T4b): tmux client attached (clients=1)
+18:08:52.402 RESULT T4b PASS kill: old server pid 932787 gone, clients dropped to 0 (was 1), counter unchanged and advanced n=12->15 while Herdr down; after restart (new server pid 933187, restored-pane tmux clients=0) new pane ACK pid=931953 start=28203948 nonce=73d029d5d1f74fd0 n=15
+18:08:52.404 cleanup start (exit=0)

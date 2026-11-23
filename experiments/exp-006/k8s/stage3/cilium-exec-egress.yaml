@@ -1,0 +1,41 @@
+# EXP-006 stage 3: the ONLY egress the exec pod has beyond the stage-2 default-deny: api.anthropic.com:443, plus DNS
+# to kube-dns restricted to that name. CiliumNetworkPolicy and NetworkPolicy allows are additive in Cilium: the
+# stage-2 default-deny-all still denies everything not listed here, and exec-ingress still governs ingress.
+# This is an L3/L4 plus FQDN allow, NOT L7 HTTP inspection: anything served from api.anthropic.com:443 is reachable.
+# Cilium resolves the name through its DNS proxy (the dns rule below); only answers for that name are permitted and
+# the toFQDNs rule allows the IPs it learned from them.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: exec-egress-anthropic
+  namespace: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: networkpolicy
+    herdrnetes.io/disposable: "true"
+spec:
+  endpointSelector:
+    matchLabels:
+      herdrnetes.io/component: exec
+      herdrnetes.io/run-id: "${RUN_ID}"
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchName: api.anthropic.com
+    - toFQDNs:
+        - matchName: api.anthropic.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

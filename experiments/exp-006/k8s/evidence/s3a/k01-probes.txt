@@ -1,0 +1,18 @@
+--- allowed
+allowed ok 443
+rc=0
+--- 1.1.1.1:443 (must fail)
+command terminated with exit code 1
+rc=1
+--- 1.1.1.1:443 rerun (must fail)
+TimeoutError: timed out
+--- example.com (must fail)
+    import socket;print(socket.getaddrinfo("example.com",443))
+command terminated with exit code 1
+example.com: gaierror [Errno -3] Temporary failure in name resolution
+--- PSA labels
+{"pod-security.kubernetes.io/audit":"restricted","pod-security.kubernetes.io/enforce":"restricted","pod-security.kubernetes.io/warn":"restricted"}
+--- exec pod hardening
+{"sa_token":false,"hostNet":null,"pod":{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"c":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsNonRoot":true},"dns":{"options":[{"name":"ndots","value":"1"}]}}
+nameserver <ip>
+options ndots:1

@@ -1,0 +1,88 @@
+# Execution pod: tmux server (dedicated socket) owning counter.sh, plus non-root sshd on 2222.
+# Image: owner-dispatched CI build of source 35369c2db4daa6d241aa6b08e9ddf3e751143490 (RUNBOOK, Image).
+# restartPolicy Never: a container restart must not mask a failure (K05 checks restartCount 0).
+# Required anti-affinity: (1) not with the herdr pod of this run, (2) not on the node of the live Herdr pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: exp006-exec
+  namespace: herdrnetes-exp006-${RUN_ID}
+  labels:
+    herdrnetes.io/experiment: exp-006
+    herdrnetes.io/run-id: "${RUN_ID}"
+    herdrnetes.io/component: exec
+    herdrnetes.io/pod-group: exp006-pair
+    herdrnetes.io/disposable: "true"
+spec:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 10
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              herdrnetes.io/run-id: "${RUN_ID}"
+              herdrnetes.io/pod-group: exp006-pair
+        - topologyKey: kubernetes.io/hostname
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: herdrnetes-exp
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: herdr
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: exec
+      image: ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16
+      imagePullPolicy: IfNotPresent
+      ports:
+        - name: ssh
+          containerPort: 2222
+          protocol: TCP
+      securityContext:
+        allowPrivilegeEscalation: false
+        privileged: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+      readinessProbe:
+        tcpSocket:
+          port: 2222
+        periodSeconds: 3
+        failureThreshold: 10
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+          ephemeral-storage: 64Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+          ephemeral-storage: 256Mi
+      volumeMounts:
+        - name: ssh-secret
+          mountPath: /run/exp006/ssh
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: ssh-secret
+      secret:
+        secretName: exp006-exec-ssh
+        defaultMode: 0440
+    - name: tmp
+      emptyDir:
+        sizeLimit: 128Mi

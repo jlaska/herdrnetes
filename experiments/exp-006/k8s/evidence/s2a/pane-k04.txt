@@ -1,0 +1,40 @@
+tick n=163
+tick n=164
+tick n=165
+tick n=166
+tick n=167
+tick n=168
+tick n=169
+tick n=170
+tick n=171
+tick n=172
+tick n=173
+tick n=174
+tick n=175
+tick n=176
+tick n=177
+tick n=178
+tick n=179
+tick n=180
+tick n=181
+tick n=182
+tick n=183
+tick n=184
+tick n=185
+tick n=186
+tick n=187
+tick n=188
+tick n=189
+tick n=190
+tick n=191
+tick n=192
+tick n=193
+tick n=194
+tick n=195
+tick n=196
+tick n=197
+mark k04
+ACK k04 pid=17 start=29585526 nonce=4d941f1d19cdad5d n=197
+tick n=198
+
+[agent] 0:bash*                                                                           "exp006-exec" 18:02 22-Nov-26

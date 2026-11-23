@@ -1,0 +1,13 @@
+None mode []  
+None permission-mode []  
+None atis-latch []  
+None file-history-snapshot []  
+2026-11-23T00:25:23.936Z user []  
+2026-11-23T00:25:23.960Z attachment []  
+2026-11-23T00:25:23.960Z attachment []  
+2026-11-23T00:25:23.963Z attachment []  
+2026-11-23T00:25:23.980Z api-request-shape []  
+None api-request-blob []  
+2026-11-23T00:25:23.980Z api-request []  
+2026-11-23T00:25:24.243Z assistant [] Credit balance is too low True
+2026-11-23T00:25:24.247Z system []  

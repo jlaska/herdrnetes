@@ -1,0 +1,119 @@
+# Proposed for owner review; not yet authorized to run. INACTIVE COPY: the owner moves it to
+# .github/workflows/exp006-exec-image.yml in an owner-operated commit (agent token has no `workflow` scope).
+#
+# EXP-006 stage 2: build the execution image (tmux + non-root sshd + counter.sh),
+# smoke-test it over SSH/PTY with the real stage-2 client, then push it to GHCR.
+# Inert until this file is on the default branch AND the owner dispatches it
+# (workflow_dispatch only: no push or pull_request trigger).
+#
+# Source pinning: a workflow_dispatch run executes the workflow file from main, but
+# this job builds from the pinned, reviewed SOURCE_SHA, not from main or any branch.
+# That commit contains experiments/exp-006/exec-image/ (Containerfile, entrypoint.sh,
+# counter.sh, smoke.sh). SOURCE_SHA below is that reviewed build-source commit; any
+# change to the build context needs a new source commit and an updated SOURCE_SHA.
+# A step fails the job unless the checked-out HEAD equals SOURCE_SHA.
+#
+# Order: build, smoke.sh, and only then GHCR login and push. A smoke failure stops the
+# job and nothing is published. Auth is the repository-scoped GITHUB_TOKEN; no PATs.
+# The pushed digest, not the tag, is what the manifests pin. Package visibility is NOT
+# changed here: the owner sets it to PUBLIC by hand in the GHCR package settings.
+name: exp006-exec-image
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: exp006-exec-image
+  cancel-in-progress: false
+
+env:
+  SOURCE_SHA: 35369c2db4daa6d241aa6b08e9ddf3e751143490
+  IMAGE: ghcr.io/jlaska/herdrnetes-exec
+  TAG: exp006-s1
+  CONTEXT: experiments/exp-006/exec-image
+  # EXP-002 Herdr image: the real stage-2 client (ssh). Public; pulled anonymously.
+  CLIENT_IMAGE: ghcr.io/jlaska/herdrnetes-herdr:exp002-h095-c311@sha256:c5a235ae20ddebd25debeae4cc844a98d854cae5f7d130693958955b37e8d277
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # actions/checkout v7.0.1 (release 2026-07-20); SHA is the commit the tag points to.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          persist-credentials: false
+
+      - name: Verify the checkout is the pinned source commit
+        run: |
+          set -eu
+          head=$(git rev-parse HEAD)
+          printf '%s' "$SOURCE_SHA" | grep -Eq '^[0-9a-f]{40}$' \
+            || { echo "SOURCE_SHA is not a 40-hex commit (placeholder not substituted?)" >&2; exit 1; }
+          [ "$head" = "$SOURCE_SHA" ] \
+            || { echo "HEAD $head != SOURCE_SHA $SOURCE_SHA" >&2; exit 1; }
+          echo "building from $head"
+
+      - name: Verify counter.sh is byte-identical to the stage-1 copy
+        run: cmp experiments/exp-006/local/counter.sh "$CONTEXT/counter.sh"
+
+      - name: Build
+        run: docker build --file "$CONTEXT/Containerfile" --tag "$IMAGE:$TAG" "$CONTEXT"
+
+      - name: Version and package manifest
+        run: |
+          set -eu
+          docker run --rm --entrypoint /usr/bin/tmux "$IMAGE:$TAG" -V
+          docker run --rm --entrypoint /usr/bin/ssh "$IMAGE:$TAG" -V
+          docker run --rm --entrypoint /bin/cat "$IMAGE:$TAG" /usr/share/exp006-manifest.txt
+
+      - name: Pull the client image (anonymous, before any login)
+        run: docker pull "$CLIENT_IMAGE"
+
+      # Two-container SSH/PTY test; no registry credentials exist at this point.
+      # A failure stops the job, so nothing is published.
+      - name: Smoke test (smoke.sh)
+        env:
+          SMOKE_TABLE_FILE: ${{ runner.temp }}/smoke-table.md
+        run: bash "$CONTEXT/smoke.sh" "$IMAGE:$TAG" "$CLIENT_IMAGE"
+
+      - name: Log in to GHCR (GITHUB_TOKEN)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$ACTOR" --password-stdin
+
+      - name: Push and report digest
+        env:
+          SMOKE_TABLE_FILE: ${{ runner.temp }}/smoke-table.md
+          WORKFLOW_COMMIT: ${{ github.sha }}
+        run: |
+          set -eu
+          docker push "$IMAGE:$TAG" | tee push.log
+          digest=$(sed -n 's/.*digest: \(sha256:[0-9a-f]\{64\}\).*/\1/p' push.log | tail -1)
+          [ -n "$digest" ] || { echo "could not read digest from docker push output" >&2; exit 1; }
+          {
+            echo "### EXP-006 exec image"
+            echo
+            echo "- Source SHA (built from): \`$SOURCE_SHA\`"
+            echo "- Workflow commit (\`GITHUB_SHA\`, the workflow file's own commit, not the build source): \`$WORKFLOW_COMMIT\`"
+            echo "- Tag: \`$IMAGE:$TAG\`"
+            echo "- Digest: \`$IMAGE@$digest\`"
+            echo "- Client image used by the smoke test: \`$CLIENT_IMAGE\`"
+            echo
+            echo "Package manifest:"
+            echo '```'
+            docker run --rm --entrypoint /bin/cat "$IMAGE:$TAG" /usr/share/exp006-manifest.txt
+            echo '```'
+            echo
+            echo "Smoke test (smoke.sh, run before the push):"
+            echo
+            cat "$SMOKE_TABLE_FILE"
+            echo
+            echo "**Owner action:** set the GHCR package \`herdrnetes-exec\` visibility to PUBLIC in the package settings (this workflow does not change it). Then record the digest and source SHA in a reviewed commit to \`manifests/exec-pod.yaml\` and the runbook."
+          } >>"$GITHUB_STEP_SUMMARY"
