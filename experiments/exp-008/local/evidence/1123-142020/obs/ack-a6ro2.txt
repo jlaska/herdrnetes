@@ -1,0 +1,6 @@
+word=a6ro2 expected=ACK a6ro2 pid=52 start=44121744 nonce=f2ca193317e6d72a n=19 min_n_exclusive=6
+log: 1795461715.941752 2026-11-23T19:21:55 ACK a6ro2 pid=52 start=44121744 nonce=f2ca193317e6d72a n=19
+source=unwrapped match=line
+source=recent match=wrapped:57:2
+source=visible match=wrapped:57:2
+verify=pass

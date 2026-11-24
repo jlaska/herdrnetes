@@ -1,0 +1,280 @@
+=== STEP 1 2026-11-23T03:02:50Z ===
+### $ gh api repos/NVIDIA/OpenShell --jq .full_name,.id
+ai-openshell/openshell
+1166129534
+### exit=0
+### $ gh api repos/ai-openshell/openshell --jq .full_name,.id
+ai-openshell/openshell
+1166129534
+### exit=0
+=== STEP 2 2026-11-23T03:02:54Z ===
+### $ gh attestation verify /tmp/hx8/1122-220034/dl/openshell-x86_64-unknown-linux-musl.tar.gz --owner ai-openshell
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/ai-openshell/attestations/sha256:3856ac7b6b2e33d6c8ab72a1036444156516e7303da85a9b13f661a2aa63bd2d?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify /tmp/hx8/1122-220034/dl/openshell-x86_64-unknown-linux-musl.tar.gz --owner NVIDIA
+
+### exit=0
+### $ gh attestation verify /tmp/hx8/1122-220034/dl/openshell-x86_64-unknown-linux-musl.tar.gz -R NVIDIA/OpenShell
+
+Error: HTTP 404: Not Found (https://api.github.com/repositories/1166129534/attestations/sha256:3856ac7b6b2e33d6c8ab72a1036444156516e7303da85a9b13f661a2aa63bd2d?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify /tmp/hx8/1122-220034/dl/openshell-gateway-x86_64-unknown-linux-gnu.tar.gz --owner ai-openshell
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/ai-openshell/attestations/sha256:c32085d64ccef037121c0e87bee1a57d6e886d77f77bb8b260cb08f0a6cce6a3?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify /tmp/hx8/1122-220034/dl/openshell-gateway-x86_64-unknown-linux-gnu.tar.gz --owner NVIDIA
+
+### exit=0
+### $ gh attestation verify /tmp/hx8/1122-220034/dl/openshell-gateway-x86_64-unknown-linux-gnu.tar.gz -R NVIDIA/OpenShell
+
+Error: HTTP 404: Not Found (https://api.github.com/repositories/1166129534/attestations/sha256:c32085d64ccef037121c0e87bee1a57d6e886d77f77bb8b260cb08f0a6cce6a3?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+=== STEP 3 2026-11-23T03:03:22Z ===
+### $ gh api repos/ai-openshell/openshell/attestations/sha256:3856ac7b6b2e33d6c8ab72a1036444156516e7303da85a9b13f661a2aa63bd2d --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/ai-openshell/attestations/sha256:3856ac7b6b2e33d6c8ab72a1036444156516e7303da85a9b13f661a2aa63bd2d --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/orgs/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/NVIDIA/attestations/sha256:3856ac7b6b2e33d6c8ab72a1036444156516e7303da85a9b13f661a2aa63bd2d --jq .attestations|length
+1
+### exit=0
+### $ gh api repos/ai-openshell/openshell/attestations/sha256:c32085d64ccef037121c0e87bee1a57d6e886d77f77bb8b260cb08f0a6cce6a3 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/ai-openshell/attestations/sha256:c32085d64ccef037121c0e87bee1a57d6e886d77f77bb8b260cb08f0a6cce6a3 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/orgs/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/NVIDIA/attestations/sha256:c32085d64ccef037121c0e87bee1a57d6e886d77f77bb8b260cb08f0a6cce6a3 --jq .attestations|length
+1
+### exit=0
+=== STEP 4 2026-11-23T03:03:33Z ===
+### $ mkdir -m700 /tmp/hx8/1122-220034/dl-inner /tmp/hx8/1122-220034/dl-inner/cli /tmp/hx8/1122-220034/dl-inner/gw
+
+### exit=0
+### $ tar -xzf /tmp/hx8/1122-220034/dl/openshell-x86_64-unknown-linux-musl.tar.gz -C /tmp/hx8/1122-220034/dl-inner/cli
+
+### exit=0
+### $ tar -xzf /tmp/hx8/1122-220034/dl/openshell-gateway-x86_64-unknown-linux-gnu.tar.gz -C /tmp/hx8/1122-220034/dl-inner/gw
+
+### exit=0
+### $ find /tmp/hx8/1122-220034/dl-inner -type f -printf %p %s bytes
+
+/tmp/hx8/1122-220034/dl-inner/gw/openshell-gateway 115408216 bytes
+/tmp/hx8/1122-220034/dl-inner/cli/openshell 26760616 bytes
+### exit=0
+### $ sha256sum /tmp/hx8/1122-220034/dl-inner/cli/openshell /tmp/hx8/1122-220034/dl-inner/gw/openshell-gateway
+2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69  /tmp/hx8/1122-220034/dl-inner/cli/openshell
+865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978  /tmp/hx8/1122-220034/dl-inner/gw/openshell-gateway
+### exit=0
+CLI=2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69 GW=865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978
+### $ gh attestation verify /tmp/hx8/1122-220034/dl-inner/cli/openshell --owner ai-openshell
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/ai-openshell/attestations/sha256:2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify /tmp/hx8/1122-220034/dl-inner/cli/openshell --owner NVIDIA
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/NVIDIA/attestations/sha256:2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify /tmp/hx8/1122-220034/dl-inner/gw/openshell-gateway --owner ai-openshell
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/ai-openshell/attestations/sha256:865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify /tmp/hx8/1122-220034/dl-inner/gw/openshell-gateway --owner NVIDIA
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/NVIDIA/attestations/sha256:865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh api repos/ai-openshell/openshell/attestations/sha256:2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/ai-openshell/attestations/sha256:2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/orgs/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/NVIDIA/attestations/sha256:2db8e54f63feebe9f994efaf6004bbd45c55bc70ea455eda42fe82a0ea7c7e69 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/orgs/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api repos/ai-openshell/openshell/attestations/sha256:865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/ai-openshell/attestations/sha256:865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/orgs/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+### $ gh api orgs/NVIDIA/attestations/sha256:865e8c5ae15a599ca001d023efc137527ff8e102b0cccb90a85184a1c6e33978 --jq .attestations|length
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/orgs/attestations#list-attestations","status":"404"}gh: Not Found (HTTP 404)
+### exit=1
+=== STEP 5 2026-11-23T03:03:58Z ===
+### $ gh api repos/ai-openshell/openshell/contents/.github/workflows?ref=v0.1.9 --jq .[].name
+branch-checks.yml
+branch-docs.yml
+branch-e2e.yml
+build-binaries-linux.yml
+build-binaries-macos.yml
+build-images.yml
+build-rpm.yml
+build-vm-driver-linux.yml
+build-vm-driver-macos.yml
+cargo-deny.yml
+ci-image.yml
+codeql.yml
+codex-compatibility.yml
+codex-security.yml
+dco.yml
+deb-package.yml
+dependency-review.yml
+e2e-docker-test.yml
+e2e-gpu-test.yaml
+e2e-kubernetes-test.yml
+e2e-label-help.yml
+e2e-podman-test.yml
+e2e-suites.yml
+e2e-vm-test.yml
+helm-lint.yml
+integration-runner.yml
+integration-test.yml
+issue-triage.yml
+maintainer-approval.yml
+maintainers-change-alert.yml
+package-release-binaries.yml
+pr-issue-acceptance.yml
+prepare-integration-inputs.yml
+publish-docs-website.yml
+release-auto-tag.yml
+release-build.yml
+release-canary.yml
+release-dev.yml
+release-notes.yml
+release-prerelease.yml
+release-publish.yml
+release-qualification.yml
+release-vm-kernel.yml
+release.yml
+required-ci-gates.yml
+review-readiness.yml
+rpm-package.yml
+rust-cache.yml
+sdk-typescript-publish.yml
+security-scan.yml
+snap-package.yml
+snap-publish.yml
+stale.yml
+sync-docs.yml
+trivy-changes.yml
+trivy-scan.yml
+vouch-check.yml
+vouch-command.yml
+windows-msvc.yml
+workflow-security.yml
+### exit=0
+=== STEP 5b 2026-11-23T03:04:03Z ===
+### fetch build-binaries-linux.yml
+### fetch exit=0 (build-binaries-linux.yml, 138 lines)
+### fetch build-binaries-macos.yml
+### fetch exit=0 (build-binaries-macos.yml, 63 lines)
+### fetch build-images.yml
+### fetch exit=0 (build-images.yml, 66 lines)
+### fetch build-rpm.yml
+### fetch exit=0 (build-rpm.yml, 132 lines)
+### fetch build-vm-driver-linux.yml
+### fetch exit=0 (build-vm-driver-linux.yml, 96 lines)
+### fetch build-vm-driver-macos.yml
+### fetch exit=0 (build-vm-driver-macos.yml, 93 lines)
+### fetch publish-docs-website.yml
+### fetch exit=0 (publish-docs-website.yml, 74 lines)
+### fetch release-auto-tag.yml
+### fetch exit=0 (release-auto-tag.yml, 70 lines)
+### fetch release-build.yml
+### fetch exit=0 (release-build.yml, 205 lines)
+### fetch release-canary.yml
+### fetch exit=0 (release-canary.yml, 495 lines)
+### fetch release-dev.yml
+### fetch exit=0 (release-dev.yml, 555 lines)
+release-dev.yml:276:      attestations: write
+release-dev.yml:413:        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+release-dev.yml:415:          subject-path: |
+### fetch release-notes.yml
+### fetch exit=0 (release-notes.yml, 198 lines)
+### fetch release-prerelease.yml
+### fetch exit=0 (release-prerelease.yml, 227 lines)
+release-prerelease.yml:120:      attestations: write
+### fetch release-publish.yml
+### fetch exit=0 (release-publish.yml, 587 lines)
+release-publish.yml:59:      attestations: write
+release-publish.yml:174:        id: attest
+release-publish.yml:175:        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+release-publish.yml:177:          subject-path: |
+### fetch release-qualification.yml
+### fetch exit=0 (release-qualification.yml, 270 lines)
+### fetch release-vm-kernel.yml
+### fetch exit=0 (release-vm-kernel.yml, 268 lines)
+release-vm-kernel.yml:82:            target/libkrun-build/provenance.json
+release-vm-kernel.yml:179:      attestations: write
+release-vm-kernel.yml:192:        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+release-vm-kernel.yml:194:          subject-path: |
+release-vm-kernel.yml:262:            gh attestation verify vm-runtime-linux-x86_64.tar.zst -R NVIDIA/OpenShell
+### fetch release.yml
+### fetch exit=0 (release.yml, 241 lines)
+release.yml:149:      attestations: write
+=== STEP 5c subject-path context 2026-11-23T03:04:15Z ===
+## release-publish.yml 172-184
+
+      - name: Attest release artifacts
+        id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            release/*.tar.gz
+            release/*.deb
+            release/*.rpm
+
+      - name: Upload assembled release assets
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+## release-dev.yml 411-420
+
+      - name: Attest VM driver artifacts
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            release/openshell-driver-vm-x86_64-unknown-linux-gnu.tar.gz
+            release/openshell-driver-vm-aarch64-unknown-linux-gnu.tar.gz
+            release/openshell-driver-vm-aarch64-apple-darwin.tar.gz
+
+      - name: Prune managed assets from dev release
+## release-vm-kernel.yml 190-200
+
+      - name: Attest VM runtime artifacts
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            release/vm-runtime-linux-aarch64.tar.zst
+            release/vm-runtime-linux-x86_64.tar.zst
+            release/vm-runtime-darwin-aarch64.tar.zst
+
+      - name: Ensure vm-runtime tag exists
+        env:
+=== STEP 6 2026-11-23T03:04:31Z ===
+### $ gh attestation verify oci://ghcr.io/nvidia/openshell/supervisor@sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3 --owner NVIDIA
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/NVIDIA/attestations/sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify oci://ghcr.io/nvidia/openshell/sandbox@sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f --owner NVIDIA
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/NVIDIA/attestations/sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify oci://ghcr.io/nvidia/openshell/supervisor@sha256:e93c39c4afe715ae5409b19d20cea74db767c51ac8cf1f92970d7925efe925e5 --owner NVIDIA
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/NVIDIA/attestations/sha256:e93c39c4afe715ae5409b19d20cea74db767c51ac8cf1f92970d7925efe925e5?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify oci://ghcr.io/nvidia/openshell/supervisor@sha256:e93c39c4afe715ae5409b19d20cea74db767c51ac8cf1f92970d7925efe925e5 --owner ai-openshell
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/ai-openshell/attestations/sha256:e93c39c4afe715ae5409b19d20cea74db767c51ac8cf1f92970d7925efe925e5?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify oci://ghcr.io/nvidia/openshell/sandbox@sha256:a22db0292463d7bbdbbac0bc16625c1d2fc60a1d86b77638169f9d6c11035920 --owner NVIDIA
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/NVIDIA/attestations/sha256:a22db0292463d7bbdbbac0bc16625c1d2fc60a1d86b77638169f9d6c11035920?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1
+### $ gh attestation verify oci://ghcr.io/nvidia/openshell/sandbox@sha256:a22db0292463d7bbdbbac0bc16625c1d2fc60a1d86b77638169f9d6c11035920 --owner ai-openshell
+
+Error: HTTP 404: Not Found (https://api.github.com/orgs/ai-openshell/attestations/sha256:a22db0292463d7bbdbbac0bc16625c1d2fc60a1d86b77638169f9d6c11035920?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+### exit=1

@@ -1,0 +1,13 @@
+# create spec
+{"name":"exp008-hcprobe-1123-142020","image":"ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16","entrypoint":["/bin/sleep"],"command":["40"],"netns":{"nsmode":"none"},"image_pull_policy":"never","healthconfig":{"test":["NONE"],"Interval":10000000000,"Timeout":2000000000,"Retries":10,"StartPeriod":5000000000}}
+# create
+{"Id":"07e23d23ce6ae30e8a115fd606c1175a159b56891e8ca8fc46cd68218c30ae0c","Warnings":[]}
+
+http=201
+# start
+
+http=204
+# delete
+[{"Id":"07e23d23ce6ae30e8a115fd606c1175a159b56891e8ca8fc46cd68218c30ae0c"}]
+
+http=200

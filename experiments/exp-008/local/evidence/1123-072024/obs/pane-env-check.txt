@@ -1,0 +1,6 @@
+/tmp/hx8/1123-072024/e/home
+/tmp/hx8/1123-072024/e/config
+/tmp/hx8/1123-072024/e/etc-openshell
+/tmp/hx8/1123-072024/e/wrap:/usr/bin:/bin
+/tmp/hx8/1123-072024/e/wrap/openshell
+/tmp/hx8/1123-072024/e/wrap/ssh

@@ -1,0 +1,4 @@
+owner default-store counts (from B1; the dedicated socket must not see them):
+  networks: 2
+  images: 28
+dedicated store: containers=0 volumes=0 secrets=0 images=0 networks=podman

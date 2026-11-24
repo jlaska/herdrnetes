@@ -1,0 +1,27 @@
+tls dir (names only):
+	d
+ca.crt	f
+ca.key	f
+client	d
+client/tls.crt	f
+client/tls.key	f
+jwt	d
+jwt/kid	f
+jwt/public.pem	f
+jwt/signing.pem	f
+server	d
+server/tls.crt	f
+server/tls.key	f
+under config (names only):
+	d
+containers	d
+containers/containers.conf	f
+containers/storage.conf	f
+herdr	d
+openshell	d
+openshell/gateways	d
+openshell/gateways/openshell	d
+openshell/gateways/openshell/mtls	d
+openshell/gateways/openshell/mtls/ca.crt	f
+openshell/gateways/openshell/mtls/tls.crt	f
+openshell/gateways/openshell/mtls/tls.key	f

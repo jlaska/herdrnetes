@@ -1,0 +1,30 @@
+sandbox still exists; deleting through the gateway
+SIGTERM gateway-1 pid=1405059
+SIGTERM podman-service-listener pid=1403760
+SWEPT[pre-store] pid=1403765 start=41648617 comm=catatonit via=environ
+RESIDUE: store path still present: /tmp/hx8/1123-072024/e/podman/root
+RESIDUE: store path still present: /tmp/hx8/1123-072024/e/podman/runroot
+SWEPT[final] pid=1407939 start=41656477 comm=catatonit via=environ
+verified gone: watchdog pid=1403588
+verified gone: podman-service pid=1403738
+verified gone: podman-service-listener pid=1403760
+verified gone: gateway-1 pid=1405059
+verified gone: herdr-server-initial pid=1405204
+verified gone: create-cli pid=1405372
+verified gone: container-main-1405607 pid=1405607
+verified gone: counter-1405673 pid=1405673
+verified gone: sweep-catatonit pid=1403765
+verified gone: sweep-catatonit pid=1407939
+port 23886 closed
+B2-vs-B1 openshell-config.txt: identical
+B2-vs-B1 openshell-state.txt: identical
+B2-vs-B1 ssh-meta.txt: identical
+B2-vs-B1 listeners.txt: identical
+INFO B2-vs-B1 listeners.txt: UDP listener set changed (not classified)
+B2-vs-B1 podman-default.txt: identical
+B2-vs-B1 systemd-units.txt: identical
+B2-vs-B0 openshell-config.txt: identical
+B2-vs-B0 openshell-state.txt: identical
+B2-vs-B0 ssh-meta.txt: identical
+B2-vs-B0 listeners.txt: identical
+CLASSIFICATION: RESIDUE

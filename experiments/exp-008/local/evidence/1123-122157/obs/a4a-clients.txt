@@ -1,0 +1,16 @@
+# before clean stop 2026-11-23T17:25:32Z: pane w3:p1 original chain (cli ssh proxy) 1574442:43424785 1574553:43424791 1574561:43424791 alive=yes
+control: original cli fd0=/dev/pts/8 exists=yes ptmx-master-holders=1 [1562080:herdr] (expected >= 1 holder: the herdr server)
+# scan 1: herdr server gone, after up to 10s for clients to end (waited 0s) 2026-11-23T17:25:33Z t+54s n=18
+counts: attached=0 cli=0 transport=0 proxy=0 run-ssh=0 other=0
+original connection: ended (cli, ssh and proxy all gone); capable of input: no
+# scan 2: herdr still down, after counter progress 2026-11-23T17:25:36Z t+57s n=20
+counts: attached=0 cli=0 transport=0 proxy=0 run-ssh=0 other=0
+original connection: ended (cli, ssh and proxy all gone); capable of input: no
+clients while herdr down: verified zero (two scans, n 18 -> 20 between them)
+new pane w3:p2 chain 1586663:43425884 1586778:43425890 1586785:43425891; 'attached read-only' notice: no; mark rc=0
+# end of A4a 2026-11-23T17:25:43Z t+64s n=28
+counts: attached=1 cli=1 transport=1 proxy=1 run-ssh=0 other=0
+cli pid=1586663 start=43425884 ppid=1586218 original=no state=S (sleeping) fd0=/dev/pts/9 role: supervising CLI with transport child 1586778
+transport pid=1586778 start=43425890 ppid=1586663 original=no state=S (sleeping) fd0=/dev/pts/9 role: SSH transport with proxy 1586785 (proxy TCP sessions to the gateway: 1)
+proxy pid=1586785 start=43425891 ppid=1586778 original=no state=S (sleeping) fd0=pipe:[8343161] role: proxy, parent transport, TCP sessions to the gateway: 1
+attached 1586663 43425884 1586778 43425890 1586785 43425891

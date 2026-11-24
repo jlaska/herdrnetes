@@ -1,0 +1,10 @@
+# 00-initial 2026-11-23T12:30:16Z
+    PID    PPID     SID    PGID   UID                  STARTED COMMAND
+1403588 1403527 1403526 1403526  1000 Mon Nov 23 07:29:25 2026 bash experiments/exp-008/local/demo.sh 1123-072024
+1403738 1403527 1403738 1403738  1000 Mon Nov 23 07:29:26 2026 /usr/bin/podman --root /tmp/hx8/1123-072024/e/podman/root --runroot /tmp/hx8/1123-072024/e/podman/runroot system service --time=0 unix:///tmp/hx8/1123-072024/e/podman.sock
+1403760 1403738 1403738 1403738  1000 Mon Nov 23 07:29:26 2026 /usr/bin/podman --root /tmp/hx8/1123-072024/e/podman/root --runroot /tmp/hx8/1123-072024/e/podman/runroot system service --time=0 unix:///tmp/hx8/1123-072024/e/podman.sock
+1405059 1403527 1405059 1405059  1000 Mon Nov 23 07:30:15 2026 /tmp/hx8/1123-072024/bin/gw/openshell-gateway --name exp008-1123-072024 --bind-address 127.0.0.1 --port 23886 --compute-driver podman --db-url sqlite:/tmp/hx8/1123-072024/e/state/gw.db?mode=rwc --config /tmp/hx8/1123-072024/e/gateway.toml --tls-cert /tmp/hx8/1123-072024/e/tls/server/tls.crt --tls-key /tmp/hx8/1123-072024/e/tls/server/tls.key --tls-client-ca /tmp/hx8/1123-072024/e/tls/ca.crt
+1405204 1403527 1405204 1405204  1000 Mon Nov 23 07:30:15 2026 /home/linuxbrew/.linuxbrew/bin/herdr server
+# children of herdr server 1405204
+    PID    PPID     SID    PGID   UID                  STARTED COMMAND
+# openshell clients: 0  ssh children: 0

@@ -1,0 +1,7 @@
+  37 /tmp/hx8/1122-220034/e/B2/listeners.txt
+  14 /tmp/hx8/1122-220034/e/B2/openshell-config.txt
+  25 /tmp/hx8/1122-220034/e/B2/openshell-state.txt
+  35 /tmp/hx8/1122-220034/e/B2/podman-default.txt
+  13 /tmp/hx8/1122-220034/e/B2/ssh-meta.txt
+   3 /tmp/hx8/1122-220034/e/B2/systemd-units.txt
+ 127 total

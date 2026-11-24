@@ -1,0 +1,10 @@
+{
+  "authentication": {
+    "provider": "mTLS transport",
+    "status": "authenticated"
+  },
+  "gateway": "exp008-1123-072024",
+  "server": "https://127.0.0.1:23886",
+  "status": "connected",
+  "version": "0.1.9"
+}

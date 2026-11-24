@@ -1,0 +1,18 @@
+class=restarted
+post identity sources consistent: yes
+pid: old=52 new=52
+start: old=44121744 new=44125793
+nonce: old=f2ca193317e6d72a new=ae0dd3b6bd8ea999
+instance_id: old=0bd02d08-70e8-4520-ab3a-c6e77a707e98 new=be9641fe-d798-4948-88b2-b49e07a13128
+started_at_ms: old=1795461697881 new=1795461738375
+restart_count: old=0 new=0
+sandbox_id: old=51419c17-0cee-4431-97b9-adbe6a2f2a28 new=51419c17-0cee-4431-97b9-adbe6a2f2a28
+cid: old=8dda09d2fe33 new=8dda09d2fe33
+hpid: old=1707470 new=1729308
+hstart: old=44121744 new=44125793
+phase: old=Ready new=Ready
+reset: old last n=28 at 1795461723.952317, new first n=1 at 1795461738.376920, gap=14.42s
+gateway_exit_after_sigterm_s=2
+ready_after_gateway_start_s=3
+ready_without_action=yes (only sandbox get polled)
+usable_after_restart=yes

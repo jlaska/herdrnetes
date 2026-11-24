@@ -1,0 +1,7 @@
+P3	PASS	isolation gate: dedicated store+socket, loopback mTLS gateway, ssh without agent, herdr under /tmp/hx8/1123-122157/e
+A1	PASS	ACK in log and pane: pid=52 start=43423622 nonce=fdf5d2b339358279 n=5; instance=94eb529c-993e-4cb4-98a9-9ceef48fa78e hpid=1564241 hstart=43423622 cread=method 3 (2026-11-23T17:25:21Z); client cli/ssh/proxy=1565134:43423733 1565254:43423740 1565262:43423740
+A2	PASS	pane closed, no cli/ssh/proxy left, phase Ready, identity unchanged, n 6 -> 11 with no client
+A3	PASS	replay visible (min tick K=1 <= n at connect 12); ACK n=13 > n(A2)=11; same identity
+A4a	PASS	clean: old server 1562080 gone; identity unchanged, n 16 -> 20 while herdr down; clients while down: verified zero (two scans, n 18 -> 20 between them); new server 1583970; ACK n=25
+A4b	FAIL	kill:;ACK mismatch: 1795454753.667934 2026-11-23T17:25:53 ACK a4b pid=52 start=43423622 nonce=fdf5d2b339358279 n=38; clients while down: verified zero (two scans, n 31 -> 33 between them)
+STOP	STOP	A4b: the new pane's ACK did not satisfy the primary criterion (mark rc=0)

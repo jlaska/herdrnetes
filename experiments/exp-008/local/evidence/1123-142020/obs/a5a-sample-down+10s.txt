@@ -1,0 +1,7 @@
+# a5a down+10s 2026-11-23T19:22:16Z
+containers (names state role):
+openshell-default--exp008-1123-142020-51419c17-0cee-4431-97b9-adbe6a2f2a28 exited sandbox
+openshell-supervisor-51419c17-0cee-4431-97b9-adbe6a2f2a28 exited supervisor
+counter host pid 1707470 alive with the same start time: no
+counter last n (cread): 28
+cread method: method 3 (2026-11-23T19:22:16Z)

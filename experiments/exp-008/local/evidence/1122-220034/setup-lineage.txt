@@ -1,0 +1,4 @@
+controller (this script) pid=1312943 ppid=1312942
+podman service pid=1313151 ppid=1312943
+gateway pid=1313852 ppid=1312943
+herdr server pid=1313984 ppid=1312943

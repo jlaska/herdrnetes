@@ -1,0 +1,5 @@
+controller (this script) pid=1703468 ppid=1703464
+podman service pid=1703675 ppid=1703468
+gateway pid=1705165 ppid=1703468
+herdr server pid=1705343 ppid=1703468
+counter chain: 1707470 bash;1707404 openshell-sandb;1707402 conmon;chain-check: no-herdr-ssh-cli-ancestor;

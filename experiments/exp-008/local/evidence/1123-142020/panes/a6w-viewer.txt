@@ -1,0 +1,26 @@
+$ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-14
+2020 sandbox connect exp008-1123-142020
+tick n=1
+tick n=2
+tick n=3
+tick n=4
+tick n=5
+mark a1
+ACK a1 pid=52 start=44121744 nonce=f2ca193317e6d72a n=5
+tick n=6
+tick n=7
+openshell: canonical main process already has an input ow
+ner; attached read-only; retry input after the owner disc
+onnects; press Ctrl-C or Ctrl-D to exit
+tick n=8
+tick n=9
+tick n=10
+tick n=11
+tick n=12
+tick n=13
+tick n=14
+tick n=15
+tick n=16
+mark a6w
+ACK a6w pid=52 start=44121744 nonce=f2ca193317e6d72a n=16
+tick n=17

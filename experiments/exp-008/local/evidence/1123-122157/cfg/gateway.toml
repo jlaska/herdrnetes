@@ -1,0 +1,6 @@
+[openshell]
+version = 2
+[openshell.drivers.podman]
+network_name = "exp008-1123-122157"
+[openshell.drivers.podman.resource_admission]
+enabled = false

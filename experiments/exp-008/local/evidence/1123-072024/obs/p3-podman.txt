@@ -1,0 +1,8 @@
+graphRoot=/tmp/hx8/1123-072024/e/podman/root
+runRoot=/tmp/hx8/1123-072024/e/podman/runroot
+rootless=true
+cgroupManager=systemd
+cgroupVersion=v2
+ociRuntime=crun
+networkBackend=netavark
+version=5.8.9

@@ -1,0 +1,21 @@
+viewer pane shows the owner's ACK a6w (output reaches the viewer; not a pass criterion): yes
+attempts for the viewer's mark a6ro2: 1
+a6-viewer-attach unwrapped: $ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-142020 sandbox connect exp008-1123-142020
+a6-viewer-attach unwrapped: openshell: canonical main process already has an input owner; attached read-only; retry input after the owner disconnects; press Ctrl-C or Ctrl-D to exit
+a6-viewer-attach recent: $ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-14
+a6-viewer-attach recent: openshell: canonical main process already has an input ow
+a6-viewer-attach recent: ner; attached read-only; retry input after the owner disc
+a6-viewer-attach visible: $ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-14
+a6-viewer-attach visible: openshell: canonical main process already has an input ow
+a6-viewer-attach visible: ner; attached read-only; retry input after the owner disc
+a6-viewer-final unwrapped: $ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-142020 sandbox connect exp008-1123-142020
+a6-viewer-final unwrapped: openshell: canonical main process already has an input owner; attached read-only; retry input after the owner disconnects; press Ctrl-C or Ctrl-D to exit
+a6-viewer-final unwrapped: openshell: input enabled
+a6-viewer-final recent: $ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-14
+a6-viewer-final recent: openshell: canonical main process already has an input ow
+a6-viewer-final recent: ner; attached read-only; retry input after the owner disc
+a6-viewer-final recent: openshell: input enabled
+a6-viewer-final visible: $ /tmp/hx8/1123-142020/e/wrap/openshell -g exp008-1123-14
+a6-viewer-final visible: openshell: canonical main process already has an input ow
+a6-viewer-final visible: ner; attached read-only; retry input after the owner disc
+a6-viewer-final visible: openshell: input enabled

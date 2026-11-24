@@ -1,0 +1,32 @@
+Generate mTLS PKI and write Kubernetes Secrets (Helm pre-install hook)
+
+Usage: openshell-gateway generate-certs [OPTIONS]
+
+Options:
+      --output-dir <DIR>
+          Write PEMs to a filesystem directory instead of Kubernetes Secrets. When set, the kube-related flags are not required
+      --namespace <NAMESPACE>
+          Kubernetes namespace to create Secrets in. Default comes from `POD_NAMESPACE`, which the Helm hook injects via the downward API [env: POD_NAMESPACE=]
+      --server-secret-name <SERVER_SECRET_NAME>
+          Name of the server TLS Secret (`kubernetes.io/tls`) to create
+      --client-secret-name <CLIENT_SECRET_NAME>
+          Name of the client TLS Secret (`kubernetes.io/tls`) to create
+      --jwt-secret-name <JWT_SECRET_NAME>
+          Name of the sandbox-JWT signing-key Secret (`Opaque`) to create. Holds `signing.pem`, `public.pem`, and `kid` keys. Mounted on the gateway pod (only) so it can mint and validate per-sandbox JWTs
+      --jwt-only
+          Create only the sandbox-JWT signing-key Secret in Kubernetes mode. This is used when another controller owns TLS Secret provisioning
+      --server-san <SAN>
+          Extra Subject Alternative Name for the server certificate. Repeatable. Auto-detected as an IP address or DNS name
+      --dry-run
+          Print the generated PEM materials to stdout instead of writing them. For local debugging
+      --backend-ca-configmap-name <NAME>
+          Name of a `ConfigMap` to create containing the CA certificate (key: ca.crt) for `BackendTLSPolicy` backend validation. The CA is always read from the authoritative server Secret: --server-secret-name in full PKI mode, --backend-ca-source-secret in --jwt-only mode
+      --backend-ca-source-secret <NAME>
+          Name of an existing `Secret` containing a ca.crt key to populate the backend CA `ConfigMap` from. Required with --jwt-only when --backend-ca-configmap-name is set (typically the server TLS `Secret` created by cert-manager)
+      --backend-ca-poll-timeout-seconds <SECONDS>
+          Maximum time in seconds to poll for the backend CA source `Secret` when using cert-manager. Defaults to 90 seconds. The Helm chart sets this to (Job activeDeadlineSeconds - 30) to leave margin for `ConfigMap` creation [default: 90]
+      --backend-ca-fail-on-timeout
+          Fail with an error if the backend CA source `Secret` is not found within the polling timeout. When false (default), the hook succeeds with a warning and the `ConfigMap` is not created. The Helm chart sets this based on pkiInitJob.failOnTimeout
+  -h, --help
+          Print help
+exit=0

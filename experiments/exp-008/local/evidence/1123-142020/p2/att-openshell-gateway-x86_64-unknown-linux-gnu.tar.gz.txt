@@ -1,0 +1,2 @@
+exit=0
+https://github.com/NVIDIA/OpenShell/.github/workflows/release-publish.yml@refs/heads/main	https://github.com/NVIDIA/OpenShell	624aceea32934f73c350ede3f2185880816a030c	refs/heads/main	https://github.com/NVIDIA/OpenShell/actions/runs/44149201744/attempts/1	https://slsa.dev/provenance/v1

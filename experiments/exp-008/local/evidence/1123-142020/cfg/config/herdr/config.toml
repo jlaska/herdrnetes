@@ -1,0 +1,9 @@
+onboarding = false
+
+[update]
+version_check = false
+manifest_check = false
+
+[terminal]
+default_shell = "/tmp/hx8/1123-142020/e/pane-shell"
+shell_mode = "non_login"

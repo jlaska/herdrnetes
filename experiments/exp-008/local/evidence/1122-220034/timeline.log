@@ -1,0 +1,27 @@
+22:57:58.415 run 1122-220034 root=/tmp/hx8/1122-220034 port=21123 gateway=exp008-1122-220034 budget=1800s
+22:57:58.422 STEP P3 (t+0s)
+22:57:58.428 run 1122-220034: herdr=herdr 0.9.5
+22:57:58.433 P3 PASS tools
+22:57:58.780 P3 PASS baseline-B1
+22:57:58.781 P3 PASS containers-conf
+22:57:58.989 P3 PASS podman-service
+22:57:59.226 P3 PASS podman-store-isolation
+22:57:59.335 P3 PASS podman-socket
+22:58:04.419 P3 PASS pinned-images
+22:58:04.634 P3 PASS cgroup-limits-probe
+22:58:04.684 P3 PASS tls-certs
+22:58:04.686 P3 PASS gateway-toml
+22:58:04.694 P3 PASS gateway-preflight
+22:58:05.011 gateway (gateway-1) pid=1313852 start=38580426 listening on 127.0.0.1:21123
+22:58:05.013 P3 PASS gateway-start
+22:58:05.137 P3 PASS gateway-register
+22:58:05.149 P3 PASS mtls-negative
+22:58:05.163 P3 PASS ssh-no-agent
+22:58:05.182 herdr server (initial) pid=1313984 start=38580473
+22:58:05.464 P3 PASS herdr-start
+22:58:05.628 RESULT P3 PASS isolation gate: dedicated store+socket, loopback mTLS gateway, ssh without agent, herdr under /tmp/hx8/1122-220034/e
+22:58:05.834 STEP A1 (t+7s)
+22:58:05.838 create CLI pid=1314150 start=38580540
+22:58:06.847 RESULT A1 FAIL create exited 1: Error:   × code: 'Internal error', message: "create sandbox failed: podman API error   │ (500): create healthcheck: unable to get systemd connection to add   │ healthchecks: lstat /tmp/hx8/1122-220034/e/run/systemd: no such file or   │ directory"  
+22:58:06.850 STOP A1 create failed
+22:58:06.853 cleanup start (exit=1)

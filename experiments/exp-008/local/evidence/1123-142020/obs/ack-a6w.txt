@@ -1,0 +1,6 @@
+word=a6w expected=ACK a6w pid=52 start=44121744 nonce=f2ca193317e6d72a n=16 min_n_exclusive=6
+log: 1795461713.241455 2026-11-23T19:21:53 ACK a6w pid=52 start=44121744 nonce=f2ca193317e6d72a n=16
+source=unwrapped match=line
+source=recent match=line
+source=visible match=line
+verify=pass

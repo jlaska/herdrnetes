@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/bash --noprofile --rcfile "/tmp/hx8/1123-122157/e/pane-bashrc" -i "$@"
