@@ -2,13 +2,18 @@
 
 Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../docs/experiments/08-openshell-execution.md) · follows stage A ([README](local/README.md), FIND-083–087) · REQ-009, REQ-011 (Future) · ADR-0001 unchanged
 
-**Status.** This is research from source only. No component was downloaded, installed, created or run, and no cluster was touched. Every action listed in [section 7](#7-owner-approvals-required-none-granted) needs explicit owner approval. Stage C (real agent) stays deferred.
+**Status.** This is research from source only. No component was downloaded, installed, created or run, and no cluster or kubeconfig was accessed. Revision 3 used only the owner's GitOps repository and upstream source. Every action listed in [section 7](#7-owner-approvals-required-none-granted) needs explicit owner approval. Stage C (real agent) stays deferred.
 
-**Revision 2 (2026-11-24, agent-generated, for owner review).** [Revision 1](https://github.com/jlaska/herdrnetes/blob/fa38e5078345da4ae9a88fab5902cbf795578731/experiments/exp-008/STAGE-B-PROPOSAL.md) (as merged in `fa38e50`, PR #41) is preserved in history. This revision:
-- re-checks every rev 1 citation against the pinned sources, corrects nine and completes two (section 2);
-- adds three mechanisms that rev 1 missed: credential expiry, `Starting`-row recovery, and gateway readiness that only checks the database;
-- compares three test environments and recommends a **disposable local cluster** instead of scratch namespaces in the existing cluster (sections 3–4);
-- revises the matrix. It now takes a true SIGKILL through the disposable node, adds a mandatory positive control, and aligns the classification with stage A, keeping one deviation that is pre-registered (section 5).
+**Revision 3 (2026-11-24, agent-generated, for owner review).** It re-targets stage B at the **existing OpenShell and Agent Sandbox installation**, which the owner reports is installed and unused. It does not set up a new cluster. Revision 3 changes:
+- 2.3, which records installed versions against the analysed sources;
+- sections 3–4 (reuse recommended, conditional on a read-only B0);
+- section 5 (API-level forced kill, B3b and B4 dropped, explicit B0 commands);
+- section 6 (cleanup preserves the installation);
+- section 7 (four approvals).
+
+The process-identity rules, the classification, the positive control, the stop conditions and the evidence requirements are unchanged.
+
+[Revision 2](https://github.com/jlaska/herdrnetes/blob/0ba77401a369f862f94129b2b9e947596a34cc07/experiments/exp-008/STAGE-B-PROPOSAL.md) (`0ba7740`) re-checked the rev 1 citations and recommended a disposable local cluster. [Revision 1](https://github.com/jlaska/herdrnetes/blob/fa38e5078345da4ae9a88fab5902cbf795578731/experiments/exp-008/STAGE-B-PROPOSAL.md) is in `fa38e50` (PR #41).
 
 The question, H1 and the overall judgement are unchanged.
 
@@ -95,75 +100,81 @@ OpenShell paths are relative to its tree. Driver paths are `crates/openshell-dri
    - The opt-in `--extensions` manifest adds cluster-wide NetworkPolicy CRUD (S, `k8s/extensions-rbac.generated.yaml`). It is **excluded**.
 9. **Auto-restart after main exit.** If the counter exits, OpenShell replaces the runtime with a new process (S, `compute/mod.rs:5066-5200`). A replacement accompanied by an exit report is a process death, not a gateway effect, and is classified as restarted with the exit code recorded.
 
+### 2.3 Installed versions versus the analysed sources (revision 3)
+
+The owner reports that OpenShell and Agent Sandbox are already installed, unused, in the existing cluster under Argo CD.
+
+The evidence for this subsection is the owner's GitOps repository, read at commit `18a4259`. Cluster, host and identity-provider names are deliberately omitted from this public repo. **No live cluster state has been read.** Every row needs B0 confirmation.
+
+| Item | Analysed in section 2 | Installed per GitOps | Effect |
+|---|---|---|---|
+| OpenShell chart | 0.1.9 (`ce58cf8`) | 0.1.9, StatefulSet, 1 replica | Same source (S). Image digests unknown until B0 |
+| Supervisor topology | Default: one dedicated supervisor pod per sandbox | Values set `supervisor.topology: combined`, `supervisor.sideloadMethod: init-container` and `server.appArmorProfile` | **Not effective in chart 0.1.9.** `supervisor.topology` was "removed by RFC 0012 with no replacement" (S, `docs/kubernetes/migrate-gateway-config.mdx:41`). No template reads these keys, and the driver's only topology enum is `Gateway`/`Workspace` (S, `config.rs:221-225`). So the install should be the default topology that section 2 analyses (I; B0 verifies) |
+| Agent Sandbox | v1.0.3 (`527d934`) | **v0.5.6**. The committed `sandbox.yaml` matches the v0.5.6 release asset `sha256:f1127ab6…2581` (S). The controller image is tag-only | Compatible by source. The driver prefers `v1beta1` and falls back to `v1alpha1` (S, `driver.rs:1982-2025`); v1beta1 arrived in v0.5.0 (S, `tasks/scripts/helm-k3s-local.sh:35-38`). The v0.5.6 controller also leaves existing pods alone and deletes them only when Suspended or expired (S, v0.5.6 `controllers/sandbox_controller.go:1377`). **Upstream never tested this pairing** (U) |
+| Webhook | None (v1.0.3) | v0.5.6 has a CRD **conversion** webhook served by the controller pod (S). It is neither validating nor mutating | OpenShell writes the storage version (`v1beta1`), so no conversion should be needed (I). The webhook is down whenever the controller pod is down |
+| Auth | Not specified | TLS with mTLS client CA for sandbox callbacks. CLI users authenticate by OIDC (PKCE, browser login). No unauthenticated users. No non-interactive CLI credential exists in the repo | The harness needs an owner-performed CLI login (section 7) |
+| Sandbox namespace | Separate scratch namespace | The gateway's own namespace | The experiment's sandbox lives beside the gateway |
+| Storage | local-path | Workspace PVC on a Longhorn class with 1 replica, best-effort locality and reclaim `Delete`. The gateway data PVC uses the cluster default class (I: Longhorn) | Longhorn is not needed for continuity, but present. Gateway rescheduling may wait for RWO detach/attach |
+| Admission / network | kind defaults | No PSA labels on either namespace. The cluster default is enforce `baseline`, audit/warn `restricted`. No Kyverno or Gatekeeper. No Cilium or default-deny policies on these namespaces (all per repo) | Driver pod specs should pass baseline (I; `net.ipv4.ip_unprivileged_port_start` is a baseline-safe sysctl). B0 confirms |
+| Argo CD | — | Apps project. Automated sync with `prune` and `selfHeal`, plus `ApplyOutOfSyncOnly`. **`ignoreDifferences` on StatefulSet and Deployment `.spec.replicas`**. The Agent Sandbox app (infrastructure project) has no such ignore | `scale 0` of the gateway is not reverted by self-heal (S, appset config). An unrelated sync that re-applies the StatefulSet would reset replicas, because there is no `RespectIgnoreDifferences` (I). Scaling the controller *would* be reverted |
+| Renovate | — | Patch updates automerge. The OpenShell chart moved weekly from 0.1.3 to 0.1.9 | A chart patch release during the run would automerge and sync, restarting the gateway mid-step. Needs a change freeze (section 7) |
+| Other consumers | — | No Sandbox CRs in GitOps. No other app references the gateway | Live sandbox and session inventory is U (B0) |
+
 ## 3. Environment comparison
 
+**Revision 3 reassessment.** Revision 2 compared three new environments and rejected scratch namespaces in the existing cluster, chiefly because they would add the controller's cluster-wide RBAC to the shared cluster. With the controller and gateway already installed there, reusing them **adds no cluster-scoped object or privilege**. The experiment adds only:
+- one sandbox, created through the gateway (CR, two pods, a workspace PVC, Secrets, a Service and NetworkPolicies, all in the gateway's namespace);
+- restarts of the existing gateway.
+
+The essential requirements A1–A6 below are unchanged. The installed Agent Sandbox version differs from A1's (2.3).
+
 **Essential to the continuity question (A):**
-- A1. The real Agent Sandbox v1.0.3 controller and CRD, and OpenShell chart 0.1.9, with the default two-pod topology.
-- A2. A durable gateway DB. The StatefulSet's SQLite is on a PVC, and any default StorageClass works (S, `deploy/helm/openshell/templates/statefulset.yaml:21-33`; `values.yaml:469-475`).
-- A3. The `/sandbox` workspace PVC the driver requests (2 GiB RWO, S). It holds the counter log.
-- A4. A kernel that passes OpenShell's fail-closed launch probes: Landlock ABI ≥3, seccomp user-notify with ADDFD, task-memory access, and `SO_BINDTODEVICE` (S, `docs/about/support-matrix.mdx:175-195`). The documented minimum is Kubernetes 1.29 (S, `:144`).
-- A5. Gateway restarts that nothing else interferes with, such as Argo CD or operators.
-- A6. Read access to pod and CR state, and the counter ACK. A host-side PID read improves the evidence but is not essential.
+- A1. The real Agent Sandbox controller and CRD, and OpenShell chart 0.1.9, with the default two-pod topology. Revision 2 named v1.0.3; the installed v0.5.6 is acceptable if B0 confirms compatibility.
+- A2. A durable gateway DB on a PVC.
+- A3. The `/sandbox` workspace PVC, which holds the counter log.
+- A4. A kernel that passes OpenShell's fail-closed launch probes (S, `docs/about/support-matrix.mdx:175-195`).
+- A5. Gateway restarts that nothing else interferes with, such as Argo CD or Renovate.
+- A6. Read access to pod and CR state, and the counter ACK.
 
-**Fidelity only (B):**
-- k3s as the distribution, Cilium, Longhorn, PSA `restricted` and Argo CD.
-- The target nodes' kernels.
+**Fidelity only (B):** k3s/Talos as the distribution, Cilium, Longhorn, PSA level and the target kernels. Reusing the existing cluster supplies these for free, but findings still claim nothing beyond what was tested.
 
-Continuity depends on the gateway, driver and controller logic and the pod lifecycle. It does not depend on CNI enforcement or the storage backend.
-- The driver's NetworkPolicies are checked for **presence**, not enforcement (I).
-- Longhorn would matter only for volume re-attach after a node failure, which is out of scope.
-- PSA affects admission, not a running process. It is checked by a server-side dry-run.
-
-| | 1. Local disposable cluster (kind / k3d on the workstation) | 2. Separate disposable cluster (dedicated VMs, k3s + Cilium) | 3. Scratch namespaces in the existing cluster |
+| | 1. Local disposable cluster (rev 2 recommendation) | 2. Separate disposable cluster (VMs) | 3. **Reuse the existing installation** |
 |---|---|---|---|
-| Isolation from existing workloads | Complete: its own API server, CRD and RBAC. The controller's cluster-wide rights stop at the throwaway cluster | Complete | **None at cluster scope.** The controller gets create/delete/patch on pods, services and PVCs in **every** namespace, including the live Herdr namespace (S, `k8s/rbac.generated.yaml`). This cannot be namespace-restricted in v1.0.3 (S). A CRD in a shared cluster, and its removal cascading to every Sandbox CR |
-| Host exposure | Shares the workstation kernel and, when rootless, the operator's UID (same class as stage A). Rootful nodes widen it | Only the VM | Only the cluster's nodes, but the live workload is exposed |
-| OpenShell / Agent Sandbox compatibility | Upstream CI tests the Kubernetes driver on **kind** (S, `.github/actions/setup-e2e-kind/action.yml:53-100`). Upstream local dev uses k3d, which "Requires Docker running" (S, `tasks/scripts/helm-k3s-local.sh:6-8`) | k3s lanes exist upstream (S, `e2e-suites.yml:93-106`) | Unknown: unrecorded node kernels, PSA fields and Cilium allows (rev 1, U) |
-| Kernel / Landlock / seccomp | The workstation kernel passed the probes in stage A under rootless Podman (S, FIND-083–087). Whether the probes pass when nested in a node container is unverified (U) | Chosen freely; can match the target | Unrecorded (U) |
-| NetworkPolicy / PSA | Enforcement not required. kind's PSA is off by default, so a `--dry-run=server` check against a labelled namespace covers admission | Can match the target exactly | Default-deny needs explicit allows for gateway ingress and API-server egress (rev 1; S/I) |
-| Storage | Bundled local-path is sufficient (I) | Any | Longhorn volumes in the shared pool |
-| Fidelity to target | Low for CNI, storage and distribution; correct for the OpenShell/Agent Sandbox logic | High | Highest |
-| Setup / teardown | One `create` and one `delete`. A host-level diff verifies cleanup | VM provisioning plus a Cilium install, which adds failure modes unrelated to the question. Depends on spare hardware (U) | Cluster-scoped install and removal. Argo CD orphan/prune behaviour (U), plus a CRD-cascade decision |
-| Resources / risk | 1 node, about 2–4 vCPU, 4–6 GB RAM and 6–10 GB of images (I). Low risk | Medium cost; low risk | Low cost; **highest risk** |
+| New cluster-scoped privilege | None outside the throwaway cluster | None outside it | **None new.** The controller's cluster-wide rights already exist; the experiment does not widen them |
+| Setup | Install kind, the controller, the chart and PKI; troubleshoot rootless nesting | VM, k3s and Cilium | One CLI login and one sandbox |
+| Fidelity | Low | High | Highest: the real distribution, kernel, CNI and storage |
+| Version match to analysed source | Exact | Exact | Chart exact. Agent Sandbox v0.5.6 instead of v1.0.3 |
+| Effect on other workloads | None | None | Gateway restarts affect only that gateway and its sandboxes (S: shutdown writes nothing; the ClusterRole is read-only plus TokenReviews). B0 must show no other sandboxes or sessions |
+| Forced kill | True SIGKILL through the node | True SIGKILL through the node | API-level only. A pod delete with a 1 s grace period ends in SIGKILL. No node access |
+| Cleanup | Delete the cluster | Delete the VMs | Delete one sandbox, then verify the pre-existing installation is intact (section 6) |
+| Main risks | Nested-runtime troubleshooting | Hardware and time | Shared gateway state (the DB), Argo/Renovate interference, untested v0.5.6 pairing, owner OIDC token in the harness session |
 
 ## 4. Recommendation
 
-**Use approach 1: a disposable single-node kind cluster on the workstation, rootless Podman first.**
+**Go, conditional on B0: run stage B on the existing OpenShell installation.**
 
 Reasons:
-- It exercises the exact OpenShell and Agent Sandbox code paths the question depends on.
-- Upstream CI uses kind for this driver.
-- kind supports Podman as a provider without the Docker socket that k3d needs (I: kind docs, not re-verified here).
-- It contains the controller's cluster-wide RBAC completely.
-- Its node is disposable, so a **true SIGKILL** of the gateway and a host-side PID read are possible without touching a shared node.
-- Cleanup is "delete the cluster" plus a host diff.
+- It answers the same question with the same OpenShell source and higher fidelity.
+- It needs no infrastructure setup.
+- It adds no cluster-scoped privilege.
 
-What it gives up:
-- No Cilium, Longhorn, k3s or target-kernel fidelity. Findings must say so.
-- The host kernel is shared, and with rootless Podman so is the operator's UID. Per AGENTS.md, that UID is **not** isolated from the owner's GPG agent or other credentials.
-- Mitigations:
-  - The **recommended** mitigation is to run the cluster under a separate unprivileged local account.
-  - Alternatively, accept the stage A exposure class: synthetic counter only, no credentials, digest-pinned images, no host mounts, loopback only.
+Conditions, verified read-only in B0 before B1:
+1. Live chart and gateway image match 0.1.9, with no `supervisor_topology` in the rendered gateway config.
+2. The controller runs v0.5.6 and the CRD serves `v1beta1` as storage.
+3. **No other Sandbox CRs or supervisor sessions** exist on this gateway. Otherwise the owner accepts that B2/B3 restart them too.
+4. The Argo CD app is Synced and Healthy. During the run window, the change freeze holds or auto-sync is paused for the OpenShell app only.
 
-**Fallbacks, in order:**
-1. k3d, if kind's rootless provider fails and the owner accepts a Docker-compatible socket.
-2. A throwaway VM running k3s, if the nested launch probes fail locally or the owner wants target-like kernel and CNI fidelity before stage C.
+Any failed condition is a no-go for reuse until the owner decides.
 
-**Scratch namespaces in the existing cluster are not recommended for stage B.**
-- The controller's rights cannot be bounded by namespace.
-- A bounding ValidatingAdmissionPolicy would be new, unreviewed cluster-scoped machinery (I).
-- Nothing in the continuity question needs the live cluster.
-
-Revisit this only after approach 1 gives a result, and with an approved decision.
+**Fallback:** revision 2's disposable local kind cluster ([rev 2](https://github.com/jlaska/herdrnetes/blob/0ba77401a369f862f94129b2b9e947596a34cc07/experiments/exp-008/STAGE-B-PROPOSAL.md#4-recommendation)), only if B0 fails or the v0.5.6 pairing proves incompatible in B1. Upgrading the installation to match the analysed versions is **not** proposed.
 
 ## 5. Minimal test matrix
 
 **Identity, collected on every sample:**
-- **P (process):** counter nonce (in memory), PID and `/proc` start time inside the workload. Also `boot_id`, and a counter log on `/sandbox` at 1 Hz with a monotonic timestamp. The ACK returns the same fields.
-  - If B3's node access is approved, also the host PID and its start time (as stage A's `hpid`/`hstart`).
-- **C (container):** UID, containerID, `startedAt`, `restartCount`, phase and Ready for both pods; the CR's UID, generation, `operatingMode` and annotations.
-- **G (gateway view):** `main_process_instance_id`, `main_process_started_at_ms`, and the `sandbox get` phase.
-- **Sampling:** pods by `get --watch` event streams plus a 1 s poll. `sandbox get` at 1 Hz. Gateway, supervisor and controller logs retained (redacted).
+- **P (process):** counter nonce (in memory), PID and `/proc` start time inside the workload. Also `boot_id`, and a counter log on `/sandbox` at 1 Hz with a monotonic timestamp. The ACK returns the same fields. Host PID is not available, because there is no node access.
+- **C (container):** UID, containerID, `startedAt`, `restartCount`, phase, Ready and node for both pods; the CR's UID, generation, `operatingMode`, Suspended condition with `observedGeneration`, the `agents.x-k8s.io/pod-name` annotation, and the `gateway-id` label.
+- **G (gateway view):** `main_process_instance_id`, `main_process_started_at_ms` and the `sandbox get` phase. Also the gateway pod UID, node, image digest and Ready, and the data PVC's attach events.
+- **Sampling:** pods by `get --watch` event streams plus a 1 s poll. `sandbox get` at 1 Hz. Gateway, supervisor and controller logs kept locally, redacted before any commit.
 
 **Classification**, pre-registered and applied separately to each step. Process continuity and session reattachment are separate axes:
 
@@ -180,73 +191,105 @@ Revisit this only after approach 1 gives a result, and with an approved decision
 
 | Step | Action | Window | Answers |
 |---|---|---|---|
-| B0 | Preflight, read-only, inside the disposable cluster and on the host only. Records podman and kind versions, cgroup v2 controller delegation, the Landlock LSM list, `ptrace_scope`, server version (≥1.29), StorageClass, no `agents.x-k8s.io` CRD, and a host baseline (containers, volumes, networks, images, listeners, user units, a hash of `~/.kube`). Server-side PSA dry-run of the driver's pod specs | — | A failure stops before any install |
-| B1 | Install the pinned controller and chart (TLS port-forward overlay; `values-tls-port-forward.yaml`). Create one sandbox whose main process is the counter. Wait for Ready, for the 300 s bootstrap window to pass, and for the row to leave `Starting`. **Soak for 10 min**, then `ACK b1` | Soak at 1 Hz | Baseline. Ready vs first ACK. Any identity change in the soak means the control is unstable: stop |
-| B2 | **Graceful:** scale the gateway StatefulSet to 0, hold 90 s, scale to 1. `ACK b2` | t0−30 s to sandbox Ready + 300 s | Graceful survival; no suspend (H3); Ready ordering. The 90 s hold stays below the minimum remaining credential life (2.2 item 4) |
-| B3 | Re-baseline (2 min after B2's Ready). **Forced:** SIGKILL the gateway container's main process through the disposable node's runtime. The kubelet restarts the container in the same pod. `ACK b3` | Same as B2 | Forced survival with a real SIGKILL, and no dual-writer risk |
-| B3b *(optional)* | `kubectl delete pod --force --grace-period=0` on the gateway | Same | API-level forced delete. Record whether the old and new gateway processes overlapped on one SQLite PVC (U) |
-| B4 *(optional)* | Agent Sandbox controller scaled 0 → 1 after 90 s, gateway up | 90 s + 300 s | Controller restart leaves the pods and CR spec untouched |
-| B5 | **Positive control (mandatory, last):** delete the workload pod with the gateway up | Until Ready + 300 s or unavailable | Must classify as restarted or unavailable. **If it reads survived, the detector is broken and B2/B3 are void** |
+| B0 | **Read-only** live inventory: the commands in [section 5.1](#51-b0-read-only-commands). Plus a host record of the CLI version and checksum | — | Reuse conditions (section 4). Any failure stops before B1 |
+| B1 | Create **one** experiment sandbox through the gateway, `--from` the stage A workload image digest, with the counter as its main process. Name and label it for the experiment. Wait for Ready, for the 300 s bootstrap window to pass, and for the row to leave `Starting`. **Soak for 10 min**, then `ACK b1` | Soak at 1 Hz | Baseline; Ready vs first ACK; v0.5.6 pairing works. Any identity change in the soak: stop |
+| B2 | **Graceful:** `scale statefulset/$GW_STS --replicas=0` (the name recorded in B0), hold 90 s, `--replicas=1`. `ACK b2`. Keep the total gateway outage under 240 s. If rescheduling waits on a volume attach, record it; the window still applies | t0−30 s to sandbox Ready + 300 s | Graceful survival; no suspend (H3); Ready ordering. Argo ignores replicas (2.3) |
+| B3 | Re-baseline (2 min after B2's Ready). **Forced (API-level):** `delete pod $GW_STS-0 --grace-period=1`. SIGTERM is followed by SIGKILL after 1 s, which cuts the 10 s drain short. The StatefulSet recreates the pod only after the old one has terminated, so there is no dual writer. `ACK b3` | Same as B2 | Survival when the gateway is killed mid-shutdown. A pure SIGKILL with no SIGTERM is **not** reachable without node access; it stays U |
+| B5 | **Positive control (mandatory, last):** delete the **experiment's own** workload pod with the gateway up | Until Ready + 300 s or unavailable | Must classify as restarted or unavailable. **If it reads survived, the detector is broken and B2/B3 are void** |
 
-**Not in the minimal matrix:**
-- A supervisor↔gateway network partition (needs an enforcing CNI).
-- A gateway outage longer than the credential TTL, and a restart during `Starting`. Each documents a hazard already shown in source (2.2 items 3–4); each would need separate approval.
-- A supervisor-pod delete, gateway upgrade or rollback, HA, Herdr, real agents and Kata.
+**Dropped for reuse:**
+- B3b (`--force --grace-period=0`) could start a second gateway on the pre-existing SQLite DB.
+- B4 (controller restart): scaling is reverted by Argo, and a controller restart touches every Sandbox CR in the cluster.
+
+Everything revision 2 excluded stays excluded.
 
 **Stop conditions:**
 - Any unavailable result.
 - Any guard or kube-context mismatch.
 - Sampler loss during an outage window.
-- Any object or listener created outside the disposable cluster and its loopback port-forward.
-- Any sign that the harness can reach a non-disposable cluster: **abort before any write**.
+- Any write to an object not created by the experiment, other than the gateway StatefulSet's replicas and pod.
+- A new Sandbox CR, session or Argo sync that appears during the run.
+- The gateway not Ready within 240 s of scale-up or pod deletion.
 - The budget: 60 min excluding the B1 soak.
 
 A restarted result is recorded, not retried. The next step re-baselines with the new identity, as in stage A run 4. Each step gets at most one pre-approved, identical re-run, and it is recorded.
 
+### 5.1 B0 read-only commands
+
+These need separate owner authorization (section 7, item 1). They run with an explicit context, `K="kubectl --context $CTX"`, and every command is `get`, `logs` or `auth can-i`. None reads Secret data. Outputs stay local until they are redacted (names of hosts, nodes and identity providers removed).
+
+```sh
+$K version -o yaml
+$K get nodes -o custom-columns=NAME:.metadata.name,KERNEL:.status.nodeInfo.kernelVersion,OS:.status.nodeInfo.osImage,RUNTIME:.status.nodeInfo.containerRuntimeVersion,KUBELET:.status.nodeInfo.kubeletVersion
+$K get crd -o name | grep -i 'agents.x-k8s.io'
+$K get crd sandboxes.agents.x-k8s.io -o jsonpath='{range .spec.versions[*]}{.name} served={.served} storage={.storage}{"\n"}{end}{.spec.conversion.strategy}{"\n"}'
+$K get sandboxes.agents.x-k8s.io -A -o custom-columns=NS:.metadata.namespace,NAME:.metadata.name,MODE:.spec.operatingMode,GW:.metadata.labels.openshell\\.ai/gateway-id,AGE:.metadata.creationTimestamp
+$K -n openshell get statefulset,deployment,pod,service,pvc,networkpolicy,serviceaccount,role,rolebinding,configmap,resourcequota,limitrange -o wide
+$K -n openshell get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.uid}{"\t"}{.spec.nodeName}{"\t"}{range .status.containerStatuses[*]}{.image}{" "}{.imageID}{" rc="}{.restartCount}{" "}{end}{"\n"}{end}'
+$K -n openshell get statefulset,configmap -o name   # discover $GW_STS and the gateway *-config ConfigMap
+$K -n openshell get configmap "$GW_CONFIG" -o yaml   # rendered gateway TOML: supervisor_topology absent? gateway_jwt ttl, sandbox namespace
+$K -n openshell get pvc -o custom-columns=NAME:.metadata.name,SC:.spec.storageClassName,MODE:.spec.accessModes,VOL:.spec.volumeName,STATUS:.status.phase
+$K -n openshell get events --sort-by=.lastTimestamp
+$K -n openshell logs "statefulset/$GW_STS" --since=24h --tail=500   # supervisor sessions; kept local
+$K -n agent-sandbox-system get deployment,pod,service,lease -o wide
+$K -n agent-sandbox-system get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .status.containerStatuses[*]}{.image}{" "}{.imageID}{" rc="}{.restartCount}{end}{"\n"}{end}'
+$K get validatingwebhookconfigurations,mutatingwebhookconfigurations -o name | grep -i -E 'sandbox|openshell'
+$K get namespace openshell agent-sandbox-system --show-labels
+$K get storageclass
+$K -n openshell get ciliumnetworkpolicies; $K get ciliumclusterwidenetworkpolicies
+$K -n argo-system get applications.argoproj.io -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,AUTO:.spec.syncPolicy.automated | grep -E 'openshell|agent-sandbox'
+$K auth can-i --list -n openshell
+```
+
+The `openshell` namespace and the Argo CD namespace come from the GitOps repo. `$GW_STS` and `$GW_CONFIG` are discovered by the `-o name` listing, not assumed (the chart's name is `helm-chart`, so generated names depend on overrides). If either returns nothing, list names first (`get configmap -o name`, `get applications -A -o name`) rather than guessing.
+
 ## 6. Security, isolation, cleanup
 
 **Pins.**
-- OpenShell CLI v0.1.9 (sha256 as in stage A) and chart 0.1.9, with provenance checked as in FIND-079.
-- The gateway, supervisor and sandbox images resolved to digests from the **published** 0.1.9 chart. The in-tree `appVersion` is `0.0.0`, so the tags are unverified (U).
-- The Agent Sandbox v1.0.3 core `sandbox.yaml`, by release-asset sha256 `725fafda…7d96`. Its controller image changed from a tag to a digest, with that edit recorded. No `--extensions`.
-- The kind node image by digest, and the EXP-006 counter image digest.
+- OpenShell CLI v0.1.9 (sha256 as in stage A).
+- The live gateway, supervisor and sandbox image digests and the controller digest, recorded in B0, not changed.
+- The stage A workload image `ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d0…7a16`. EXP-006 already pulled this image family in the cluster (I).
 
 **Isolation.**
-- A dedicated kubeconfig (mode 0600, outside the repo), pointed at by an explicit `KUBECONFIG` and `--context`. A server-identity guard compares the cluster CA hash. Upstream scripts that merge kubeconfigs are not used.
-- The API server is bound to loopback, with no host-port mappings.
-- A dedicated gateway id. No providers, inference or credentials. Chart PKI stays in a temporary directory that is never committed.
-- Access is only by `port-forward`. `exec` into the workload bypasses the OpenShell boundary and is limited to reading identity.
-- Preferably run under a separate local account (section 4).
+- An explicit `--context` on every `kubectl` call, and a server-identity guard comparing the cluster CA hash, as in EXP-006.
+- The harness touches only:
+  - the experiment sandbox and its derived objects;
+  - the gateway StatefulSet's replicas and pod.
+- No changes to the chart, values, Argo applications (except an owner-performed auto-sync pause), CRDs, the controller, or any other namespace.
+- No providers, inference or credentials in the sandbox.
+- `exec` into the experiment workload is limited to reading identity.
+- The CLI's OIDC token belongs to the owner and sits under the operator's UID. Per AGENTS.md that is not isolation. The owner logs in for the run and logs out at cleanup.
 
-**Rollback.** If any stop condition fires, record the state and go straight to cleanup. There is nothing to roll back outside the disposable cluster.
+**Rollback.** If any stop condition fires, record the state and then restore the gateway to `replicas=1` and Ready. **Do not** uninstall, re-sync with prune, or delete any pre-existing object.
 
-**Cleanup.**
-1. Delete the sandbox through the CLI and wait for finalizers.
-2. Uninstall the release and the Agent Sandbox manifest.
-3. `kind delete cluster`.
-4. Remove the dedicated kubeconfig and the PKI directory. Remove the images pulled only for this run, listed by digest.
-5. **Verify** with a diff against the B0 host baseline: containers, volumes, networks, images, listeners, user systemd units, the `~/.kube` hash, and the default Podman store. Confirm no non-disposable context was ever used.
+**Cleanup must leave the existing installation intact:** the OpenShell gateway, its data PVC and DB, the Agent Sandbox controller, CRDs and webhook, and the Argo CD apps.
+1. Delete the experiment sandbox through the CLI, by name, and wait for finalizers.
+2. Verify the CR, both pods, the workspace PVC and its Longhorn volume (reclaim `Delete`), and the per-sandbox Secrets, Service and NetworkPolicies are gone.
+3. Verify the gateway is at `replicas=1`, Ready, with the B0 image digest and the same data PVC UID.
+4. Verify the controller pod, CRD versions and webhook match B0.
+5. Verify the Argo apps are Synced and Healthy. The owner re-enables auto-sync if it was paused.
+6. Remove the harness-side data. The owner runs `openshell gateway logout` (or equivalent).
+7. **Verify** with a diff of the B0 inventory against a post-run inventory. The only allowed differences are the gateway pod's UID and age, and events.
 
-Because the cluster is destroyed, the CRD-cascade question from rev 1 disappears.
-
-**Remaining privileges.**
-- Within the throwaway cluster: the controller's cluster-wide pod, service and PVC rights; the gateway's pod and Secret creation in the sandbox namespace; TokenReviews.
-- On the host: the shared kernel, and the operator's UID unless a separate account is used.
+**Remaining privileges.** These are unchanged by the experiment: the controller's cluster-wide pod, service and PVC rights; the gateway's namespaced Role; TokenReviews. The harness uses the operator's kube credential (scope recorded by `auth can-i` in B0) and the owner's OIDC session.
 
 ## 7. Owner approvals required (none granted)
 
-1. The environment: a disposable kind cluster on the workstation, rootless Podman. Rootful only on a separate explicit approval; k3d or a VM only as the fallbacks in section 4.
-2. Which local account runs it: a separate unprivileged account (recommended) or the operator's own account.
-3. Installing user-space `kind` (pinned version and checksum) and creating its node container, network and volumes.
-4. Image pulls from `ghcr.io`, `registry.k8s.io`, `nvcr.io` and `docker.io`, by digest.
-5. Inside the disposable cluster only: the Agent Sandbox CRD, namespace, controller Deployment, ClusterRole and ClusterRoleBinding; the OpenShell chart with its ClusterRole, Roles, certgen hook and the NetworkPolicies the driver creates.
-6. The TLS port-forward chart overlay. The upstream disabled-auth `values-skaffold.yaml` shape is not proposed.
-7. `port-forward`, and read-only `exec` for identity.
-8. Node-level actions on the **disposable** node only: the SIGKILL in B3, and an optional host PID read.
-9. Optional B3b and B4, and the mandatory positive control B5.
-10. The pre-registered deviation from stage A's classification (section 5).
-11. That findings are scoped to kind, rootless Podman, local-path, OpenShell v0.1.9 and Agent Sandbox v1.0.3. They make no claim about Cilium, Longhorn, k3s or the target kernels.
-12. Whether a later **read-only** preflight of the existing cluster (k3s version, node kernel, Landlock/seccomp, PSA dry-run) is wanted before stage C. It is not part of stage B.
+The smallest set for reuse:
+1. **Authorize the B0 read-only commands** in section 5.1 against the existing cluster.
+2. **Authorize stage B execution on the existing installation** after B0 passes. That covers:
+   - one experiment sandbox `--from` the stage A image digest;
+   - B2 (scale the gateway 0 → 1);
+   - B3 (delete the gateway pod with `--grace-period=1`);
+   - B5 (delete the experiment's own workload pod);
+   - read-only `exec` into the experiment workload;
+   - cleanup per section 6.
+
+   It includes the pre-registered classification deviation (section 5), and findings scoped to this installation (OpenShell 0.1.9, Agent Sandbox v0.5.6).
+3. **CLI authentication:** the owner performs the OIDC login for the harness session (role "user" suffices if it can create sandboxes) and logs out at cleanup.
+4. **Change freeze for the run window:** either pause automated sync on the OpenShell Argo app only, owner-performed and restored afterwards; or hold Renovate and other merges to the GitOps repo for that window.
+
+No new cluster-scoped install, upgrade, node access, kind installation or workstation change is requested.
 
 ## 8. Judgement
 
@@ -258,23 +301,24 @@ The stage A mechanism that replaced the process is specific to the Podman driver
 - Survival is inferred, not observed.
 - A long gateway outage can freeze and then kill the workload through credential expiry, and the supervisor cannot re-bootstrap.
 - A restart during `Starting` replaces both pods.
-- The controller needs cluster-wide privileges. AGENTS.md asks not to bring this complexity in without an approved decision. A disposable cluster keeps it out of the shared one.
+- The installed Agent Sandbox v0.5.6 pairing is untested upstream.
+- The cluster-wide controller is a standing security concern. Reuse does not add to it, but this experiment does not justify keeping it either. Keeping it is a separate owner decision.
 
-**Alternatives if B2 or B3 show restarts, or the privilege cost is unacceptable:**
+**Alternatives if B2 or B3 show restarts:**
 1. Keep EXP-006's tmux/SSH ownership: FIND-074 and FIND-076, with no cluster-scoped objects and no isolation.
 2. OpenShell for isolation only, with tmux inside the sandbox as the process owner.
 3. Treat gateway restarts as interrupting, and rely on native agent resume. That is a separate capability, still to be tested.
 
 Gateway HA (Postgres plus replicas) addresses control-plane availability, not workload survival, and is excluded from stage B.
 
-## 9. Open uncertainties (only an experiment can settle them)
+## 9. Open uncertainties (only an experiment or live read can settle them)
 
-1. The counter's identity across a graceful restart and a true SIGKILL of the gateway (H1).
+1. The counter's identity across a graceful restart and a forced (1 s grace) pod delete of the gateway (H1).
 2. Whether the supervisor pod stays Running, and is therefore Degraded rather than Unavailable, throughout the outage.
 3. Whether `sandbox get` reads Ready only after the supervisor reconnects.
 4. The actual remaining credential life at the time of an outage, and the replay grace for a lost refresh.
-5. Whether OpenShell's launch probes pass nested in a rootless kind node: the inner runtime's seccomp profile, user-namespace mapping and cgroup delegation.
-6. Two overlapping gateway processes on one SQLite file after an API force-delete (B3b only).
-7. Whether the published 0.1.9 chart's image digests and the in-process Kubernetes driver match the source read here.
-8. Changes in Agent Sandbox v1.0.4–v1.0.12, and gateway **upgrade** and rollback. Both are out of scope.
-9. Behaviour on the target cluster's kernel, CNI and storage. That is out of scope for stage B by design.
+5. The live state: chart and image digests, rendered config, sandbox and session inventory, Argo status, PSA and quota. These are B0 items.
+6. Whether OpenShell 0.1.9 works with Agent Sandbox v0.5.6 in practice (B1).
+7. Gateway rescheduling time when its RWO data volume must re-attach on another node.
+8. A pure SIGKILL with no preceding SIGTERM. That needs node access and is not requested.
+9. Changes in other Agent Sandbox releases, and gateway **upgrade** and rollback. Both are out of scope.
