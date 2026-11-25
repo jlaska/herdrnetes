@@ -1,0 +1,3 @@
+log_lines=895 window_lines=641 window_first_n=255 window_last_n=895
+window_first_t=1795577178.723 window_last_t=1795577818.527 max_gap_s=1.011
+n_discontinuities=0 gaps_over_3s=0

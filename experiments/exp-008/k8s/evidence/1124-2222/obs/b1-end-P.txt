@@ -1,0 +1,6 @@
+pid=71
+start=50438614
+nonce=230650de7ef3e973
+boot_id=446a67c4-3fbb-4b5b-b663-f936c3484baa
+proc=71 start=50438614 nspid=71 cmd=bash /usr/local/bin/counter.sh /sandbox/out 
+last=1795577818.526717 2026-11-25T03:36:58 COUNT n=895

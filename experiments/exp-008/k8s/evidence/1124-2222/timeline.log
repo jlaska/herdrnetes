@@ -1,0 +1,29 @@
+2026-11-25T03:21:37.807Z [pre] pre OK: refs recorded; digests match B0; gateway Ready; no Sandbox CRs; argo=argo-app-openshell Synced Healthy 1978dc1353048515634f94ab0c1909b7c2ab34f9 Succeeded 2026-11-25T02:47:30Z;argo-app-agent-sandbox Synced Healthy 1978dc1353048515634f94ab0c1909b7c2ab34f9 Succeeded 2026-11-24T21:11:00Z; gitops=1978dc1353048515634f94ab0c1909b7c2ab34f9
+2026-11-25T03:21:37.894Z [sampler-start] sampler started pid=243656
+2026-11-25T03:21:48.145Z [b1] MUTATE openshell sandbox create --name exp008b-1124-2222 --from ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16 --detach --tty --restart-policy never --no-auto-providers --label exp008.run=1124-2222 -- /usr/local/bin/counter.sh /sandbox/out
+2026-11-25T03:22:04.464Z [b1] create rc=0
+2026-11-25T03:22:04.572Z [b1] B1 sandbox get phase=Ready (Ready wait is in b1-soak)
+2026-11-25T03:22:04.648Z [b1] B1 created id=71a54a47-62ed-4831-a304-d1a73a197aa1 cr=openshell/default--exp008b-1124-2222
+2026-11-25T03:22:53.147Z [b1-soak] B1 base: P=71 50438614 230650de7ef3e973 446a67c4-3fbb-4b5b-b663-f936c3484baa  W=b84a7082-9650-479e-810e-12f6a9aee840 containerd://170f24d4d8a9429219bfdd836aa268fe46078e440975edcbc5ca313a15957331
+2026-11-25T03:36:57.861Z [b1-soak] MUTATE openshell sandbox connect exp008b-1124-2222 (ACK b1)
+2026-11-25T03:36:58.636Z [b1-soak] ACK b1 rc=0 reached_pty=yes sent=yes ack=ACK b1 pid=71 start=50438614 nonce=230650de7ef3e973 n=894 t_tick_s=0.14 t_ack_s=0.65
+2026-11-25T03:36:59.034Z [b1-soak] B1 ACK identity matches
+2026-11-25T03:36:59.564Z [b1-soak] B1 done
+2026-11-25T03:37:12.706Z [b2] B2 token expiry annotations: workload -;supervisor -;
+2026-11-25T03:37:12.860Z [b2] MUTATE kubectl -n openshell scale statefulset/openshell --replicas=0
+2026-11-25T03:38:43.584Z [b2] MUTATE kubectl -n openshell scale statefulset/openshell --replicas=1
+2026-11-25T03:39:15.154Z [b2] MUTATE openshell sandbox connect exp008b-1124-2222 (ACK b2)
+2026-11-25T03:39:15.942Z [b2] ACK b2 rc=0 reached_pty=yes sent=yes ack=ACK b2 pid=71 start=50438614 nonce=230650de7ef3e973 n=1032 t_tick_s=0.14 t_ack_s=0.65
+2026-11-25T03:39:16.942Z [b2] B2 done
+2026-11-25T03:41:19.025Z [b3] MUTATE kubectl -n openshell delete pod openshell-0 --grace-period=1 --wait=false
+2026-11-25T03:41:35.159Z [b3] MUTATE openshell sandbox connect exp008b-1124-2222 (ACK b3)
+2026-11-25T03:41:35.954Z [b3] ACK b3 rc=0 reached_pty=yes sent=yes ack=ACK b3 pid=71 start=50438614 nonce=230650de7ef3e973 n=1172 t_tick_s=0.15 t_ack_s=0.66
+2026-11-25T03:41:36.950Z [b3] B3 done
+2026-11-25T03:41:49.191Z [b5] MUTATE kubectl -n openshell delete pod default--exp008b-1124-2222 --wait=false
+2026-11-25T03:46:50.289Z [b5] B5 done
+2026-11-25T03:47:20.338Z [cleanup] MUTATE openshell sandbox delete exp008b-1124-2222
+2026-11-25T03:47:20.487Z [cleanup] sandbox delete rc=0
+2026-11-25T03:47:20.835Z [cleanup] experiment objects gone (by sandbox-id label, and no Sandbox CRs)
+2026-11-25T03:47:30.840Z [sampler-stop] sampler stop requested
+2026-11-25T03:47:30.964Z [logout] MUTATE openshell gateway logout exp008b
+2026-11-25T03:47:30.970Z [logout] gateway logout rc=0

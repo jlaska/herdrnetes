@@ -1,0 +1,5 @@
+2026-11-25T02:20:41.620Z [pre] pre OK: refs recorded; digests match B0; gateway Ready; no Sandbox CRs; argo=argo-app-openshell Synced Healthy a604ce9807aa9c845adab0ed7e0d4311dfd5f3fe Succeeded 2026-11-18T07:02:55Z;argo-app-agent-sandbox Synced Healthy a604ce9807aa9c845adab0ed7e0d4311dfd5f3fe Succeeded 2026-11-24T21:11:00Z; gitops=a604ce9807aa9c845adab0ed7e0d4311dfd5f3fe
+2026-11-25T02:20:47.806Z [sampler-start] sampler started pid=210844
+2026-11-25T02:20:48.689Z [b1] MUTATE openshell sandbox create --name exp008b-1124-2120 --from ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16 --detach --tty --restart-policy never --no-auto-providers --label exp008.run=1124-2120 -- /usr/local/bin/counter.sh /sandbox/out
+2026-11-25T02:26:07.333Z [b1] create rc=1
+2026-11-25T02:26:07.350Z [b1] STOP: B1 create failed rc=1: 2026-11-25T02:20:48.689Z [b1] MUTATE openshell sandbox create --name exp008b-1124-2120 --from ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16 --detach --tty --restart-policy never --no-auto-providers --label exp008.run=1124-2120 -- /usr/local/bi

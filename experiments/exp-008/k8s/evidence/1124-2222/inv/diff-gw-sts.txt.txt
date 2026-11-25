@@ -1,0 +1,5 @@
+--- b0-pre/gw-sts.txt	2026-11-24 22:21:36.849492717 -0500
++++ post/gw-sts.txt	2026-11-24 22:47:26.812792085 -0500
+@@ -1 +1 @@
+-438d42ed-39e6-45bb-83f8-e01ddbfb8d07 replicas=1 gen=10
++438d42ed-39e6-45bb-83f8-e01ddbfb8d07 replicas=1 gen=12
