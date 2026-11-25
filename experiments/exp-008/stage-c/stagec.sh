@@ -15,7 +15,7 @@
 #     c2             M5  gateway scale 0 -> 90 s -> 1 while detached and working; window metrics
 #     c2-reattach    M2/M3  C3b: as c1-reattach
 #     cleanup        M6  stop clients, delete the sandbox, residue check, replicas restored
-#     post           read-only post-run inventory + diff against this run's pre inventory
+#     post           read-only post-run inventory + diff against pre; restore-check.sh validates generation, providers, profiles
 #     sampler-stop | logout (M7) | ident <label> | snap <label> | spend
 #
 # Single attempt: every mutating step writes done-<step> before its first mutation and refuses to run twice;
@@ -66,13 +66,15 @@ R=$HX/run/$RUN
 E=$R/e   # evidence candidates (derived; redaction-scanned before any commit)
 L=$R/raw # raw local-only material: transcripts, screen captures, PTY logs, container logs, codeword
 TL=$E/timeline.log
+PROF=claude-code-exp008c # the imported provider profile (task/profile-claude-code-exp008c.yaml)
 OUTAGE_MAX=240        # gateway Ready within 240 s of scale-down, or STOP
 WALL_MAX=5400         # 90 min from c0-create
 FREEZE_END_LOCAL=30   # 00:30 America/New_York; Renovate's automerge window opens at 01:00
 JWT_MARGIN=900        # c2 must start >= 15 min before the earliest supervisor-token expiry annotation
-# Spend guard: Haiku 5.5 list prices (USD/MTok, prompts <= 100K): input 0.10, output 0.50; cache write/read
-# taken as the standard 1.25x / 0.1x multipliers (inference). Applied to transcript usage; STOP at 80 %.
-PRICES="0.10 0.125 0.01 0.50"
+# Spend guard: metrics.py `usage` prices transcript usage per request with the Haiku 5.5 rate card (two cards,
+# split at a 100K-token prompt incl. cache reads/writes). It is an ESTIMATE; the Console workspace cap is the
+# authoritative control. STOP at 80 % of BUDGET_USD, and STOP if usage cannot be obtained or is not reliable
+# once model activity has begun (c0-create).
 export TZ=America/New_York
 KUBECTL_DIR=$HOME/.local/share/mise/installs/kubectl/1.36.5
 GH=$(ls -d "$HOME"/.local/share/mise/installs/gh/*/gh_*/bin/gh 2>/dev/null | sort -V | tail -n 1)
@@ -124,8 +126,19 @@ kw() { # kubectl, mutating: exact allowlist only (M5); logged before it runs
   *) log "REFUSED kw $f"; return 97 ;;
   esac
   log "MUTATE kubectl -n $NS $f"
-  "${KC[@]}" --request-timeout=20s -n "$NS" "$@"
+  # every M5 operation is recorded with the StatefulSet generation before and after it, so `post` can
+  # explain the generation change exactly (and refuse to explain any other change)
+  # t= is the issue time of the scale itself (c2 times its windows from it, not from the generation reads).
+  # A scale that applies but returns rc != 0 is recorded as such and fails safe (UNEXPLAINED in post).
+  local g0 g1 rc ti
+  g0=$(sts_gen)
+  ti=$(ems)
+  "${KC[@]}" --request-timeout=20s -n "$NS" "$@" && rc=0 || rc=$?
+  g1=$(sts_gen)
+  echo "t=$ti rc=$rc gen_before=${g0:-unreadable} gen_after=${g1:-unreadable} op=$f" >>"$E/obs/scale-ops.txt"
+  return "$rc"
 }
+sts_gen() { K -n "$NS" get statefulset "$GW_STS" -o jsonpath='{.metadata.generation}' 2>/dev/null; }
 
 # ---------------------------------------------------------------- exec: fixed read-only scripts, this workload only
 # X1 identity: the launcher's record + the live main process (exe, start, nonce, placeholder form; never values)
@@ -180,6 +193,7 @@ O() {
   case $sub in
   "sandbox get" | "sandbox list" | "gateway list") ;;
   "provider list") [ "$*" = "provider list --names" ] || { log "REFUSED O $*"; return 97; } ;;
+  "profile list") [ "$#" -eq 2 ] || { log "REFUSED O $*"; return 97; } ;;
   "sandbox exec") [ "$#" -eq 12 ] && [ "$3" = "$SBX" ] && [ "${*:4:7}" = "--no-tty --no-login-shell --timeout 60 -- python3 -I" ] && [ "${11}" = -c ] && [ "${12}" = "$X5PY" ] || { log "REFUSED O sandbox exec"; return 97; } ;;
   "sandbox create") [ "${3:-}" = --name ] && [ "${4:-}" = "$SBX" ] || { log "REFUSED O $*"; return 97; } ;;
   "sandbox delete") [ "${3:-}" = "$SBX" ] && [ "$#" -eq 3 ] || { log "REFUSED O $*"; return 97; } ;;
@@ -205,14 +219,30 @@ argo_state() { local a; for a in "$ARGO_APP_GW" "$ARGO_APP_AS"; do K -n argo-sys
 argo_healthy() { awk '$2 != "Synced" || $3 != "Healthy" {bad=1} END {exit bad}' <<<"$1"; }
 gitops_sha() { env -u SSH_AUTH_SOCK "$GH" api "repos/$GITOPS_REPO/commits/main" --jq .sha 2>/dev/null; }
 sandboxes_all() { K get sandboxes.agents.x-k8s.io -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}'; }
-providers() { OT=30 O provider list --names 2>/dev/null | sort; }
-spend_check() { # STOP at 80 % of BUDGET_USD, estimated from transcript usage (the Console cap is the hard control)
-  [ -s "$E/tr_rel" ] || return 0
-  kx X3T "$L/tr/spend.jsonl" 30 || { log "spend: transcript copy failed (not a stop by itself)"; return 0; }
-  # shellcheck disable=SC2086
-  python3 -I "$HERE/metrics.py" usage "$L/tr/spend.jsonl" $PRICES >"$E/metrics/spend-latest.json" || return 0
-  local u; u=$(jq -r .est_usd "$E/metrics/spend-latest.json")
-  echo "$(now) est_usd=$u budget=$BUDGET_USD" >>"$E/obs/spend.txt"
+providers() { # names, sorted; a CLI failure prints an ERROR marker (never an empty-looking list) and returns 1
+  local o; o=$(OT=30 O provider list --names 2>/dev/null) || { echo "ERROR provider-list-failed"; return 1; }
+  sort <<<"$o"
+}
+profiles() { # profile table rows without the header; "No profiles found." becomes empty; failure -> ERROR marker
+  local o; o=$(OT=30 O profile list 2>/dev/null) || { echo "ERROR profile-list-failed"; return 1; }
+  awk 'NR == 1 && $1 == "NAME" {next} $0 == "No profiles found." {next} {print}' <<<"$o"
+}
+spend_check() { # see the header; every outcome is appended to obs/spend.txt
+  [ -e "$E/done-c0-create" ] || return 0 # no model activity yet
+  if [ ! -s "$E/tr_rel" ]; then
+    # c0-baseline locates the transcript (<= 180 s after create) and then calls spend_check itself
+    [ "$STEP" = c0-baseline ] && [ ! -e "$E/obs/c0-baseline-done" ] && { echo "$(now) step=$STEP usage=not-yet-locatable" >>"$E/obs/spend.txt"; return 0; }
+    stop "spend: model activity began but the transcript is not located (usage unobtainable)"
+  fi
+  kx X3T "$L/tr/spend.jsonl" 30 || stop "spend: transcript copy failed after model activity began (usage unobtainable)"
+  python3 -I "$HERE/metrics.py" usage "$L/tr/spend.jsonl" >"$E/metrics/spend-latest.json" 2>"$L/spend-metrics.err" \
+    && jq -e '.est_usd | numbers' "$E/metrics/spend-latest.json" >/dev/null || stop "spend: usage calculation failed"
+  local u prev rel
+  u=$(printf '%.8f' "$(jq -r .est_usd "$E/metrics/spend-latest.json")"); rel=$(jq -r '.reliable and .messages >= 1' "$E/metrics/spend-latest.json")
+  prev=$(sed -n 's/.* est_usd=\([0-9.]*\) .*/\1/p' "$E/obs/spend.txt" 2>/dev/null | tail -n 1)
+  echo "$(now) step=$STEP est_usd=$u budget=$BUDGET_USD reliable=$rel msgs=$(jq -r .messages "$E/metrics/spend-latest.json") long_ctx=$(jq -r .long_context_messages "$E/metrics/spend-latest.json") reasons=$(jq -r '.unreliable_reasons | join(",")' "$E/metrics/spend-latest.json") (transcript estimate; Console cap is authoritative)" >>"$E/obs/spend.txt"
+  [ "$rel" = true ] || stop "spend: usage not reliably calculable ($(jq -r '.unreliable_reasons | join(",")' "$E/metrics/spend-latest.json"); messages=$(jq -r .messages "$E/metrics/spend-latest.json"))"
+  if [ -n "$prev" ] && awk -v u="$u" -v p="$prev" 'BEGIN {exit !(u + 0.00005 < p)}'; then stop "spend: estimate decreased ($prev -> $u): transcript replaced or truncated"; fi
   awk -v u="$u" -v b="$BUDGET_USD" 'BEGIN {exit !(u >= 0.8 * b)}' && stop "spend estimate $u >= 80% of $BUDGET_USD (run cleanup now)"
   return 0
 }
@@ -259,7 +289,8 @@ inventory() { # inventory <dir>
   K get namespace "$NS" agent-sandbox-system -o 'custom-columns=NAME:.metadata.name,UID:.metadata.uid,LABELS:.metadata.labels' >"$d/namespaces.txt" 2>&1
   { K -n "$NS" get ciliumnetworkpolicies; K get ciliumclusterwidenetworkpolicies; } >"$d/cilium.txt" 2>&1
   argo_state 2>&1 | awk '{print $1, $2, $3, $4}' >"$d/argo.txt"
-  providers >"$d/providers.txt"
+  providers >"$d/providers.txt" || true
+  profiles >"$d/profiles.txt" || true
   OT=30 O sandbox list >"$d/sandbox-list.txt" 2>&1
 }
 
@@ -567,6 +598,7 @@ pre)
   gw_registered || stop "CLI registration $GWNAME missing (owner login first)"
   OT=30 O sandbox list >"$E/inv/sandbox-list-pre.txt" 2>&1 || stop "sandbox list failed (not logged in?)"
   grep -q -x -F "$PROV" "$E/providers-ref.txt" || stop "provider $PROV not present (owner creates it first)"
+  awk -v n="$PROF" '{for (i = 1; i <= NF; i++) if ($i == n) f = 1} END {exit !f}' "$E/inv/pre/profiles.txt" || stop "profile $PROF not listed (owner imports it first), or profile list failed"
   log "pre OK: Argo Synced/Healthy; digests match Stage B; gateway Ready replicas=1; no Sandbox CRs; provider $PROV present; providers=$(grep -c . "$E/providers-ref.txt") gitops=$(cat "$E/gitops-ref.txt")"
   ;;
 sampler-start)
@@ -648,11 +680,12 @@ c0-baseline)
   [ "$(jq -r .reply "$E/metrics/c0-probe.json")" = true ] || stop "C0: codeword line not acknowledged in the transcript within 10 min"
   echo "$m" >"$E/obs/M_s"
   wc -c <"$L/tr/c0-ref.jsonl" >"$E/obs/prefix_n"; snap c0-ref
-  python3 -I "$HERE/metrics.py" usage "$L/tr/c0-ref.jsonl" $PRICES >"$E/metrics/c0-usage.json"
+  python3 -I "$HERE/metrics.py" usage "$L/tr/c0-ref.jsonl" >"$E/metrics/c0-usage.json"
   r=$(cat "$L/task/c0-ref/refusals.log" 2>/dev/null | grep -c .)
   [ -s "$L/task/c0-ref/attempts.log" ] || stop "C0: attempts.log missing from the C0 snapshot"
   grep -v -q 'kf=placeholder ak=absent' "$L/task/c0-ref/attempts.log" && stop "C0: a step.sh run (agent descendant) saw unexpected key forms"
   log "C0 baseline: P=$(pkeys c0-base) W=$(wkeys c0-base) M=${m}s refusals=$r usage=$(jq -c . "$E/metrics/c0-usage.json") probe=$(jq -c . "$E/metrics/c0-probe.json")"
+  spend_check # first measurement now that the transcript is located (stops if not reliable)
   echo "$(ems)" >"$E/obs/c0-baseline-done"
   ;;
 _tr_probe) # helper for c0-baseline: rc 0 once a transcript with >= 1 assistant entry exists (records its relative path)
@@ -698,14 +731,15 @@ c2)
   gate c2 120 inflight || stop "C2: no step in flight within 120 s"
   rollback() { [ "$(K -n "$NS" get statefulset "$GW_STS" -o jsonpath='{.spec.replicas}')" = "$(ref gw_replicas)" ] || { log "ROLLBACK: restoring replicas=$(ref gw_replicas)"; kw scale "statefulset/$GW_STS" --replicas="$(ref gw_replicas)"; }; }
   trap rollback EXIT; trap 'rollback; exit 130' INT TERM HUP
-  t0=$(ems); put1 "$E/obs/c2-t0" "$t0"
   kw scale "statefulset/$GW_STS" --replicas=0 || stop "C2 scale 0 refused/failed"
+  t0=$(sed -n 's/^t=\([0-9]*\) .*/\1/p' "$E/obs/scale-ops.txt" | tail -n 1); nz "$t0" || t0=$(ems) # issue time of the scale-down
+  put1 "$E/obs/c2-t0" "$t0"
   if waitfor $((t0 + 60000)) sh -c '! "$@"' _ "${KC[@]}" --request-timeout=5s -n "$NS" get pod "$GW_POD"; then
     echo "gw_gone_ms=$(( $(ems) - t0 ))" | tee -a "$E/obs/c2-times.txt"
   else stop "C2: gateway pod still present 60 s after scale 0 (rollback runs)"; fi
   while [ "$(ems)" -lt $((t0 + 90000)) ]; do sleep 1; done
   kw scale "statefulset/$GW_STS" --replicas="$(ref gw_replicas)" || stop "C2 scale up failed (rollback retries once on exit)"
-  echo "scale_up_ms=$(( $(ems) - t0 ))" | tee -a "$E/obs/c2-times.txt"
+  echo "scale_up_ms=$(( $(sed -n 's/^t=\([0-9]*\) .*/\1/p' "$E/obs/scale-ops.txt" | tail -n 1) - t0 ))" | tee -a "$E/obs/c2-times.txt"
   waitfor $((t0 + OUTAGE_MAX * 1000)) gw_new_ready "$old" || stop "C2: new gateway pod not Ready within ${OUTAGE_MAX}s of scale-down"
   t_gw=$(ems); put1 "$E/obs/c2-t-gw-ready" "$t_gw"
   echo "gw_ready_ms=$((t_gw - t0)) new_gw_uid=$(gw_field '{.metadata.uid}')" | tee -a "$E/obs/c2-times.txt"
@@ -738,7 +772,7 @@ cleanup)
   "${TM[@]}" kill-server 2>/dev/null; sleep 1
   [ -z "$(client_scan)" ] || { client_scan >"$E/obs/cleanup-clients.txt"; log "cleanup: client processes remain (see obs)"; }
   snap cleanup-final || log "cleanup: final snapshot failed"
-  python3 -I "$HERE/metrics.py" usage "$L/tr/cleanup-final.jsonl" $PRICES >"$E/metrics/final-usage.json" 2>/dev/null
+  python3 -I "$HERE/metrics.py" usage "$L/tr/cleanup-final.jsonl" >"$E/metrics/final-usage.json" 2>/dev/null || log "cleanup: final usage estimate failed (Console figure is authoritative)"
   grab_logs cleanup-pre
   K -n "$NS" get pvc -o json | jq -r --arg s "$(cat "$E/sbx_id")" '.items[] | select(.metadata.labels["openshell.ai/sandbox-id"] == $s or .metadata.labels["openshell.ai/boundary-pair"] == $s or (.metadata.name | contains("'"$SBX"'"))) | "\(.metadata.name) \(.spec.volumeName)"' >"$E/obs/cleanup-pvcs.txt"
   if [ -e "$E/done-c0-create" ]; then OT=180 O sandbox delete "$SBX" >"$E/obs/cleanup-delete.out" 2>"$E/obs/cleanup-delete.err"; rc=$?; log "sandbox delete rc=$rc"
@@ -759,16 +793,24 @@ cleanup)
   log "experiment objects gone ($KINDS by labels and names, Sandbox CRs, PVs by recorded PVC and by claim, Cilium policies); gateway replicas=$(ref gw_replicas)"
   ;;
 post)
-  inventory "$E/inv/post"
-  (cd "$E/inv" && for f in pre/*; do b=${f#pre/}; diff -u "pre/$b" "post/$b" >"diff-$b.txt" 2>&1 && rm -f "diff-$b.txt"; done; ls diff-* 2>/dev/null) | tee "$E/inv/diff-files.txt"
-  # Pre-declared expected differences: gw-sts-generation (+2 from C2's two scale operations), gateway pod UID
-  # (openshell-pod-images and pod names are name/image only), sandbox-list (the experiment sandbox is gone).
-  # providers.txt MUST differ only if the owner has already deleted $PROV.
-  grep -v -x -E 'diff-(gw-sts-generation|providers)\.txt' "$E/inv/diff-files.txt" >"$E/inv/unexpected-diffs.txt" || true
-  if [ -s "$E/inv/unexpected-diffs.txt" ]; then echo "restoration=NOT-CLEAN unexpected=$(tr '\n' ' ' <"$E/inv/unexpected-diffs.txt")" | tee "$E/inv/restoration.txt"
-  else echo "restoration=matches-pre (declared differences only)" | tee "$E/inv/restoration.txt"; fi
-  [ -e "$E/done-cleanup" ] || echo "note: cleanup step has not run" | tee -a "$E/inv/restoration.txt"
-  log "post: $(head -n 1 "$E/inv/restoration.txt")"
+  # read-only, so it may be re-run (e.g. after the owner's deletion, or after an aborted run); every run is
+  # kept as inv/post-N with its own diffs and verdict; inv/restoration.txt is a copy of the latest run's.
+  n=1; while [ -e "$E/inv/post-$n" ]; do n=$((n + 1)); done
+  P=$E/inv/post-$n D=$E/inv/diff-$n; mkdir -p "$D"
+  inventory "$P"
+  for f in "$E"/inv/pre/*; do b=${f##*/}; diff -u "$f" "$P/$b" >"$D/diff-$b.txt" 2>&1 && rm -f "$D/diff-$b.txt"; done
+  (cd "$D" && ls diff-* 2>/dev/null) >"$E/inv/diff-files-$n.txt" || true
+  # Only three inventory files may differ, and each is validated explicitly below (never accepted by name):
+  # gw-sts-generation, providers, profiles. Every other difference is unexpected.
+  grep -v -x -E 'diff-(gw-sts-generation|providers|profiles)\.txt' "$E/inv/diff-files-$n.txt" >"$E/inv/unexpected-diffs-$n.txt" || true
+  gen=$(bash "$HERE/restore-check.sh" generation "$E/inv/pre/gw-sts-generation.txt" "$P/gw-sts-generation.txt" "$E/obs/scale-ops.txt")
+  prv=$(bash "$HERE/restore-check.sh" names "$E/inv/pre/providers.txt" "$P/providers.txt" "$PROV")
+  prf=$(bash "$HERE/restore-check.sh" names "$E/inv/pre/profiles.txt" "$P/profiles.txt" "$PROF")
+  { echo "post_run=$n"; echo "gw_sts_generation=$gen"; echo "providers=$prv"; echo "profiles=$prf"; } >"$E/inv/restore-checks-$n.txt"
+  v=$(bash "$HERE/restore-check.sh" verdict "$E/inv/unexpected-diffs-$n.txt" "$gen" "$prv" "$prf")
+  { echo "$v"; cat "$E/inv/restore-checks-$n.txt"; [ -e "$E/done-cleanup" ] || echo "note: cleanup step has not run"; } >"$E/inv/restoration-$n.txt"
+  cp "$E/inv/restoration-$n.txt" "$E/inv/restoration.txt"; cat "$E/inv/restoration.txt"
+  log "post run $n: $v; $(tr '\n' ' ' <"$E/inv/restore-checks-$n.txt")"
   ;;
 logout) O gateway logout "$GWNAME" >"$E/obs/logout.out" 2>&1; log "gateway logout rc=$?" ;;
 *) echo "unknown step $STEP" >&2; exit 2 ;;

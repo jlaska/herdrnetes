@@ -8,7 +8,7 @@ usage:
   python3 -I metrics.py window   <taskdir> <transcript.jsonl> <open_ms> <close_ms> <M_s> <skew_ms>
   python3 -I metrics.py probe    <transcript.jsonl> <probe-token> <codeword-file|-> <last_done>
   python3 -I metrics.py prefix   <transcript.jsonl> <nbytes>                 -> sha256 of the first n bytes
-  python3 -I metrics.py usage    <transcript.jsonl> <in> <cache_write> <cache_read> <out>  (USD per MTok)
+  python3 -I metrics.py usage    <transcript.jsonl>                          -> spend estimate (Haiku 5.5 card)
   python3 -I metrics.py screen   <capture.txt>                               -> terminal-state rule
   python3 -I metrics.py rawmode  <pty.raw>                                   -> renderer mode seen in raw output
   python3 -I metrics.py ledger   <taskdir>                                   -> hash-chain check
@@ -229,19 +229,101 @@ def probe(tr: list[dict], token: str, codeword: str | None, last_done: int) -> d
     return r
 
 
-def usage(tr: list[dict], p_in: float, p_cw: float, p_cr: float, p_out: float) -> dict:
-    seen, tot = set(), {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0}
+# Claude Haiku 5.5 rate card, USD per MTok (platform.claude.com/docs/en/about-claude/pricing, read 2026-11-25).
+# Two cards chosen PER REQUEST by prompt length = input + cache writes + cache reads; > 100,000 tokens pays
+# the long-context card on every token category of that request. US-only inference_geo adds 1.1x.
+RATE_CARD = {
+    "model_prefix": "claude-haiku-5-5",
+    "long_context_threshold": 100_000,
+    "base": {"in": 0.10, "cw5m": 0.125, "cw1h": 0.20, "cr": 0.01, "out": 0.50},
+    "long": {"in": 0.50, "cw5m": 0.625, "cw1h": 1.00, "cr": 0.05, "out": 2.50},
+    "geo_us_multiplier": 1.1,
+}
+USAGE_FIELDS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens")
+
+
+def _nonneg_int(v) -> bool:
+    return isinstance(v, int) and not isinstance(v, bool) and v >= 0
+
+
+def usage(tr: list[dict], card: dict = RATE_CARD) -> dict:
+    """Transcript-based spend ESTIMATE (the Console workspace cap is the authoritative control).
+
+    reliable=false (with reasons) whenever a cost cannot be computed from what the transcript records: an
+    assistant entry without a usable usage object or message id, an unknown model, a corrupt line before
+    the last one, or unpriced server-tool use. Requests the transcript never records (aborted streams,
+    client retries, side requests) are not visible here, so the estimate can undercount.
+    """
+    reasons: set[str] = set()
+    per: dict[str, dict] = {}
+    synthetic = 0
+    last = max((e.get("_line", -1) for e in tr), default=-1)
     for e in tr:
-        m = e.get("message") or {}
-        u, mid = m.get("usage"), m.get("id")
-        if e.get("type") != "assistant" or not isinstance(u, dict) or mid in seen:
+        if e.get("_bad"):
+            if e.get("_line") != last:  # a partially written final line is normal; anything earlier is not
+                reasons.add("corrupt-line")
             continue
-        seen.add(mid)  # streamed content blocks repeat one message's usage
-        for k in tot:
-            tot[k] += int(u.get(k) or 0)
-    usd = (tot["input_tokens"] * p_in + tot["cache_creation_input_tokens"] * p_cw
-           + tot["cache_read_input_tokens"] * p_cr + tot["output_tokens"] * p_out) / 1e6
-    return {"messages": len(seen), **tot, "est_usd": round(usd, 4)}
+        if e.get("type") != "assistant":
+            continue
+        m = e.get("message")
+        if not isinstance(m, dict):
+            reasons.add("missing-message")
+            continue
+        model = m.get("model")
+        if model == "<synthetic>":  # client-generated (e.g. an API error shown to the user): no API cost
+            synthetic += 1
+            continue
+        if not isinstance(model, str) or not model.startswith(card["model_prefix"]):
+            reasons.add("unknown-model")
+            continue
+        mid, u = m.get("id"), m.get("usage")
+        if not isinstance(mid, str) or not mid:
+            reasons.add("missing-message-id")
+            continue
+        if not isinstance(u, dict):
+            reasons.add("missing-usage")
+            continue
+        vals = {k: u.get(k, 0 if k.startswith("cache_") else None) for k in USAGE_FIELDS}
+        if not all(_nonneg_int(v) for v in vals.values()):
+            reasons.add("bad-usage-field")
+            continue
+        cc = u.get("cache_creation")
+        split = None
+        if isinstance(cc, dict) and _nonneg_int(cc.get("ephemeral_5m_input_tokens")) and _nonneg_int(cc.get("ephemeral_1h_input_tokens")) \
+                and cc["ephemeral_5m_input_tokens"] + cc["ephemeral_1h_input_tokens"] == vals["cache_creation_input_tokens"]:
+            split = (cc["ephemeral_5m_input_tokens"], cc["ephemeral_1h_input_tokens"])
+        stu = u.get("server_tool_use")
+        if isinstance(stu, dict) and any(_nonneg_int(v) and v > 0 for v in stu.values()):
+            reasons.add("server-tool-use-unpriced")
+        geo = u.get("inference_geo")
+        # streamed content blocks of one message repeat its usage, and early entries can carry partial
+        # output counts: keep the per-field maximum for each message id
+        p = per.setdefault(mid, {k: 0 for k in USAGE_FIELDS} | {"split": None, "geo_us": False})
+        for k in USAGE_FIELDS:
+            p[k] = max(p[k], vals[k])
+        if split is not None and sum(split) == p["cache_creation_input_tokens"]:
+            p["split"] = split
+        p["geo_us"] = p["geo_us"] or (isinstance(geo, str) and geo.lower() == "us")
+    tot = {k: 0 for k in USAGE_FIELDS}
+    usd, long_n, max_prompt, assumed_1h = 0.0, 0, 0, 0
+    for p in per.values():
+        prompt = p["input_tokens"] + p["cache_creation_input_tokens"] + p["cache_read_input_tokens"]
+        max_prompt = max(max_prompt, prompt)
+        r = card["long"] if prompt > card["long_context_threshold"] else card["base"]
+        long_n += r is card["long"]
+        if p["split"] is not None and sum(p["split"]) == p["cache_creation_input_tokens"]:
+            cw = p["split"][0] * r["cw5m"] + p["split"][1] * r["cw1h"]
+        else:  # TTL split unknown: price every cache write at the higher 1-hour rate
+            cw = p["cache_creation_input_tokens"] * r["cw1h"]
+            assumed_1h += p["cache_creation_input_tokens"] > 0
+        c = p["input_tokens"] * r["in"] + cw + p["cache_read_input_tokens"] * r["cr"] + p["output_tokens"] * r["out"]
+        usd += c * (card["geo_us_multiplier"] if p["geo_us"] else 1.0)
+        for k in USAGE_FIELDS:
+            tot[k] += p[k]
+    return {"basis": "transcript-estimate", "messages": len(per), "synthetic_messages": synthetic, **tot,
+            "max_prompt_tokens": max_prompt, "long_context_messages": long_n,
+            "cache_write_ttl_assumed_1h_messages": assumed_1h,
+            "est_usd": round(usd / 1e6, 8), "reliable": not reasons, "unreliable_reasons": sorted(reasons)}
 
 
 ESC_FRAG = re.compile(r"\x1b|\[\?\d{1,4}[hl]|\[\d{1,3}(;\d{1,3})*[mHJKf]|\]\d;")
@@ -301,7 +383,7 @@ def main(a: list[str]) -> int:
         data = _read(a[1], "rb")[: int(a[2])]
         r = {"prefix_bytes": len(data), "prefix_sha256": hashlib.sha256(data).hexdigest()}
     elif cmd == "usage":
-        r = usage(load_transcript(a[1]), *map(float, a[2:6]))
+        r = usage(load_transcript(a[1]))
     elif cmd == "screen":
         r = screen(_read(a[1]))
     elif cmd == "rawmode":
