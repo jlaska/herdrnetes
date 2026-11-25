@@ -43,7 +43,7 @@ Reattaching was manual (FIND-072). The OpenShell properties this experiment reli
 - **A7:** a detached, retained sandbox outlives the CLI that created it; explicit deletion removes its resources; any other termination conditions are recorded.
 
 **Later stages (separate approval each).**
-- **B:** the Kubernetes driver in a scratch namespace (cluster-scoped Agent Sandbox controller/CRD and gateway RBAC).
+- **B:** the Kubernetes driver (cluster-scoped Agent Sandbox controller/CRD and gateway RBAC). Where it runs is an owner decision. The proposal (revision 4) recommends reusing the existing, unused OpenShell 0.1.9 and Agent Sandbox v1.0.12 installation. Its owner-authorized read-only preflight (B0, 2026-11-24) found no blocker; a disposable local cluster is the fallback.
 - **C:** a real agent with an egress-substituted credential. It covers work through a pane close (the EXP-006 K03 gap) and workload-pod loss, classified as resume rather than continuity.
 
 **Evidence:** [run 1122-220034](../../experiments/exp-008/local/evidence/1122-220034/), [run 1123-072024](../../experiments/exp-008/local/evidence/1123-072024/), [run 1123-122157](../../experiments/exp-008/local/evidence/1123-122157/), [run 1123-142020](../../experiments/exp-008/local/evidence/1123-142020/).
