@@ -18,6 +18,7 @@ This is a **living requirements register**. Requirements are not implementation 
 | REQ-010 | Future | Lazily provision and hydrate a PVC per repository without restarting the unified Herdr server. |
 | REQ-011 | Future | Support agent isolation via OpenShell and potentially Kata Containers. |
 | REQ-012 | Future | Recover safely from full-cluster shutdown/hibernation with backed-up persistent state. |
+| REQ-013 | Future (proposed 2026-11-25, agent-added for owner review) | Run OpenShell sandboxes under Kata Containers and restore the Talos KSPP default `kernel.yama.ptrace_scope=2`, removing the node-wide `ptrace_scope=1` relaxation (`talos/<cluster>/patches/global/yama-ptrace.yaml`) only after validating OpenShell's task-memory operations in the Kata guest, other workloads' independence from the relaxation, and REQ-011; with an ordered migration and a GitOps rollback. See [EXP-008 Stage C README, section 9](../experiments/exp-008/stage-c/README.md#9-deferred-security-requirement-kata-containers-and-talos-ptrace-restoration-not-part-of-stage-c). |
 
 ## Initial trusted MVP non-goals
 
