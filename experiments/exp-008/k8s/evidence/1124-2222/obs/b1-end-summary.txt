@@ -1,0 +1,11 @@
+pid=71
+start=50438614
+nonce=230650de7ef3e973
+boot_id=446a67c4-3fbb-4b5b-b663-f936c3484baa
+procs=1
+proc=71 start=50438614 nspid=71
+pod workload name=default--exp008b-1124-2222 uid=b84a7082-9650-479e-810e-12f6a9aee840 phase=Running node=node-b del=- gates= agent:cid=313a15957331 started=2026-11-25T03:22:04Z rc=0 ready=true
+pod supervisor name=os-supervisor-71a54a47-62ed-4831-a304-d1a73a197aa1 uid=5e1c1bd0-514b-4b9d-ba56-e2d37bc40339 phase=Running node=node-a del=- gates= supervisor:cid=9fda47ffa3d1 started=2026-11-25T03:21:49Z rc=0 ready=true
+cr name=default--exp008b-1124-2222 uid=aa39d390-878f-41a5-a45c-25d7e736e87f gen=2 mode=Running Suspended=False/NotSuspended/og=2 Ready=True/DependenciesReady/og=2 PodScheduled=True/PodScheduled/og=2
+gwpod=5a00c959-391b-4312-8ac8-1ba83a38a7c9 node-a ghcr.io/nvidia/openshell/gateway@sha256:1fd9e1e807990e66c9486a28d3ce9d649fd7528df48d0e830d2de2148b52dfe5 ready=true
+G phase=Ready instance=8f2e398a-4be0-495c-845a-ac8ecd02d671 started_ms=1795576924454

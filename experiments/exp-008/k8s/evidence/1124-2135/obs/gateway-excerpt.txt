@@ -1,0 +1,11 @@
+# Attempt 2 (1124-2135): excerpt of the gateway log retained in run 3 (logs/b1-gateway.log, local).
+# The gateway container started 2026-11-25T02:33:48Z, so attempt 1 (02:20-02:26Z) is not in any retained log.
+# Selected lines only (grep: TLS|CreateSandbox request completed|AUTH:LOGON|latency_ms=300000|rolled back|delete_sandbox).
+# Redacted: pod IPs -> <ip>, OCSF user hash -> <user>; tracing span fields removed.
+2026-11-25T02:33:48.748050Z  INFO openshell_server::cli: TLS enabled — listening on encrypted HTTPS
+2026-11-25T02:35:30.453Z OCSF AUTH:LOGON [INFO] ALLOWED user:<user> from <ip> [protocol:OpenID op:/openshell.v1.OpenShell/ListSandboxes]
+2026-11-25T02:36:06.237617Z  INFO : openshell_server::grpc::sandbox: CreateSandbox request completed successfully sandbox_id=448e1806-15f2-4952-8644-2b05d6894353 sandbox_name=exp008b-1124-2135
+2026-11-25T02:36:07.747Z OCSF AUTH:LOGON [INFO] ALLOWED sandbox:448e1806-15f2-4952-8644-2b05d6894353 from <ip> [protocol:sandbox_jwt op:/openshell.v1.OpenShell/PushSandboxLogs]
+2026-11-25T02:41:07.747724Z  INFO : openshell_server::multiplex: response status=200 latency_ms=300000
+2026-11-25T02:41:19.231474Z  WARN openshell_driver_kubernetes::driver: rolled back stale fail-closed sandbox-runtime bootstrap sandbox="default--exp008b-1124-2135"
+2026-11-25T02:41:19.257610Z  INFO driver{otel.name="openshell.compute.v1.ComputeDriver/DeleteSandbox" otel.kind="client" driver.name=kubernetes rpc.system.name="grpc" rpc.method="openshell.compute.v1.ComputeDriver/DeleteSandbox" sandbox.id="448e1806-15f2-4952-

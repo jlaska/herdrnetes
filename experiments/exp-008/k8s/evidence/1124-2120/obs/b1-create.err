@@ -1,0 +1,5 @@
+2026-11-25T02:20:48.689Z [b1] MUTATE openshell sandbox create --name exp008b-1124-2120 --from ghcr.io/jlaska/herdrnetes-exec@sha256:9c8fc9d00aada8c910e93325bd1c465a6eea9af28a6de77eba4fa066e91d7a16 --detach --tty --restart-policy never --no-auto-providers --label exp008.run=1124-2120 -- /usr/local/bin/counter.sh /sandbox/out
+Error:   × sandbox provisioning timed out after 300s. Last reported status:
+  │ ConfigurationPending: Waiting for effective configuration validation
+  │ before workload activation
+

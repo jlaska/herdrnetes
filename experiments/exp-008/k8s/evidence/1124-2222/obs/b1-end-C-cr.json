@@ -1,0 +1,47 @@
+{
+  "name": "default--exp008b-1124-2222",
+  "uid": "aa39d390-878f-41a5-a45c-25d7e736e87f",
+  "generation": 2,
+  "labels": {
+    "openshell.ai/gateway-id": "openshell",
+    "openshell.ai/managed-by": "openshell",
+    "openshell.ai/sandbox-id": "71a54a47-62ed-4831-a304-d1a73a197aa1",
+    "openshell.ai/sandbox-name": "exp008b-1124-2222",
+    "openshell.ai/sandbox-workspace": "default"
+  },
+  "annotations": {
+    "openshell.ai/sandbox-runtime-control-generation": "76afe25703ddcfe050e94d60025be0b7842c1e36bc3cc008e59ab94f98957090",
+    "openshell.ai/sandbox-runtime-control-policy-generation": "1",
+    "openshell.ai/sandbox-runtime-generation": "76afe25703ddcfe050e94d60025be0b7842c1e36bc3cc008e59ab94f98957090",
+    "openshell.ai/sandbox-runtime-network-policy-generation": "1"
+  },
+  "deletionTimestamp": null,
+  "operatingMode": "Running",
+  "failedPodPolicy": "Retain",
+  "conditions": [
+    {
+      "lastTransitionTime": "2026-11-25T03:21:48Z",
+      "message": "Sandbox is not suspended",
+      "observedGeneration": 2,
+      "reason": "NotSuspended",
+      "status": "False",
+      "type": "Suspended"
+    },
+    {
+      "lastTransitionTime": "2026-11-25T03:22:04Z",
+      "message": "Pod is Ready",
+      "observedGeneration": 2,
+      "reason": "DependenciesReady",
+      "status": "True",
+      "type": "Ready"
+    },
+    {
+      "lastTransitionTime": "2026-11-25T03:21:51Z",
+      "message": "",
+      "observedGeneration": 2,
+      "reason": "PodScheduled",
+      "status": "True",
+      "type": "PodScheduled"
+    }
+  ]
+}

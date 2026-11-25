@@ -1,0 +1,5 @@
+# Run 3 (1124-2222) B5: WARN lines from the gateway log captured after B5 (logs/b5-gateway.log, kept local).
+# Selected lines only (grep: WARN|ERROR). Tracing span fields removed; nothing else redacted was present.
+2026-11-25T03:41:49.276372Z  WARN driver_watch: openshell_server::compute: Sandbox failed to become ready sandbox_id=71a54a47-62ed-4831-a304-d1a73a197aa1 sandbox_name=exp008b-1124-2222 reason=PodTerminating Pod is terminating
+2026-11-25T03:41:55.845614Z  WARN openshell_driver_kubernetes::driver: sandbox-runtime workload generation changed; suspending stale boundary sandbox_id="71a54a47-62ed-4831-a304-d1a73a197aa1"
+2026-11-25T03:42:19.368692Z  INFO : openshell_server::multiplex: response status=200 latency_ms=45239
