@@ -510,14 +510,20 @@ reattach() { # reattach <step> <client-name> <previous-client-name>
 }
 
 # ---------------------------------------------------------------- sampler (read-only, background, own session)
+# kwatch <out> <get args...>: restartable kubectl watch, one compact JSON line per event. jq MUST run with
+# --unbuffered: writing to a file, jq block-buffers, so a quiet watch (only the gateway pod) never reached the
+# file and run 1125-2032 stopped at the sampler gate; the sampler's `kill 0` also discarded the unflushed tail.
+kwatch() { while [ ! -e "$E/sampler.stop" ]; do echo "## watch (re)start $(now)" >>"$1.err"; "${KC[@]}" -n "$NS" get "${@:2}" --watch --output-watch-events -o json 2>>"$1.err" | jq -c --unbuffered '{type, k: .object.kind, name: .object.metadata.name, uid: .object.metadata.uid, rv: .object.metadata.resourceVersion, del: .object.metadata.deletionTimestamp, phase: .object.status.phase, cs: [.object.status.initContainerStatuses[]?, .object.status.containerStatuses[]? | {name, containerID, ready, restartCount, state, lastState}], cond: .object.status.conditions, reason: .object.reason, msg: .object.message, ts: (.object.lastTimestamp // .object.eventTime)}' >>"$1"; sleep 1; done; }
+# sampler_gate: within 20 s, the 1 Hz sample lists the gateway pod (not just an error text) and the pod watch
+# holds a parsed event for it.
+sampler_gate() { local i; for i in $(seq 20); do grep -q "^$GW_POD " "$E/samples/pods-1hz.txt" 2>/dev/null && jq -e --arg p "$GW_POD" 'select(.name == $p)' "$E/samples/pods-watch.jsonl" >/dev/null 2>&1 && return 0; sleep 1; done; return 1; }
 sampler() {
   local s=$E/samples n=0 t
   mkdir -p "$s"
   trap 'kill 0' EXIT
-  KWATCH() { while [ ! -e "$E/sampler.stop" ]; do echo "## watch (re)start $(now)" >>"$1.err"; "${KC[@]}" -n "$NS" get "${@:2}" --watch --output-watch-events -o json 2>>"$1.err" | jq -c '{type, k: .object.kind, name: .object.metadata.name, uid: .object.metadata.uid, rv: .object.metadata.resourceVersion, del: .object.metadata.deletionTimestamp, phase: .object.status.phase, cs: [.object.status.initContainerStatuses[]?, .object.status.containerStatuses[]? | {name, containerID, ready, restartCount, state, lastState}], cond: .object.status.conditions, reason: .object.reason, msg: .object.message, ts: (.object.lastTimestamp // .object.eventTime)}' >>"$1"; sleep 1; done; }
-  KWATCH "$s/pods-watch.jsonl" pods &
-  KWATCH "$s/cr-watch.jsonl" sandboxes.agents.x-k8s.io &
-  KWATCH "$s/events-watch.jsonl" events &
+  kwatch "$s/pods-watch.jsonl" pods &
+  kwatch "$s/cr-watch.jsonl" sandboxes.agents.x-k8s.io &
+  kwatch "$s/events-watch.jsonl" events &
   while [ ! -e "$E/sampler.stop" ]; do
     t=$(now)
     { echo "## $t"; K -n "$NS" get pods -o jsonpath='{range .items[*]}{.metadata.name} {.metadata.uid} {.status.phase} del={.metadata.deletionTimestamp} {range .status.containerStatuses[*]}{.name}:{.ready}:{.restartCount}:{.containerID} {end}{"\n"}{end}' 2>&1; } >>"$s/pods-1hz.txt"
@@ -604,8 +610,7 @@ pre)
 sampler-start)
   [ ! -e "$E/sampler.pid" ] || fail "sampler already started"; rm -f "$E/sampler.stop"
   setsid bash "$(readlink -f "$0")" "$RUN" _sampler </dev/null >>"$E/sampler.log" 2>&1 & echo $! >"$E/sampler.pid"
-  sleep 8
-  [ -s "$E/samples/pods-1hz.txt" ] && [ -s "$E/samples/pods-watch.jsonl" ] || stop "sampler not producing data 8 s after start (Stage B attempt-1 defect check)"
+  sampler_gate || stop "sampler not producing data 20 s after start (pods-1hz lists $GW_POD; pods-watch holds a parsed event)"
   log "sampler started pid=$(cat "$E/sampler.pid") and producing data"
   ;;
 _sampler) sampler ;;

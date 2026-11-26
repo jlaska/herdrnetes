@@ -12,8 +12,10 @@ annot() { awk '
   { print fn "\t" NR "\t" $0 }' "$H"; }
 code() { annot | grep -v -P '\t\s*#' | sed -E 's/[[:space:]]+# [^"'"'"']*$//'; } # drop comment lines and trailing comments
 # 1. direct kubectl only in K (read), kw (mutating allowlist), kx (exec), sampler watches, the _tr_probe ls
-bad=$(code | grep -F '"${KC[@]}"' | grep -v -E '^(K|kw|kx|KWATCH|sampler|step:_tr_probe|step:c2)	' | grep -v 'KC=(')
+bad=$(code | grep -F '"${KC[@]}"' | grep -v -E '^(K|kw|kx|kwatch|step:_tr_probe|step:c2)	' | grep -v 'KC=(')
 [ -z "$bad" ] && ok "raw kubectl confined to K/kw/kx/watch" || no "raw kubectl outside wrappers: $bad"
+kwl=$(code | grep -F '"${KC[@]}"' | grep -E '^kwatch	')
+[ "$(grep -c . <<<"$kwl")" = 1 ] && grep -q -F '"${KC[@]}" -n "$NS" get "${@:2}" --watch --output-watch-events -o json' <<<"$kwl" && ok "kwatch raw kubectl is one read-only get --watch" || no "kwatch kubectl: $kwl"
 c2=$(code | grep -F '"${KC[@]}"' | grep -E '^step:c2	')
 grep -q -v -E 'get pod "\$GW_POD"' <<<"$c2" && no "c2 raw kubectl other than get pod: $c2" || ok "c2 raw kubectl is a read (get pod) only"
 # 2. no kubectl mutation verbs outside kw's case list
