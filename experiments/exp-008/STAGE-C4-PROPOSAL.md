@@ -5,12 +5,33 @@ Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../d
 **Status (2026-11-26).** Agent-generated research proposal for owner review.
 - No sandbox, PVC, provider, profile, gateway setting, GitOps change, model call or API key was created, changed or used to write it. No cluster was read.
 - It supersedes the C4 parts of the historical [Stage C proposal](STAGE-C-PROPOSAL.md) (sections 3.1 items 2–3, 4.2 rows "Native recovery" and "Repository", 4.3 rows C4a–C4c, 8 items 10–11). That file stays as written. Section 11 lists what changed and why.
-- It authorizes nothing. Section 13 lists the owner decisions. Implementation (harness changes and offline tests) and execution are two separate later approvals.
+- It authorizes nothing by itself. Section 13 lists the owner decisions that were open; the owner's decisions so far are in "Owner decisions (2026-11-26)" below. Implementation and execution are separate approvals: **Phase 1 implementation and offline testing are approved; execution is not.**
 - Nothing here changes ADR-0001, a requirement status or a finding status. FIND-095 to FIND-097 stay **proposed**.
 
 **Labels.** **O** observed in this repository's committed evidence. **S** read in upstream source or docs at the pinned version. **B** static review of the pinned Claude Code binary. **I** inference. **H** hypothesis C4 would test. **U** unknown; needs a live read.
 
 **Pins.** OpenShell `v0.1.9` (`ce58cf8e9b953281352d98a637e41616295b1318`); Agent Sandbox `v1.0.12` (tag commit `4863a62`, cloned for this review); Claude Code **2.1.323** (sha256 `604d29a6…e348e`) in image `ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18`; `claude-haiku-5-5`, effort medium. The same installation as run `1126-1017`.
+
+## Owner decisions (2026-11-26; recorded by the agent as stated by the owner)
+
+These are the owner's decisions on this proposal and on the Phase 1 implementation, PR #49. They amend the text below only where it says so.
+
+1. **Scope:** Phase 1 (native `stop`/`start`) is approved for **implementation and offline testing only**. No C4 execution is authorized; a run needs a separate explicit authorization. **Phase 2 is deferred**: no `allow_driver_config`, no external PVC, no second sandbox.
+2. **Approved design choices:**
+   - C4a uses `--grace-period=1`, without `--force`;
+   - the ledger instead of Git;
+   - the new mutations M9–M11;
+   - plain `--resume` (no `CLAUDE_CODE_RESUME_INTERRUPTED_TURN`, no `--session-id`, no positional prompt);
+   - `STEP_SLEEP=45`;
+   - the §5.6 control and probe lines;
+   - at most two inputs after resume, with the fixed continuation line;
+   - the §10 limits;
+   - the shared real-model predicate.
+3. **D-1, the transcript tail (amends §5.4):** up to **5** entries after R. Entries 4–5 are permitted only if they are recognized metadata (`api-request`, `cost-state`, `last-prompt`). The 64 KiB limit, the byte-prefix integrity, the permitted types, parent continuity and the partial-line check are unchanged. Additional tool activity is never accepted.
+4. **The C4 `step.sh` signal fix** is approved: an interruption exits without recording a completed step. C0–C3 is unchanged.
+5. **Classifications added during implementation** are approved: C4b `unmeasured`, session `unavailable`, process `unreadable` and `same-as-original`, and the documented inconclusive reasons.
+6. **A single reference snapshot:** if R cannot be verified, or the timing gate expires, STOP without deleting the pod. There is no second R to salvage the same attempt.
+7. **FIND-095 to FIND-097:** the owner recommends accepting them at the narrowed scopes in `stage-c/results/1126-1017-ADDENDUM.md` (PR #49). The acceptance itself is recorded by the owner on issue #39.
 
 ## 0. Recommendation in one screen
 
@@ -207,7 +228,7 @@ Phase 1 has **no gateway scale, no gateway restart, no second sandbox** and no C
 | (start record) | — | No provisioning-timeout record on the sandbox (`provisioning_deadline.rs:279`); recorded |
 
 **Allowance (pre-registered).**
-- Transcript bytes after L_R (appended between R and the kill): at most 64 KiB and 3 entries, of types `assistant`, `api-request`, `cost-state` or `last-prompt`, with `parentUuid` continuity. At most the final line may be partial.
+- Transcript bytes after L_R (appended between R and the kill): at most 64 KiB and 3 entries, of types `assistant`, `api-request`, `cost-state` or `last-prompt`, with `parentUuid` continuity. At most the final line may be partial. *(Amended by owner decision D-1: up to 5 entries, where entries 4–5 must be recognized metadata.)*
 - A stale `.state/lock` from the killed step.
 - A partial or complete finish of step N (section 4): `in-flight-partial(1)` (token rotated only), `in-flight-partial(2)` (plus `done N`), or `in-flight-completed` (all three writes). The first two are always `chain-broken-by-fault`. The third is too, unless the transcript tail holds step N's output.
 - Nothing else may change.
