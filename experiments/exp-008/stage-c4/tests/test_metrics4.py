@@ -337,7 +337,9 @@ class C4b(unittest.TestCase):
         bad(self.tail(three + [{"type": "cost-state", "uuid": "m4", "parentUuid": "nope"}]), "tail-parent-discontinuity")
         bad(self.tail(three + [{"type": "cost-state", "uuid": "m4", "pad": "x" * 66000}]), "tail-too-large")
         t = tempfile.TemporaryDirectory(); s = State(t.name)                              # broken byte prefix
-        open(s.Pt, "wb").write(open(s.Pt, "rb").read()[:-5] + b"XXXXX\n" + json.dumps(meta("cost-state", 1)).encode() + b"\n")
+        orig = open(s.Pt, "rb").read()                                                     # read BEFORE truncating
+        self.assertTrue(orig.endswith(b"\n") and len(orig) > 10)
+        open(s.Pt, "wb").write(orig[:-6] + b"XXXXX\n" + json.dumps(meta("cost-state", 1)).encode() + b"\n")
         bad(m4.c4b(s.bundle()), "transcript-prefix-changed"); t.cleanup()
 
     def test_D1_allowance_never_hides_state_corruption(self):
@@ -393,7 +395,7 @@ class C4b(unittest.TestCase):
         State.write(s.P, dict(s.logs, progress=lines))
         self.assertIn("progress-unexpected", m4.c4b(s.bundle())["reasons"])
         t = tempfile.TemporaryDirectory(); s2 = State(t.name)
-        open(s2.Pt, "wb").write(b"X" + open(s2.Pt, "rb").read()[1:])
+        orig = open(s2.Pt, "rb").read(); self.assertTrue(len(orig) > 10); open(s2.Pt, "wb").write(b"X" + orig[1:])  # read before truncating
         self.assertIn("transcript-prefix-changed", m4.c4b(s2.bundle())["reasons"]); t.cleanup()
 
     def test_broken_chain(self):
@@ -648,6 +650,7 @@ class C4c(unittest.TestCase):
         r = self.r; r.probe(); r.cont(); r.continue_steps()
         v = self.v(pre_transcript=os.path.join(self.td.name, "nope.jsonl"))
         self.assertEqual(v["attributes"].get("boundary"), "R"); self.assertEqual(v["axes"]["resume"], "resumed-continued-after-prompt")
+        self.assertFalse(v["primary_pass"])  # missing frozen copy = missing transcript evidence: never a pass (owner correction C)
 
     def test_process_unreadable_is_inconclusive(self):
         r = self.r; r.probe(); r.cont(); r.continue_steps()
@@ -705,6 +708,7 @@ class C4c(unittest.TestCase):
             "process-same-as-original": dict(process="same-as-original"),
             "process-not-started": dict(process="not-started"),
             "no-transcript-evidence": dict(transcripts_after=[]),
+            "no-frozen-copy": dict(pre_transcript="/nonexistent/pre.jsonl"),
         }
         for k, kw in variants.items():
             with self.subTest(k):
@@ -803,7 +807,9 @@ class Totality(unittest.TestCase):
                     self.assertTrue(v["attributes"]["probe"]["pass"] or v["axes"]["resume"] == "resumed-auto-continued")
                 # exactly one value, and the primary pass is exactly the documented conjunction
                 expect = v["axes"]["resume"] in ("resumed-auto-continued", "resumed-continued-after-prompt") and \
-                    v["axes"]["repeat_skip"] in ("none", "in-flight-reattempt-only") and v["attributes"]["c4b"] in ("intact", "intact-with-allowance")
+                    v["axes"]["repeat_skip"] in ("none", "in-flight-reattempt-only") and v["attributes"]["c4b"] in ("intact", "intact-with-allowance") and \
+                    v["axes"]["session"] == "same-id-same-file" and v["axes"]["process"] == "new-process" and \
+                    v["attributes"]["final_transcript_available"] and v["attributes"]["session_ids_consistent"] and v["attributes"]["frozen_copy_available"]
                 self.assertEqual(v["primary_pass"], expect)
                 seen.add(v["axes"]["resume"])
         self.assertGreaterEqual(len(seen), 8, seen)

@@ -375,7 +375,9 @@ def c4c(b: dict) -> dict:
     c4bv = (b.get("c4b") or {}).get("value")
     n = (b.get("c4b") or {}).get("in_flight_step")
     v["attributes"]["c4b"] = c4bv
-    pre = load_bytes(b["pre_transcript"]) if b.get("pre_transcript") and os.path.exists(b["pre_transcript"]) else b""
+    pre_ok = bool(b.get("pre_transcript")) and os.path.exists(b["pre_transcript"])
+    v["attributes"]["frozen_copy_available"] = pre_ok
+    pre = load_bytes(b["pre_transcript"]) if pre_ok else b""
     if not pre and b.get("R_transcript") and os.path.exists(b["R_transcript"]):
         pre = load_bytes(b["R_transcript"])  # no frozen copy read: R (a prefix of it) is the boundary
         v["attributes"]["boundary"] = "R"
@@ -550,10 +552,11 @@ def c4c(b: dict) -> dict:
                         "continue_typed": bool(b.get("continue_typed")), "continue_delivered": cont_t is not None,
                         "dialogs": b.get("dialogs") or {}, "responded_within_6M": responded}
     # primary pass: a resume value, no repeated work, retained state, AND unambiguous continuation of the
-    # original session by a new process (one file, one session id, the prefix kept, evidence available)
+    # original session by a new process (one file, one session id, the prefix kept, and the evidence: the final
+    # transcript AND the launcher's frozen pre-resume copy; the R fallback boundary classifies but never passes)
     v["primary_pass"] = val in ("resumed-auto-continued", "resumed-continued-after-prompt") and \
         rs in ("none", "in-flight-reattempt-only") and c4bv in ("intact", "intact-with-allowance") and \
-        session == "same-id-same-file" and proc == "new-process" and fin_ok and sid_consistent
+        session == "same-id-same-file" and proc == "new-process" and fin_ok and sid_consistent and pre_ok
     return v
 
 
