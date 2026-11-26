@@ -1,0 +1,4 @@
+post_run=1
+gw_sts_generation=explained pre=12 post=12 scale_ops=0
+providers=present-owner-delete-pending
+profiles=present-owner-delete-pending

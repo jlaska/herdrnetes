@@ -1,0 +1,1023 @@
+## 2026-11-26T02:54:05.590Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:06.767Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:07.861Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:08.952Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:10.014Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:11.104Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:12.168Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:13.253Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:54:14.313Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Pending del= 
+## 2026-11-26T02:54:15.425Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:16.520Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:17.607Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:18.700Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:19.797Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:20.897Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:21.974Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:23.044Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:24.196Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:25.290Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:26.382Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:27.484Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:28.549Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:29.616Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:30.680Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Pending del= agent:false:0: 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:false:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:31.750Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:33.146Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:34.600Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:35.853Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:37.066Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:38.295Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:39.547Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:41.145Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:42.374Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:43.580Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:44.812Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:46.025Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:47.476Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:48.714Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:49.942Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:51.204Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:52.412Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:54.112Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:55.338Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:56.553Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:57.800Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:54:59.000Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:00.427Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:01.629Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:02.864Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:04.071Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:05.275Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:06.866Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:08.079Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:09.277Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:10.494Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:11.696Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:13.170Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:14.448Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:15.679Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:16.911Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:18.113Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:19.824Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:21.054Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:22.292Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:23.543Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:24.749Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:26.191Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:27.394Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:28.605Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:29.809Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:31.077Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:32.724Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:33.933Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:35.196Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:36.404Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:37.654Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:39.093Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:40.314Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:41.516Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:42.725Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:43.924Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:45.612Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:46.835Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:48.056Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:49.308Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:50.580Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:52.007Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:53.239Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:54.445Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:55.674Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:56.942Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:58.607Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:55:59.813Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:01.011Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:02.210Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:03.441Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:04.859Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:06.061Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:07.304Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:08.500Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:09.707Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:11.386Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:12.613Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:13.828Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:15.042Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:16.255Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:17.715Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:18.966Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:20.204Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:21.435Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:22.640Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:24.278Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:25.511Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:26.731Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:27.950Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:29.216Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:30.673Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:31.906Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:33.129Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:34.330Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:35.568Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:37.203Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:38.457Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:39.698Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:40.899Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:42.144Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:43.604Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:44.845Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:46.058Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:47.285Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:48.495Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:50.174Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:51.392Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:52.594Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:53.825Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:55.061Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:56.531Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:57.769Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:56:58.962Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:00.157Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:01.386Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:03.078Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:04.285Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:05.555Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:06.761Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:07.996Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:09.421Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:10.629Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:11.851Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:13.093Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:14.362Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:16.034Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:17.275Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:18.509Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:19.811Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:21.021Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:22.482Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:23.726Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:24.979Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:26.224Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:27.452Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:29.051Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:30.278Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:31.493Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:32.719Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:33.951Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:35.390Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:36.638Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:37.869Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:39.071Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:40.302Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:41.996Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:43.234Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:44.446Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:45.659Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:46.875Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:48.316Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:49.560Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:50.772Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:52.011Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:53.237Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:54.814Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:56.048Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:57.286Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:58.542Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:57:59.802Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:01.299Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:02.511Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:03.746Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:04.958Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:06.176Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:07.881Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:09.123Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:10.368Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:11.575Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:12.791Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:14.205Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:15.447Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:16.688Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:17.903Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:19.155Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del= agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del= supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:20.799Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del=2026-11-26T02:58:50Z agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del=2026-11-26T02:58:50Z supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:22.174Z
+default--exp008c-1125-2153 183eb85d-626a-4fd3-af51-fd18d7b5693b Running del=2026-11-26T02:58:50Z agent:true:0:containerd://dbc6b229eea5e91eafdf3f1f6be2cbb5baf214c7f56ede04ff224fb4c9cf3990 
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del=2026-11-26T02:58:50Z supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:23.385Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del=2026-11-26T02:58:50Z supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:24.674Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del=2026-11-26T02:58:50Z supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:25.893Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del=2026-11-26T02:58:50Z supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:27.150Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+os-supervisor-d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad 2f62738a-b60a-4f0d-9f84-fe248040e628 Running del=2026-11-26T02:58:50Z supervisor:true:0:containerd://701e18894d101e93a1c92759c9137d0a3d22cd3abcf76201407a42fa1f41f0e0 
+## 2026-11-26T02:58:30.400Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:31.608Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:32.808Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:34.000Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:35.298Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:36.503Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:37.760Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:38.969Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:40.187Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:41.469Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:42.673Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:43.859Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:45.101Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:46.313Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:47.662Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:48.844Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:50.049Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:51.274Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:52.541Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:53.776Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:55.002Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:56.207Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:57.391Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:58.603Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:58:59.989Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:01.210Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:02.414Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:03.602Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:04.798Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:06.067Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:07.265Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:08.512Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:09.719Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:10.895Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:12.240Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:13.419Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:14.596Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:15.818Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:16.998Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:18.262Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:19.441Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:20.622Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:21.837Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:23.024Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:24.386Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:25.637Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:26.868Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:28.092Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:29.296Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:30.557Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:31.778Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:32.956Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:34.142Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:35.345Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:36.701Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:37.930Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:39.154Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:40.368Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:41.548Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:42.783Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:43.960Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:45.148Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:46.365Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:47.565Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:48.871Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:50.126Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:51.359Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:52.601Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:53.810Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:55.052Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:56.236Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:57.498Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:58.732Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T02:59:59.971Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:01.309Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:02.495Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:03.710Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:04.920Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:06.126Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:07.391Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:08.576Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:09.764Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:11.003Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:12.207Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:13.550Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:14.774Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:15.986Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:17.208Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:18.421Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:19.693Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:20.915Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:22.141Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:23.338Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:24.554Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:25.841Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:27.066Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:28.269Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:29.460Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:30.644Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:31.927Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:33.146Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:34.372Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:35.597Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:36.774Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:38.112Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:39.320Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T03:00:40.497Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## trimmed for the public record: samples after 2026-11-26T03:00:41.571Z (cleanup done + 120 s) omitted; the sampler ran until 2026-11-26T13:16:28.195Z (stopped by sampler-stop); full file kept local

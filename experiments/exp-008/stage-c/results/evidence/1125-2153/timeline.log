@@ -1,0 +1,18 @@
+2026-11-26T02:54:01.303Z [pre] pre OK: Argo Synced/Healthy; digests match Stage B; gateway Ready replicas=1; no Sandbox CRs; provider exp008c-anthropic present; providers=1 gitops=05fed443631dd6cc9d102ffa6ce64f0d0c193001
+2026-11-26T02:54:06.522Z [sampler-start] sampler started pid=655489 and producing data
+2026-11-26T02:54:14.089Z [c0-create] MUTATE openshell sandbox create --name exp008c-1125-2153
+2026-11-26T02:54:31.207Z [c0-create] create rc=0
+2026-11-26T02:54:31.555Z [c0-create] C0 created id=d4ce4013-2f3b-434c-8fb2-c755e9a0d0ad cr=openshell/default--exp008c-1125-2153 ready_ms=17359
+2026-11-26T02:54:44.030Z [c0-baseline] MUTATE openshell sandbox exec exp008c-1125-2153 --no-tty
+2026-11-26T02:57:53.196Z [c0-baseline] STOP: C0: no transcript with assistant entries within 180 s (H4?)
+2026-11-26T02:58:18.238Z [cleanup] cleanup after STOP: 2026-11-26T02:57:53.200Z c0-baseline: C0: no transcript with assistant entries within 180 s (H4?)
+2026-11-26T02:58:19.651Z [cleanup] cleanup: final snapshot failed
+2026-11-26T02:58:19.730Z [cleanup] cleanup: final usage estimate failed (Console figure is authoritative)
+2026-11-26T02:58:20.172Z [cleanup] MUTATE openshell sandbox delete exp008c-1125-2153
+2026-11-26T02:58:23.077Z [cleanup] sandbox delete rc=0
+2026-11-26T02:58:41.571Z [cleanup] experiment objects gone (pods,pvc,secret,service,networkpolicy,configmap,serviceaccount,role,rolebinding by labels and names, Sandbox CRs, PVs by recorded PVC and by claim, Cilium policies); gateway replicas=1
+2026-11-26T03:00:18.504Z [post] post run 1: restoration=INCOMPLETE pending-owner-delete=providers,profiles; post_run=1 gw_sts_generation=explained pre=12 post=12 scale_ops=0 providers=present-owner-delete-pending profiles=present-owner-delete-pending 
+2026-11-26T13:15:19.048Z [post] post run 2: restoration=NOT-CLEAN inventory:diff-argo.txt.txt,diff-profiles.txt.txt,diff-providers.txt.txt providers:UNEXPECTED_added=1_removed=1 profiles:UNEXPECTED_added=2_removed=3; post_run=2 gw_sts_generation=explained pre=12 post=12 scale_ops=0 providers=UNEXPECTED added=1 removed=1 profiles=UNEXPECTED added=2 removed=3 
+2026-11-26T13:16:31.478Z [sampler-stop] sampler stop requested
+2026-11-26T13:16:35.612Z [logout] MUTATE openshell gateway logout exp008c
+2026-11-26T13:16:35.619Z [logout] gateway logout rc=0

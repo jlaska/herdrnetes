@@ -1,0 +1,5 @@
+--- ~/.cache/hxc/run/1125-2153/e/inv/pre/providers.txt	2026-11-25 21:54:00.933318382 -0500
++++ ~/.cache/hxc/run/1125-2153/e/inv/post-2/providers.txt	2026-11-26 08:15:18.835764981 -0500
+@@ -1 +1 @@
+-exp008c-anthropic
++

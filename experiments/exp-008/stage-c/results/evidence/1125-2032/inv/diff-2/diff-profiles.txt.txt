@@ -1,0 +1,8 @@
+--- ~/.cache/hxc/run/1125-2032/e/inv/pre/profiles.txt	2026-11-25 20:33:22.177228748 -0500
++++ ~/.cache/hxc/run/1125-2032/e/inv/post-2/profiles.txt	2026-11-26 08:15:21.850821158 -0500
+@@ -1,3 +1,2 @@
+-claude-code-exp008c  provider  AGENT           user    workspace
+-github-agent         provider  SOURCE CONTROL  user    workspace
+-litellm-inference    provider  INFERENCE       user    workspace
++github-agent       provider  SOURCE CONTROL  user    workspace
++litellm-inference  provider  INFERENCE       user    workspace

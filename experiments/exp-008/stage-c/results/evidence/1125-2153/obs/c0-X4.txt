@@ -1,0 +1,4 @@
+environ_readable=2 environ_unreadable=1
+env_real_key_shape=0
+fs_real_key_shape_files=0
+fs_placeholder_files=0
