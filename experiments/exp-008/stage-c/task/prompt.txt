@@ -1,0 +1,6 @@
+This directory holds an ordered task of 120 steps. Start by running exactly: ./step.sh 1 start
+Each successful step prints the exact next command on a line beginning "NEXT:". Run exactly that command as your next Bash tool call.
+Rules: one step.sh call per Bash tool call; never chain, combine, loop, script or background commands; never guess a token; never read or print environment variables or files under .state.
+Do not stop to summarize or ask for confirmation between steps. Continue until a step prints "ALL 120 STEPS DONE".
+If a step prints REFUSED, re-read the last NEXT line you were given and run exactly that.
+If a user message arrives while you work, answer it in one short line exactly as it asks, then continue with the next step.

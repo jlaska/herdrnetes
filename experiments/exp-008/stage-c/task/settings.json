@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "allow": [
+      "Bash(./step.sh *)"
+    ],
+    "deny": [
+      "Read(./.state/**)",
+      "Read(/sandbox/c/claude/**)",
+      "Read(/sandbox/c/home/**)",
+      "Read(/sandbox/c/launch/**)",
+      "Read(/run/**)",
+      "Read(/proc/**)",
+      "Bash(env *)",
+      "Bash(printenv *)",
+      "Bash(cat *)"
+    ]
+  }
+}

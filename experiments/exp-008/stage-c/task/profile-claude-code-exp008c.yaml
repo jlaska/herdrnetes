@@ -1,0 +1,39 @@
+# EXP-008 Stage C: reviewed, narrowed copy of OpenShell v0.1.9 providers/claude-code.yaml
+# (upstream ce58cf8). OWNER-IMPORTED into the default workspace (not --global) only after approval:
+#   openshell -g exp008c provider profile lint   -f profile-claude-code-exp008c.yaml
+#   openshell -g exp008c provider profile import -f profile-claude-code-exp008c.yaml
+# and deleted at cleanup (after the provider):  openshell -g exp008c profile delete claude-code-exp008c
+#
+# Changes from upstream:
+#   - id claude-code-exp008c, so it cannot collide with or modify any existing profile;
+#   - one credential env var (ANTHROPIC_API_KEY), not CLAUDE_API_KEY too;
+#   - endpoints: api.anthropic.com:443 only. statsig.anthropic.com and sentry.io (telemetry and error
+#     reporting) are dropped (proposal 5.1 MUST-5, approval item 8, recommended); the agent also runs
+#     with DISABLE_TELEMETRY / DISABLE_ERROR_REPORTING / CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC;
+#   - binaries: /usr/local/bin/claude only (the path in the pinned image).
+# Upstream semantics to keep in mind (source review, not tested here):
+#   - binary matching also admits processes STARTED BY a listed binary, so the agent's own Bash-tool
+#     children can reach api.anthropic.com with the credential substituted (same trust as the agent);
+#   - static substitution is endpoint-scoped, placed only in the x-api-key header;
+#   - a placeholder found in a request BODY is refused with 403 credential_placeholder_in_request_body.
+id: claude-code-exp008c
+display_name: Claude Code (EXP-008 Stage C)
+description: Claude Code CLI, api.anthropic.com only, for EXP-008 Stage C
+category: agent
+inference_capable: true
+credentials:
+  - name: api_key
+    description: Dedicated, spend-capped Anthropic API key for EXP-008 Stage C
+    env_vars: [ANTHROPIC_API_KEY]
+    required: true
+    auth_style: header
+    header_name: x-api-key
+discovery:
+  credentials: [api_key]
+endpoints:
+  - host: api.anthropic.com
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+binaries: [/usr/local/bin/claude]
