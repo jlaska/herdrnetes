@@ -2,11 +2,11 @@
 
 Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · design: [STAGE-C4-PROPOSAL.md at `f19de00`](https://github.com/jlaska/herdrnetes/blob/f19de00c9f9ae6c8722e2000ec4111911e642fee/experiments/exp-008/STAGE-C4-PROPOSAL.md) (draft PR #48) · C0–C3: [`../stage-c/`](../stage-c/README.md), run [`1126-1017`](../stage-c/results/1126-1017.md) · REQ-003, REQ-006, REQ-009, REQ-011 · ADR-0001 unchanged
 
-**Status (2026-11-26).** The owner reviewed draft PR #48 and approved **Phase 1 implementation and offline testing only**.
+**Status (2026-11-26).** The owner reviewed draft PR #48 and approved **Phase 1 implementation and offline testing only**. On review of this PR at `eca1d50`, the owner approved it with targeted corrections and decided D-1 and the items in section 12. The decisions are recorded in the proposal's "Owner decisions" section (PR #48), and the corrections are below.
 - This directory holds that implementation and its offline tests.
 - Nothing here has touched a cluster. No sandbox, provider, profile, PVC, gateway setting or GitOps commit was created or changed, and no API key or model was used.
 - **No C4 run is authorized.** Section 12 is the readiness checklist for a later, separate owner authorization.
-- FIND-095 to FIND-097 stay **proposed**. A clarification for the owner's review is in [`../stage-c/results/1126-1017-ADDENDUM.md`](../stage-c/results/1126-1017-ADDENDUM.md).
+- FIND-095 to FIND-097 stay **proposed**. A clarification for the owner's review is in [`../stage-c/results/1126-1017-ADDENDUM.md`](../stage-c/results/1126-1017-ADDENDUM.md); the owner recommends accepting them at those narrowed scopes, and the decision is recorded on issue #39 by the owner.
 - REQ-009, REQ-011 and REQ-013 stay Future.
 
 Labels: **S** read in upstream source at the pin (OpenShell `v0.1.9` `ce58cf8`, Agent Sandbox `v1.0.12`), **B** static review of the pinned Claude Code 2.1.323 binary, **O-offline** observed in this directory's offline tests, **I** inference, **U** unknown until a live run.
@@ -83,11 +83,21 @@ These are choices the proposal left open, stated so they can be reviewed. None c
    - The termination record is the captured state (exit code, reason, signal). A 1 s grace request is not evidence of a SIGKILL.
    - The sampler now captures a pod once when it starts deleting and once more when a container shows `terminated`.
 5. **Resume launcher order.** Verification, freeze and precheck run **before** the credential checks, so C4b remains measurable if the credential path then fails. The approval-tail edit runs after the credential checks. It changes only `customApiKeyResponses.approved`, in both copies, and records hashes before and after.
-6. **C4b comparison.**
-   - The frozen copy taken by the launcher before `exec` is compared with R: append-only logs, the token-file hash, the ledger chain, the transcript byte prefix, and the tail bounds (64 KiB, 3 entries of the allowed types, `parentUuid` continuity, one partial final line).
+6. **C4b comparison** (tail bound as amended by owner decision D-1, 2026-11-26).
+   - The frozen copy taken by the launcher before `exec` is compared with R. The checks are: append-only logs; the token-file hash; the ledger chain; the transcript byte prefix; and the tail bounds.
+   - The tail bounds are:
+     - 64 KiB in total;
+     - **at most 5 entries**;
+     - entries 1–3 of the approved types (`assistant`, `api-request`, `cost-state`, `last-prompt`), or step N's own tool result;
+     - **entries 4–5 only recognized metadata** (`api-request`, `cost-state`, `last-prompt`);
+     - `parentUuid` continuity;
+     - one partial final line, accepted only among entries 1–3, because a torn line at position 4 or 5 cannot be recognized as metadata.
+   - Anything else is `corrupt` (`tail-entry-4-5-not-metadata`, `tail-too-many-entries`, …).
    - The in-flight write order maps to `in-flight-partial(1)`, `in-flight-partial(2)` or `in-flight-completed`.
    - A launcher refusal maps to `lost` (partial or missing state, session id, transcript or state id) or `corrupt` (a chain, settings or step.sh mismatch).
-7. **C4c decision procedure** (`metrics4.c4c`). The proposal's ordered §6.3 procedure, with three precisions:
+7. **C4c decision procedure** (`metrics4.c4c`). The proposal's ordered §6.3 procedure, with these precisions:
+   - **Strict probe (owner correction B).** The first text block that carries the token must *be* the one line `PROBE-<8 hex> CODEWORD=<alnum> LAST=<0..999>`, with surrounding whitespace only. Any prefix or suffix text, a second line, punctuation, a placeholder, a leading zero or swapped fields fails `format_ok`. A later well-formed line does not rescue a malformed first reply.
+   - **Session integrity (owner correction C).** The session axis is `same-id-same-file` only when the post-resume listing shows exactly the original transcript and its frozen bytes are an exact prefix. No listing gives `unavailable`. A duplicated file is `inconclusive (session-duplicated-file)`. A second session id inside the file is `inconclusive (session-id-ambiguous)`. **`primary_pass` additionally requires** session `same-id-same-file`, process `new-process`, the final transcript available, and one consistent session id.
    - **Session axis:** the pre-fault file no longer starting with its frozen bytes is `fresh-no-history`; a different transcript basename is `new-id`; the same basename twice is `same-id-new-file`.
    - **Inconclusive when the probe is not delivered:** a probe that was typed but never reached the session, while the model was responding, is `inconclusive (probe-not-delivered)`. That is a harness or terminal failure, not memory loss.
    - **`probe-ignored`:** the value applies when any `tool_use` precedes the token-bearing reply. That covers "the first action is a tool".
@@ -194,7 +204,7 @@ A `not-restartable`, `lost`, `corrupt` or any C4c value is a recorded result, no
 
 | Suite | Checks | Covers |
 |---|---|---|
-| `test_metrics4.py` | 55 unit tests | Predicate negatives; byte offsets and torn lines; strict probe (pass, tool before the reply, wrong codeword/LAST/format, synthetic reply ignored, queued-only, not delivered); C4b (intact, tail allowance, the three partial states, impossible orders, unexpected changes, rewritten log, prefix, broken chain, lost, refusal mapping); C4c fixture per value and axis; interrupted-turn values; precedence where rules overlap; a correct reply alone is not a pass; totality over 300 random runs (one value each, and the primary pass is exactly the documented conjunction); no secret in output |
+| `test_metrics4.py` | 61 unit tests | Predicate negatives; byte offsets and torn lines; strict probe (pass, tool before the reply, wrong codeword/LAST/format, synthetic reply ignored, queued-only, not delivered); C4b (intact, tail allowance, the three partial states, impossible orders, unexpected changes, rewritten log, prefix, broken chain, lost, refusal mapping); C4c fixture per value and axis; interrupted-turn values; precedence where rules overlap; a correct reply alone is not a pass; the D-1 five-entry tail (3, 4, 5 accepted; 6 rejected; an assistant, tool result, unknown type or torn line at position 4/5 rejected; prefix, continuity and byte limit; the allowance never hides corruption); the strict one-line probe (19 format cases); no ambiguous session can pass (duplicated file, new id, no listing, unavailable, fresh, unreadable or original process, a mixed session id); primary-pass implications over 120 random runs; totality over 300 random runs (one value each, and the primary pass is exactly the documented conjunction); no secret in output |
 | `launch4-test.sh` | 54 | Deterministic package; byte-identical bootstrap, prompt and settings; CREATE argv; Fresh argv; Resume argv (no `--session-id`, no prompt); unset auto-continue variables; env names only; frozen copy; approval tail same and added in both copies; 11 refusal cases with no fallback; precheck before a credential refusal |
 | `step4-test.sh` | 19 | Token chain and refusals; recorded sleep; SIGTERM during the sleep ends the step without `done`; stale-lock cases (live, empty start, other boot, dead pid, reused pid); lock break from a new PID namespace with `prior_attempts=1` |
 | `allowlist4-test.sh` | 51 | Wrapper confinement, the exact allowlist, step binding, once-only, no C1–C3/Phase 2/gateway/credential path; **10 negative controls** (mutated harness copies must fail) |
@@ -242,7 +252,7 @@ This validates the harness, launcher and classifier path. It says **nothing abou
 - **Lost state looks like a fresh launch to the launcher.** The harness guards this from outside: V is checked before `start`, and `lost` or `fresh-no-history` override every C4c value. A fresh session would still spend a little.
 - **The permission rules are not an OS boundary.** The agent runs as uid 10001 on the PVC that holds its transcript. Every resumed Bash command is regex-checked, and the C4c pass requires zero non-conforming commands.
 - **The CR4 auto-continue variant, Phase 2, graceful pod loss, node loss and supervisor-pod loss are not tested.**
-- **The tail bound of 3 entries** (approved) matched the offline SIGTERM measurement exactly. A fourth metadata row, as CR1 once saw, would read `corrupt`. See D-1.
+- **The tail bound (D-1, decided 2026-11-26)** is up to 5 entries; entries 4–5 must be recognized metadata. The offline SIGTERM measurement gave 3, and CR1 once saw 4. Additional tool activity is never accepted.
 - **The 60 min wall clock** (approved) can be tight in the worst case: C0 up to about 13 min, then up to 15 min for the gate and up to 15 min to arm, before C4b and C4c. A stop on it is a recorded `not-tested`, not a failure of the question.
 - **The frozen copy and refusal records live on the PVC.** After a refusing relaunch they cannot be read through the supported path, because the container has exited. Only the logged refusal phrase is available.
 
@@ -270,12 +280,14 @@ This validates the harness, launcher and classifier path. It says **nothing abou
 - [ ] **[owner]** Availability for the checkpoint reports after C0, C4a, C4b, C4c and cleanup.
 - [ ] **[owner]** After `cleanup`: delete the provider and profile, then `post`. After `logout`: revoke the key and record the Console figure.
 - [ ] **[owner]** Decision on raw evidence retention (transcripts, the frozen copy, screens).
-- [ ] **[owner] Decision D-1, the transcript tail bound.** Keep the approved 3 entries, or allow known metadata types (`api-request`, `cost-state`, `last-prompt`) up to 5 entries. Offline SIGTERM+1 s gave 3; CR1 once gave 4. As implemented, the approved value stands.
-- [ ] **[owner] Acknowledge the C4 `step.sh` signal fix** (section 4, item 11). It is a behaviour change from the C0–C3 `step.sh` that the design's in-flight model requires.
-- [ ] **[owner] Acknowledge the added values:**
+- [x] **D-1, the transcript tail bound:** decided (owner, 2026-11-26). Up to 5 entries; entries 4–5 must be recognized metadata. Implemented and tested.
+- [x] **The C4 `step.sh` signal fix:** approved (owner, 2026-11-26). C0–C3 is unchanged.
+- [x] **The added classification values:** approved (owner, 2026-11-26). They are:
   - C4b `unmeasured`;
-  - C4c session `unavailable`;
-  - C4c inconclusive reasons `probe-not-delivered`, `probe-not-typed`, `process-unreadable`, `session-new-id-not-followed`, `final-transcript-unavailable`;
-  - process `unreadable` and `same-as-original`.
+  - session `unavailable`;
+  - process `unreadable` and `same-as-original`;
+  - the documented inconclusive reasons.
+- [x] **The single reference snapshot:** approved (owner, 2026-11-26). An R that cannot be verified, or an expired timing gate, STOPs without deleting the pod. There is no second R.
+- [ ] **[owner]** Record the FIND-095 to FIND-097 decision on issue #39 (draft language in PR #49's description).
 - [ ] `sampler-stop` after every run, including after a cleanup STOP: the sampler stops itself only after a successful cleanup.
 - [ ] Explicit owner authorization naming: Phase 1, one run, the harness commit, and the run window.

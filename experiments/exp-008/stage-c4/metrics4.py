@@ -29,9 +29,11 @@ _spec.loader.exec_module(m0)
 
 PINNED_MODEL = "claude-haiku-5-5"  # exact match: a different or dated id fails closed (not counted)
 STEP_CMD_RE = re.compile(r"^\./step\.sh ([0-9]+) ([a-z0-9]+)$")  # the ONLY conforming Bash command
-PROBE_RE = re.compile(r"PROBE-([0-9a-f]+)\s+CODEWORD=(\S+?)[.,;]?\s+LAST=([0-9]+)")
-TAIL_TYPES = {"assistant", "api-request", "cost-state", "last-prompt"}
-TAIL_MAX_BYTES, TAIL_MAX_ENTRIES = 65536, 3
+# the reply must be EXACTLY this one line (surrounding whitespace only): no prefix, suffix, second line or punctuation
+PROBE_RE = re.compile(r"PROBE-([0-9a-f]{8}) CODEWORD=([A-Za-z0-9]+) LAST=(0|[1-9][0-9]{0,2})")
+TAIL_TYPES = {"assistant", "api-request", "cost-state", "last-prompt"}  # tail entries 1-3 (approved allowance)
+TAIL_META_TYPES = {"api-request", "cost-state", "last-prompt"}           # tail entries 4-5 (owner decision D-1)
+TAIL_MAX_BYTES, TAIL_MAX_ENTRIES, TAIL_BASE_ENTRIES = 65536, 5, 3
 C4B_VALUES = ("intact", "intact-with-allowance", "corrupt", "lost", "not-restartable", "unmeasured")
 RESUME_VALUES = ("lost", "fresh-no-history", "inconclusive", "not-started", "failed", "re-executed", "probe-ignored",
                  "resumed-context-lost", "resumed-auto-continued", "resumed-continued-after-prompt", "responded-no-progress")
@@ -165,7 +167,7 @@ def probe4(entries: list[dict], token: str, codeword: str | None, expected_last:
     if delivered is None:
         return r | {"reply": False, "pass": False, "first_action": "none", "tool_use_before_reply": 0}
     later = entries[delivered + 1:]
-    first_action, tools_before, reply = "none", 0, None
+    first_action, tools_before, reply, reply_text = "none", 0, None, ""
     for e in later:
         if not is_real_model_entry(e):
             continue
@@ -177,15 +179,15 @@ def probe4(entries: list[dict], token: str, codeword: str | None, expected_last:
             elif t == "text" and b.get("text", "").strip():
                 first_action = "text" if first_action == "none" else first_action
                 if token in b.get("text", ""):
-                    reply = e
+                    reply, reply_text = e, b.get("text", "")
                     break
         if reply is not None:
             break
     if reply is None:
         tools_after = sum(len(tool_use_blocks(e)) for e in later if is_real_model_entry(e))
         return r | {"reply": False, "pass": False, "first_action": first_action, "tool_use_before_reply": tools_after}
-    txt = text_of(reply)
-    m = PROBE_RE.search(txt)
+    # strict: the first text block that carries the token must BE the one-line reply (fullmatch after strip)
+    m = PROBE_RE.fullmatch(reply_text.strip())
     fmt = bool(m) and ("PROBE-" + m.group(1)) == token
     cw_ok = bool(fmt and codeword is not None and m.group(2) == codeword)
     last = int(m.group(3)) if fmt else None
@@ -296,21 +298,27 @@ def c4b(b: dict) -> dict:
         ents = after(pt, len(rt))
         uuids = {e.get("uuid") for e in parse_lines(rt) if e.get("uuid")}
         stepn = find_step_tool_use(parse_lines(rt), n)
-        cont, types_ok = True, True
-        for e in ents:
+        cont, types_ok, extra_ok = True, True, True
+        for pos, e in enumerate(ents, start=1):
             if e.get("_bad"):
-                if not e.get("_partial"):
-                    types_ok = False
+                # a torn final line is allowed among entries 1-3 only: at positions 4-5 its type cannot be
+                # recognized as metadata, so it is not accepted (D-1: entries 4-5 must be recognized metadata)
+                if not e.get("_partial") or pos > TAIL_BASE_ENTRIES:
+                    types_ok = types_ok and e.get("_partial", False)
+                    extra_ok = extra_ok and pos <= TAIL_BASE_ENTRIES
                 continue
-            # also allowed: the step-N tool result itself, if the step finished before the kill (in-flight-completed)
+            # also allowed among entries 1-3: the step-N tool result itself (in-flight-completed)
             own_result = e.get("type") == "user" and stepn and any(bl.get("type") == "tool_result" and bl.get("tool_use_id") == stepn["id"] for bl in m0.blocks(e))
-            if e.get("type") not in TAIL_TYPES and not own_result:
+            if pos > TAIL_BASE_ENTRIES:
+                if e.get("type") not in TAIL_META_TYPES:
+                    extra_ok = False
+            elif e.get("type") not in TAIL_TYPES and not own_result:
                 types_ok = False
             if e.get("parentUuid") and e["parentUuid"] not in uuids:
                 cont = False
             if e.get("uuid"):
                 uuids.add(e["uuid"])
-        tail |= {"tail_bytes": len(pt) - len(rt), "tail_entries": len(ents),
+        tail |= {"tail_bytes": len(pt) - len(rt), "tail_entries": len(ents), "tail_extra_metadata_ok": extra_ok,
                  "tail_partial_final": bool(ents and ents[-1].get("_partial")), "tail_types_ok": types_ok, "parent_continuity": cont}
         if tail["tail_bytes"] > TAIL_MAX_BYTES:
             reasons.append("tail-too-large")
@@ -318,6 +326,8 @@ def c4b(b: dict) -> dict:
             reasons.append("tail-too-many-entries")
         if not types_ok:
             reasons.append("tail-unexpected-entry")
+        if not extra_ok:
+            reasons.append("tail-entry-4-5-not-metadata")
         if not cont:
             reasons.append("tail-parent-discontinuity")
     allowance = []
@@ -372,17 +382,25 @@ def c4c(b: dict) -> dict:
     # same id; the pre-fault file no longer starting with its frozen bytes = the history was not kept.
     names = b.get("transcripts_after") or []
     rname = b.get("R_transcript_name")
-    if not fin_ok:
-        session = "unavailable"
+    if not fin_ok or not names:
+        session = "unavailable"  # no final copy, or no listing proving which transcript files exist
     elif not fin or not pre or not fin.startswith(pre):
         session = "fresh-no-history"
     elif any(x != rname for x in names):
         session = "new-id"
     elif names.count(rname) > 1:
         session = "same-id-new-file"
-    else:
+    elif names == [rname]:
         session = "same-id-same-file"
+    else:
+        session = "unavailable"
     v["axes"]["session"] = session
+    # unambiguous original-session continuation: ONE session id before the fault, and every resumed entry
+    # carries that same id (a second id inside the same file would be an ambiguous identity)
+    pre_sids = {e.get("sessionId") for e in parse_lines(pre) if e.get("sessionId")}
+    post_sids = {e.get("sessionId") for e in post if e.get("sessionId")}
+    sid_consistent = len(pre_sids) == 1 and bool(post_sids) and post_sids <= pre_sids
+    v["attributes"]["session_ids_consistent"] = sid_consistent
     # ---- Process axis
     proc = b.get("process") or "not-started"
     v["axes"]["process"] = proc
@@ -464,7 +482,7 @@ def c4c(b: dict) -> dict:
         if session == "unavailable":
             if b.get("launcher_refused") or proc == "not-started":
                 return "not-started", "launcher-refused-or-no-process"
-            return "inconclusive", "final-transcript-unavailable"
+            return "inconclusive", "final-transcript-unavailable" if not fin_ok else "transcript-listing-unavailable"
         if session == "fresh-no-history":
             return "fresh-no-history", "session-fresh-no-history"
         if (b.get("c4b") or {}).get("chain_broken_by_fault"):
@@ -483,6 +501,10 @@ def c4c(b: dict) -> dict:
             return "not-started", "launcher-refused-or-no-process"
         if session == "new-id":
             return "inconclusive", "session-new-id-not-followed"
+        if session == "same-id-new-file":
+            return "inconclusive", "session-duplicated-file"
+        if post and not sid_consistent:
+            return "inconclusive", "session-id-ambiguous"
         if not b.get("probe_typed"):
             return "inconclusive", "probe-not-typed"
         if b.get("probe_typed") and not pr.get("delivered") and real:
@@ -505,7 +527,8 @@ def c4c(b: dict) -> dict:
     val, why = decide()
     v["axes"]["resume"] = val
     v["decision_path"] = why
-    pre_uuids = {e.get("uuid") for e in parse_lines(pre) if e.get("uuid")}
+    pre_ents = parse_lines(pre)
+    pre_uuids = {e.get("uuid") for e in pre_ents if e.get("uuid")}
     first_parent = next((e.get("parentUuid") for e in post if e.get("parentUuid") is not None or e.get("uuid")), None)
     v["attributes"]["first_resumed_parent_in_prefault"] = bool(first_parent and first_parent in pre_uuids)
     v["attributes"] |= {"real_model_entries_after_resume": len(real), "api_error_entries_after_resume": len(api_err),
@@ -518,8 +541,11 @@ def c4c(b: dict) -> dict:
                                                          "first_action", "tool_use_before_reply", "reply_latency_ms", "pass")},
                         "continue_typed": bool(b.get("continue_typed")), "continue_delivered": cont_t is not None,
                         "dialogs": b.get("dialogs") or {}, "responded_within_6M": responded}
+    # primary pass: a resume value, no repeated work, retained state, AND unambiguous continuation of the
+    # original session by a new process (one file, one session id, the prefix kept, evidence available)
     v["primary_pass"] = val in ("resumed-auto-continued", "resumed-continued-after-prompt") and \
-        rs in ("none", "in-flight-reattempt-only") and c4bv in ("intact", "intact-with-allowance")
+        rs in ("none", "in-flight-reattempt-only") and c4bv in ("intact", "intact-with-allowance") and \
+        session == "same-id-same-file" and proc == "new-process" and fin_ok and sid_consistent
     return v
 
 

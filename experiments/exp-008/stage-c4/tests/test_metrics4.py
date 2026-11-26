@@ -153,9 +153,36 @@ class Probe(unittest.TestCase):
         r = m4.probe4(ents(tb), self.TOK, self.CW, {7})
         self.assertTrue(r["pass"]); self.assertEqual(r["tool_use_before_reply"], 0); self.assertEqual(r["first_action"], "text")
 
-    def test_trailing_period_on_codeword(self):
-        tb = self.base(); tb.real_text(f"{self.TOK} CODEWORD={self.CW}. LAST=7", T0 + 2000)
-        self.assertTrue(m4.probe4(ents(tb), self.TOK, self.CW, {7})["pass"])
+    def test_exact_one_line_format_only(self):
+        """The first token-bearing text must BE the reply line: prefix, suffix, extra lines and malformed values fail."""
+        good = f"{self.TOK} CODEWORD={self.CW} LAST=7"
+        cases = {
+            "exact": (good, True), "surrounding-whitespace": (f"  {good}\n", True),
+            "prefix-text": (f"Sure! {good}", False), "suffix-text": (f"{good} and continuing", False),
+            "trailing-period": (good + ".", False), "codeword-punctuation": (f"{self.TOK} CODEWORD={self.CW}. LAST=7", False),
+            "two-lines": (f"{good}\nNext I will run step 8.", False), "line-before": (f"Here it is:\n{good}", False),
+            "last-not-number": (f"{self.TOK} CODEWORD={self.CW} LAST=seven", False), "last-negative": (f"{self.TOK} CODEWORD={self.CW} LAST=-7", False),
+            "last-leading-zero": (f"{self.TOK} CODEWORD={self.CW} LAST=07", False), "last-empty": (f"{self.TOK} CODEWORD={self.CW} LAST=", False),
+            "codeword-empty": (f"{self.TOK} CODEWORD= LAST=7", False), "codeword-placeholder": (f"{self.TOK} CODEWORD=<the codeword> LAST=7", False),
+            "fields-swapped": (f"{self.TOK} LAST=7 CODEWORD={self.CW}", False), "double-space": (f"{self.TOK}  CODEWORD={self.CW} LAST=7", False),
+            "lowercase-keys": (f"{self.TOK} codeword={self.CW} last=7", False), "token-repeated": (f"{self.TOK} {self.TOK} CODEWORD={self.CW} LAST=7", False),
+            "markdown": (f"`{good}`", False),
+        }
+        for name, (txt, want) in cases.items():
+            with self.subTest(name):
+                tb = self.base(); tb.real_text(txt, T0 + 2000)
+                r = m4.probe4(ents(tb), self.TOK, self.CW, {7})
+                self.assertEqual(r["pass"], want, txt); self.assertEqual(r["format_ok"], want, txt)
+
+    def test_later_exact_line_does_not_rescue_a_malformed_first_reply(self):
+        tb = self.base(); tb.real_text(f"Answer: {self.TOK} CODEWORD={self.CW} LAST=7", T0 + 2000)
+        tb.real_text(f"{self.TOK} CODEWORD={self.CW} LAST=7", T0 + 3000)
+        self.assertFalse(m4.probe4(ents(tb), self.TOK, self.CW, {7})["pass"])
+
+    def test_wrong_token_in_exact_format(self):
+        tb = self.base(); tb.real_text(f"{self.TOK} CODEWORD={self.CW} LAST=7".replace(self.TOK, self.TOK) + "", T0 + 2000)
+        tb2 = self.base(); tb2.real_text(f"PROBE-deadbeef CODEWORD={self.CW} LAST=7 {self.TOK}", T0 + 2000)
+        self.assertFalse(m4.probe4(ents(tb2), self.TOK, self.CW, {7})["pass"])
 
     def test_tool_before_reply(self):
         tb = self.base(); tb.tool("./step.sh 8 abc", T0 + 1500); tb.real_text(f"{self.TOK} CODEWORD={self.CW} LAST=7", T0 + 2000)
@@ -262,7 +289,7 @@ class C4b(unittest.TestCase):
 
     def test_tail_limits(self):
         for raw, why in ((b'{"type":"user","message":{"content":"x"}}\n', "tail-unexpected-entry"),
-                         (b"".join(json.dumps({"type": "cost-state"}).encode() + b"\n" for _ in range(4)), "tail-too-many-entries"),
+                         (b"".join(json.dumps({"type": "cost-state"}).encode() + b"\n" for _ in range(6)), "tail-too-many-entries"),
                          (json.dumps({"type": "assistant", "pad": "x" * 70000}).encode() + b"\n", "tail-too-large"),
                          (json.dumps({"type": "cost-state", "uuid": "z", "parentUuid": "nope"}).encode() + b"\n", "tail-parent-discontinuity"),
                          (b'{"type": broken}\n{"type":"cost-state"}\n', "tail-unexpected-entry")):
@@ -270,6 +297,62 @@ class C4b(unittest.TestCase):
                 t = tempfile.TemporaryDirectory(); s = State(t.name); s.pre_transcript_append(raw)
                 r = m4.c4b(s.bundle())
                 self.assertEqual(r["value"], "corrupt"); self.assertIn(why, r["reasons"]); t.cleanup()
+
+    def tail(self, entries):
+        """C4b on a fresh State whose frozen transcript gains <entries> (dicts or raw bytes) after R."""
+        t = tempfile.TemporaryDirectory(); s = State(t.name); last = s.tb.last
+        for e in entries:
+            if isinstance(e, bytes):
+                s.pre_transcript_append(e); continue
+            e = dict(e); e.setdefault("parentUuid", last); last = e.get("uuid", last)
+            s.pre_transcript_append(json.dumps(e).encode() + b"\n")
+        r = m4.c4b(s.bundle()); t.cleanup(); return r
+
+    def test_D1_five_entry_bounded_allowance(self):
+        meta = lambda typ, i: {"type": typ, "uuid": f"m{i}"}
+        asst = lambda i: {"type": "assistant", "uuid": f"a{i}", "message": {"id": f"x{i}", "model": "claude-haiku-5-5", "content": [{"type": "text", "text": "x"}], "usage": {"input_tokens": 1, "output_tokens": 1}}}
+        tres = lambda i: {"type": "user", "uuid": f"r{i}", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_s3", "content": "x"}]}}
+        three = [meta("api-request", 1), meta("cost-state", 2), meta("last-prompt", 3)]
+        ok = lambda r: self.assertEqual(r["value"], "intact-with-allowance", r["reasons"])
+        bad = lambda r, why: (self.assertEqual(r["value"], "corrupt"), self.assertIn(why, r["reasons"]))
+        ok(self.tail(three))                                                             # three (previously accepted)
+        ok(self.tail([asst(1), meta("cost-state", 2), meta("last-prompt", 3)]))           # an assistant row within 1-3 (approved)
+        ok(self.tail(three + [meta("cost-state", 4)]))                                    # four with metadata
+        ok(self.tail(three + [meta("cost-state", 4), meta("api-request", 5)]))            # five with metadata
+        bad(self.tail(three + [meta("cost-state", 4), meta("cost-state", 5), meta("last-prompt", 6)]), "tail-too-many-entries")  # six
+        bad(self.tail(three + [asst(4)]), "tail-entry-4-5-not-metadata")                  # assistant at position 4
+        bad(self.tail(three + [meta("cost-state", 4), asst(5)]), "tail-entry-4-5-not-metadata")  # assistant at position 5
+        bad(self.tail(three + [tres(4)]), "tail-entry-4-5-not-metadata")                  # tool result at position 4
+        bad(self.tail(three + [{"type": "progress", "uuid": "p4"}]), "tail-entry-4-5-not-metadata")  # unknown type at 4
+        bad(self.tail([{"type": "progress", "uuid": "p1"}]), "tail-unexpected-entry")     # unknown type at 1
+        bad(self.tail([tres(1)]), "tail-unexpected-entry")                                # another call's result at 1
+        bad(self.tail(three + [b'{"type":"cost-st']), "tail-entry-4-5-not-metadata")       # torn line at 4: type unrecognizable
+        ok(self.tail([meta("api-request", 1), b'{"type":"cost-st']))                       # torn final line at 2: allowed
+        bad(self.tail(three + [{"type": "cost-state", "uuid": "m4", "parentUuid": "nope"}]), "tail-parent-discontinuity")
+        bad(self.tail(three + [{"type": "cost-state", "uuid": "m4", "pad": "x" * 66000}]), "tail-too-large")
+        t = tempfile.TemporaryDirectory(); s = State(t.name)                              # broken byte prefix
+        open(s.Pt, "wb").write(open(s.Pt, "rb").read()[:-5] + b"XXXXX\n" + json.dumps(meta("cost-state", 1)).encode() + b"\n")
+        bad(m4.c4b(s.bundle()), "transcript-prefix-changed"); t.cleanup()
+
+    def test_D1_allowance_never_hides_state_corruption(self):
+        """A permitted five-entry tail does not mask a changed log, a broken chain or a lost volume."""
+        three_plus = [{"type": "api-request", "uuid": "m1"}, {"type": "cost-state", "uuid": "m2"}, {"type": "last-prompt", "uuid": "m3"},
+                      {"type": "cost-state", "uuid": "m4"}, {"type": "api-request", "uuid": "m5"}]
+        for what in ("refusals", "ledger-chain", "lost"):
+            with self.subTest(what):
+                t = tempfile.TemporaryDirectory(); s = State(t.name); last = s.tb.last
+                for e in three_plus:
+                    e = dict(e, parentUuid=last); last = e["uuid"]; s.pre_transcript_append(json.dumps(e).encode() + b"\n")
+                kw = {}
+                if what == "refusals":
+                    s.pre_append("refusals", "refused n=3 t=x reason=expected-n=8")
+                elif what == "ledger-chain":
+                    bad = s.logs["ledger"][:]; bad[2] = bad[2].replace("tokhash=0123", "tokhash=9999")
+                    State.write(s.R, dict(s.logs, ledger=bad)); State.write(s.P, dict(s.logs, ledger=bad))
+                else:
+                    kw = {"V_after": dict(s.V, pvc_uid="other")}
+                r = m4.c4b(s.bundle(**kw))
+                self.assertIn(r["value"], ("corrupt", "lost")); self.assertNotIn(r["value"], ("intact", "intact-with-allowance")); t.cleanup()
 
     def test_in_flight_partial_states(self):
         s = self.s
@@ -600,6 +683,47 @@ class C4c(unittest.TestCase):
         r = self.r; r.probe()  # correct probe reply, no continuation at all
         v = self.v()
         self.assertEqual(v["axes"]["resume"], "responded-no-progress"); self.assertFalse(v["primary_pass"])
+
+    def test_no_ambiguous_session_can_pass(self):
+        """Regression (owner correction C): a run that is otherwise a perfect continuation never passes unless the
+        ORIGINAL session continued unambiguously in a new process."""
+        def perfect():
+            r = Run(tempfile.mkdtemp(dir=self.td.name)); r.probe(); r.cont(); r.continue_steps(); return r
+        name = "00000000-0000-4000-8000-000000000001.jsonl"
+        self.assertTrue(classify(perfect())["primary_pass"])  # control: the baseline passes
+        variants = {
+            "same-id-new-file": dict(transcripts_after=[name, name]),
+            "new-id": dict(transcripts_after=[name, "33333333-0000-4000-8000-000000000001.jsonl"]),
+            "unavailable": dict(final_transcript="/nonexistent/final.jsonl"),
+            "process-unreadable": dict(process="unreadable"),
+            "process-same-as-original": dict(process="same-as-original"),
+            "process-not-started": dict(process="not-started"),
+            "no-transcript-evidence": dict(transcripts_after=[]),
+        }
+        for k, kw in variants.items():
+            with self.subTest(k):
+                v = classify(perfect(), **kw)
+                self.assertFalse(v["primary_pass"], (k, v["axes"], v["decision_path"]))
+        r = perfect(); b = r.bundle(); open(b["final_transcript"], "wb").write(b"{}\n")           # fresh-no-history
+        v = m4.c4c(b); self.assertEqual(v["axes"]["session"], "fresh-no-history"); self.assertFalse(v["primary_pass"])
+        r = perfect(); r.tb.sid = "44444444-0000-4000-8000-000000000001"; r.tb.real_text("x", r.t + 990000)  # a second session id in the same file
+        v = classify(r); self.assertEqual(v["decision_path"], "session-id-ambiguous"); self.assertFalse(v["primary_pass"])
+        r = perfect(); v = classify(r, transcripts_after=[name, name])
+        self.assertEqual(v["decision_path"], "session-duplicated-file")
+
+    def test_primary_pass_requires_every_condition(self):
+        """Over random runs: primary_pass implies every documented condition."""
+        rnd = random.Random(7)
+        name = "00000000-0000-4000-8000-000000000001.jsonl"
+        for i in range(120):
+            r = Run(tempfile.mkdtemp(dir=self.td.name)); r.probe(reply=rnd.choice(["ok", "ok", "wrong"])); r.cont(); r.continue_steps()
+            kw = rnd.choice([{}, {}, {"transcripts_after": [name, name]}, {"process": "unreadable"}, {"transcripts_after": []},
+                             {"final_transcript": "/nonexistent"}, {"c4b": {"value": "unmeasured"}}])
+            v = classify(r, **kw)
+            if v["primary_pass"]:
+                self.assertEqual(v["axes"]["session"], "same-id-same-file"); self.assertEqual(v["axes"]["process"], "new-process")
+                self.assertTrue(v["attributes"]["session_ids_consistent"]); self.assertTrue(v["attributes"]["final_transcript_available"])
+                self.assertIn(v["attributes"]["c4b"], ("intact", "intact-with-allowance")); self.assertTrue(v["attributes"]["probe"]["pass"])
 
     def test_every_value_has_a_fixture(self):
         covered = set()
