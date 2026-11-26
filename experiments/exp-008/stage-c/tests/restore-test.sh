@@ -47,6 +47,18 @@ expect removed names "$T/pv-only" "$T/pv-empty" exp008c-anthropic   # a genuinel
 printf 'claude-code-exp008c  provider  INFERENCE  user  workspace\n' >"$T/pf-norm"; : >"$T/pf-norm-empty"
 expect removed names "$T/pf-norm" "$T/pf-norm-empty" claude-code-exp008c   # normalised table, "No profiles found." -> empty
 
+# run 1125-2153 post 2 shapes: the CLI re-aligns its columns once the longest name is gone; an empty provider list is a blank line
+printf 'claude-code-exp008c  provider  AGENT           user    workspace\nsrc-agent            provider  SOURCE CONTROL  user    workspace\ninf-x                provider  INFERENCE       user    workspace\n' >"$T/pf-wide"
+printf 'src-agent  provider  SOURCE CONTROL  user    workspace\ninf-x      provider  INFERENCE       user    workspace\n' >"$T/pf-narrow"
+expect removed names "$T/pf-wide" "$T/pf-narrow" claude-code-exp008c   # column reflow is not a change
+printf 'src-agent  provider  SOURCE CONTROL  user    global\ninf-x      provider  INFERENCE       user    workspace\n' >"$T/pf-narrow-changed"
+expect 'UNEXPECTED added=1 removed=2' names "$T/pf-wide" "$T/pf-narrow-changed" claude-code-exp008c   # a changed field still is
+printf '\n' >"$T/pv-blank"
+expect removed names "$T/pv-only" "$T/pv-blank" exp008c-anthropic   # empty list printed as one blank line
+H=$(cd "$(dirname "$0")/.." && pwd)/stagec.sh
+grep -q 'd="$D/diff-${b%.txt}.txt"' "$H" && grep -q -F 'diff-(gw-sts-generation|providers|profiles)\.txt' "$H" \
+  && ok "post names diff files diff-<name>.txt, matching its validated-file filter" || no "post diff naming and validated-file filter disagree"
+
 # --- verdict
 : >"$T/nodiff"; echo diff-crd.txt >"$T/diff"
 E='explained pre=7 post=9 scale_ops=2'

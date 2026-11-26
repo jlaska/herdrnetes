@@ -45,12 +45,12 @@ env -i PATH=/usr/bin:/bin OUTF="$T/out1" /bin/sh -c "$BOOT_T" "$(base64 -w0 "$T/
 grep -q '^key_form=absent$' "$T/sb/c/launch/identity" && ok "identity records key_form=absent" || no "identity key_form"
 rm -rf "$T/sb/c"
 
-# 3. placeholder present -> moved to EXP008_ANTHROPIC_KEYREF, ANTHROPIC_API_KEY unset, same PID, CA var kept
+# 3. placeholder present -> kept in ANTHROPIC_API_KEY (sent only as X-Api-Key), no KEYREF variable, approval tail seeded, same PID, CA var kept
 echo pem >"$T/ca.crt"
 env -i PATH=/usr/bin:/bin OUTF="$T/out2" ANTHROPIC_API_KEY=openshell:resolve:env:v1_ANTHROPIC_API_KEY \
   NODE_EXTRA_CA_CERTS="$T/ca.crt" /bin/sh -c "$BOOT_T" "$(base64 -w0 "$T/t.tar")" "$TSHA"
-grep -q '^keyref=placeholder$' "$T/out2" && ok "placeholder moved to EXP008_ANTHROPIC_KEYREF" || no "keyref"
-grep -q '^ak=absent$' "$T/out2" && ok "ANTHROPIC_API_KEY unset for claude (no approval dialog trigger)" || no "ANTHROPIC_API_KEY still set"
+grep -q '^ak=placeholder$' "$T/out2" && ok "placeholder kept in ANTHROPIC_API_KEY for claude" || no "ANTHROPIC_API_KEY not the placeholder"
+grep -q '^keyref=absent$' "$T/out2" && ok "no EXP008_ANTHROPIC_KEYREF (no apiKeyHelper path)" || no "keyref variable present"
 grep -q "^ca=$T/ca.crt$" "$T/out2" && ok "inherited NODE_EXTRA_CA_CERTS kept" || no "CA variable lost"
 grep -q '^nonce_set=yes$' "$T/out2" && ok "nonce exported" || no "nonce"
 [ "$(sed -n 's/^pid=//p' "$T/out2")" = "$(sed -n 's/^pid=//p' "$T/sb/c/launch/identity")" ] && ok "claude keeps the launcher PID (exec chain)" || no "PID changed across exec"
@@ -59,9 +59,22 @@ grep -q -x "pwd=$T/sb/c/repo" "$T/out2" && ok "cwd is the task repo" || no "cwd"
 for a in --bare --strict-mcp-config --tools Bash --model claude-haiku-5-5 --session-id; do grep -q -x -- "arg=$a" "$T/out2" || no "missing arg $a"; done
 grep -q -x 'arg=--settings' "$T/out2" && ok "claude argv flags present" || no "argv"
 grep -q 'hasTrustDialogAccepted' "$T/sb/c/claude/.claude.json" && cmp -s "$T/sb/c/claude/.claude.json" "$T/sb/c/home/.claude.json" && ok "first-run state seeded in CLAUDE_CONFIG_DIR and HOME" || no "seed"
-python3 -I -c 'import json,sys; s=json.load(open(sys.argv[1])); assert s["apiKeyHelper"] and s["permissions"]["defaultMode"]=="dontAsk"' "$T/sb/c/settings.json" && ok "settings.json valid" || no "settings.json"
+python3 -I -c 'import json,sys; s=json.load(open(sys.argv[1])); assert "apiKeyHelper" not in s and s["permissions"]["defaultMode"]=="dontAsk" and "Read(/sandbox/c/home/**)" in s["permissions"]["deny"]' "$T/sb/c/settings.json" && ok "settings.json valid, no apiKeyHelper, home state read-denied" || no "settings.json"
+python3 -I -c 'import json,sys; s=json.load(open(sys.argv[1])); assert s["customApiKeyResponses"] == {"approved": [sys.argv[2][-20:]], "rejected": []}, s' "$T/sb/c/claude/.claude.json" "openshell:resolve:env:v1_ANTHROPIC_API_KEY" \
+  && ok "custom-key approval seeded with the placeholder's last 20 characters only" || no "customApiKeyResponses"
 grep -r -q -F 'openshell:resolve' "$T/sb/c" && no "placeholder prefix appears literally in the state tree" || ok "placeholder prefix not literal on disk"
-grep -r -q -F 'v1_ANTHROPIC_API_KEY' "$T/sb/c" && no "placeholder value written to the state tree" || ok "placeholder value not written to disk"
+grep -r -q -F 'env:v1_ANTHROPIC_API_KEY' "$T/sb/c" && no "more than the 20-character approval tail written to the state tree" || ok "no more than the approval tail of the placeholder on disk"
+[ "$(grep -r -l -F 'v1_ANTHROPIC_API_KEY' "$T/sb/c" | sed "s#$T/sb/c/##" | sort | tr '\n' ' ')" = "claude/.claude.json home/.claude.json " ] \
+  && ok "approval tail only in the two seeded .claude.json files" || no "approval tail elsewhere: $(grep -r -l -F 'v1_ANTHROPIC_API_KEY' "$T/sb/c")"
+
+# 3b. a placeholder with unexpected characters (would change under trim / need JSON escaping) or < 20 chars is refused
+for bad in 'openshell:resolve:env:v1_ANTHROPIC_API_KEY ' 'openshell:resolve:env:v1_"X' 'openshell:resolve:x'; do
+  rm -rf "$T/sb/c"
+  env -i PATH=/usr/bin:/bin OUTF="$T/outb" ANTHROPIC_API_KEY="$bad" /bin/sh -c "$BOOT_T" "$(base64 -w0 "$T/t.tar")" "$TSHA" 2>/dev/null \
+    && no "launcher accepted a malformed placeholder (${#bad} chars)" || ok "launcher refuses a malformed placeholder (${#bad} chars)"
+done
+rm -f "$T/outb"; rm -rf "$T/sb/c"
+env -i PATH=/usr/bin:/bin OUTF="$T/out2b" ANTHROPIC_API_KEY=openshell:resolve:env:v1_ANTHROPIC_API_KEY /bin/sh -c "$BOOT_T" "$(base64 -w0 "$T/t.tar")" "$TSHA"
 
 # 4. reuse refused
 env -i PATH=/usr/bin:/bin OUTF="$T/out3" ANTHROPIC_API_KEY=openshell:resolve:env:v1_ANTHROPIC_API_KEY /bin/sh "$T/sb/c/pkg/launch.sh" 2>/dev/null \

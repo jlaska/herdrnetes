@@ -8,7 +8,9 @@
 #       gen_after. Prints "explained pre=N post=M scale_ops=K" or "UNEXPLAINED reason=...".
 #
 #   restore-check.sh names <pre list> <post list> <experiment name>
-#       Provider/profile state. `pre` must list the experiment's name exactly once (as a whole field). Prints
+#       Provider/profile state, compared as whitespace-normalized non-empty rows (the CLI re-aligns its table
+#       columns when the longest name goes, and an empty list may print a blank line: run 1125-2153 post 2).
+#       `pre` must list the experiment's name exactly once (as a whole field). Prints
 #       "removed" (post = pre without that line), "present-owner-delete-pending" (post = pre), or
 #       "UNEXPECTED added=N removed=N" / "UNVERIFIABLE reason=..." for anything else.
 #
@@ -46,6 +48,8 @@ names)
   pre=$2 post=$3 name=$4
   [ -r "$pre" ] && [ -r "$post" ] || { echo "UNVERIFIABLE reason=list-missing"; exit 0; }
   for f in "$pre" "$post"; do grep -q '^ERROR ' "$f" && { echo "UNVERIFIABLE reason=list-failed-$([ "$f" = "$pre" ] && echo pre || echo post)"; exit 0; }; done
+  N=$(mktemp -d); trap 'rm -rf "$N"' EXIT
+  awk 'NF {$1 = $1; print}' "$pre" >"$N/pre"; awk 'NF {$1 = $1; print}' "$post" >"$N/post"; pre=$N/pre post=$N/post
   hit() { awk -v n="$name" '{for (i = 1; i <= NF; i++) if ($i == n) {print NR; next}}' "$1"; }
   h=$(hit "$pre")
   [ "$(grep -c . <<<"$h")" = 1 ] || { echo "UNVERIFIABLE reason=pre-lists-experiment-name-$(grep -c . <<<"$h")-times"; exit 0; }

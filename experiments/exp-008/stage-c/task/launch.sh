@@ -9,11 +9,14 @@
 # - Writes /sandbox/c/launch/identity (pid, /proc start, boot id, nonce, uid, placeholder FORM only),
 #   then execs claude with the same PID.
 # - Never prints, stores or inspects a credential value. The key form is a fixed word.
-# - Moves OpenShell's placeholder from ANTHROPIC_API_KEY to EXP008_ANTHROPIC_KEYREF and serves it through
-#   the settings' apiKeyHelper. Claude Code 2.1.323 shows a blocking "Detected a custom API key ... use
-#   this API key?" dialog for an unapproved ANTHROPIC_API_KEY even under --bare (static strings review);
-#   with the env var unset and an apiKeyHelper, no dialog appeared in EXP-006 s3b. The proxy substitutes
-#   by placeholder VALUE in the x-api-key header, so the variable name does not matter to OpenShell.
+# - Leaves OpenShell's placeholder in ANTHROPIC_API_KEY, which Claude Code sends ONLY as X-Api-Key, the one
+#   placement the provider profile permits. Run 1125-2153 used an apiKeyHelper instead; Claude Code 2.1.323
+#   also sends a helper's value as "Authorization: Bearer" (static review of the pinned binary), and OpenShell
+#   v0.1.9 refused all 12 model requests with credential_placement_mismatch.
+# - Pre-approves that key for Claude Code's interactive "Detected a custom API key ... use this API key?"
+#   check (EXP-008 D6) the way Claude Code itself records an approval: customApiKeyResponses.approved holds
+#   key.trim().slice(-20) (pinned binary, static review). The 20 characters are the TAIL OF THE PLACEHOLDER,
+#   not of the real key, which never enters the sandbox; they are not a resolvable placeholder.
 set -eu
 B=/sandbox/c
 P=$B/pkg
@@ -23,11 +26,6 @@ mkdir -p "$B/repo" "$B/claude" "$B/home" "$B/launch" "$B/tmp" "$B/xdg/config" "$
 install -m 0755 "$P/step.sh" "$B/repo/step.sh"
 cp "$P/prompt.txt" "$B/repo/TASK.txt"
 cp "$P/settings.json" "$B/settings.json"
-# First-run state (EXP-006 entrypoint-agent.sh:98 pattern): onboarding done, folder trust accepted.
-# Trust must be seeded: apiKeyHelper refuses to run before workspace trust is confirmed.
-printf '{"hasCompletedOnboarding": true, "theme": "dark", "projects": {"%s": {"hasTrustDialogAccepted": true}, "%s": {"hasTrustDialogAccepted": true}}}\n' "$B/repo" "$B" >"$B/claude/.claude.json"
-cp "$B/claude/.claude.json" "$B/home/.claude.json"
-
 pp="openshell"; pp="$pp:resolve:" # assembled: never literal in an agent-readable file
 case ${ANTHROPIC_API_KEY:-} in
 '') KF=absent ;;
@@ -35,8 +33,7 @@ case ${ANTHROPIC_API_KEY:-} in
 sk-ant-*) KF=REAL-KEY-SHAPE ;;
 *) KF=other ;;
 esac
-EXP008_ANTHROPIC_KEYREF=${ANTHROPIC_API_KEY:-}
-unset ANTHROPIC_API_KEY CLAUDE_API_KEY
+unset CLAUDE_API_KEY EXP008_ANTHROPIC_KEYREF
 NONCE=$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')
 SID=$(cat /proc/sys/kernel/random/uuid)
 START=$(sed 's/.*) //' /proc/$$/stat | awk '{print $20}')
@@ -48,8 +45,17 @@ CA=$( [ -n "${NODE_EXTRA_CA_CERTS:-}" ] && [ -r "${NODE_EXTRA_CA_CERTS:-/nonexis
 } >"$B/launch/identity.tmp"
 mv "$B/launch/identity.tmp" "$B/launch/identity"
 [ "$KF" = placeholder ] || { echo "exp008c-launch: ANTHROPIC_API_KEY is $KF, not an OpenShell placeholder; not starting the agent" >&2; exit 1; }
+# Approval tail: Claude Code trims and keeps the last 20 characters. Refuse anything that is not a plain
+# token, so trimming cannot change the tail and the tail is JSON-safe without escaping.
+case $ANTHROPIC_API_KEY in *[!A-Za-z0-9:_.-]*) echo "exp008c-launch: placeholder has unexpected characters; not starting the agent" >&2; exit 1 ;; esac
+AT=$(printf %s "$ANTHROPIC_API_KEY" | tail -c 20)
+[ "${#AT}" -eq 20 ] || { echo "exp008c-launch: placeholder shorter than 20 characters; not starting the agent" >&2; exit 1; }
+# First-run state (EXP-006 entrypoint-agent.sh:98 pattern): onboarding done, folder trust accepted, key approved.
+printf '{"hasCompletedOnboarding": true, "theme": "dark", "customApiKeyResponses": {"approved": ["%s"], "rejected": []}, "projects": {"%s": {"hasTrustDialogAccepted": true}, "%s": {"hasTrustDialogAccepted": true}}}\n' "$AT" "$B/repo" "$B" >"$B/claude/.claude.json"
+cp "$B/claude/.claude.json" "$B/home/.claude.json"
+unset AT
 
-export EXP008_ANTHROPIC_KEYREF EXP008_NONCE="$NONCE" HOME="$B/home" CLAUDE_CONFIG_DIR="$B/claude" TMPDIR="$B/tmp" \
+export EXP008_NONCE="$NONCE" HOME="$B/home" CLAUDE_CONFIG_DIR="$B/claude" TMPDIR="$B/tmp" \
   XDG_CONFIG_HOME="$B/xdg/config" XDG_STATE_HOME="$B/xdg/state" XDG_CACHE_HOME="$B/xdg/cache" XDG_DATA_HOME="$B/xdg/data" \
   SHELL=/bin/bash LANG=C.UTF-8 PYTHONDONTWRITEBYTECODE=1 \
   DISABLE_AUTOUPDATER=1 DISABLE_TELEMETRY=1 DISABLE_ERROR_REPORTING=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1

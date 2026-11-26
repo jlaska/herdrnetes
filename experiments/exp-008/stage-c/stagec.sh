@@ -327,13 +327,15 @@ pkeys() { local p=$E/obs/$1-P.txt a b; a=$(sed -n -e 's/^pid=//p' -e 's/^start=/
   b=$(sed -n 's/^proc=\([0-9]*\) start=\([0-9]*\) ppid=[0-9]* nonce=unreadable .*/\1 \2/p' "$p")
   nz "$b" && [ "$(cut -d' ' -f1-2 <<<"$a")" = "$b" ] && echo "$a nonce_source=launch-record"; }
 wkeys() { jq -r '.items[] | select(.labels["openshell.ai/boundary-role"]=="workload") | "\(.uid) \([.containerStatuses[] | "\(.name)=\(.containerID)/rc\(.restartCount)"]|join(","))"' "$E/obs/$1-C-pods.json" 2>/dev/null; }
-snap() { # snap <label>: local copies of task logs + transcript; S key (path, lines, prefix hash)
-  local l=$1
-  kx X3L "$L/task/$l.tar" 30 && mkdir -p "$L/task/$l" && tar -xf "$L/task/$l.tar" -C "$L/task/$l" || return 1
+snap() { # snap <label>: local copies of task logs + transcript; S key (path, lines, prefix hash). rc 1 if either copy failed.
+  # The transcript is copied even when the task-log archive fails (run 1125-2153: no attempts -> empty archive refused).
+  local l=$1 task=1
+  kx X3L "$L/task/$l.tar" 30 && mkdir -p "$L/task/$l" && tar -xf "$L/task/$l.tar" -C "$L/task/$l" || task=0
   kx X3T "$L/tr/$l.jsonl" 60 || return 1
-  { echo "tr=$(cat "$E/tr_rel") lines=$(wc -l <"$L/tr/$l.jsonl") bytes=$(wc -c <"$L/tr/$l.jsonl")"
+  { echo "tr=$(cat "$E/tr_rel") lines=$(wc -l <"$L/tr/$l.jsonl") bytes=$(wc -c <"$L/tr/$l.jsonl") task_logs=$([ "$task" = 1 ] && echo copied || echo failed)"
     python3 -I "$HERE/metrics.py" prefix "$L/tr/$l.jsonl" "$(cat "$E/obs/prefix_n" 2>/dev/null || wc -c <"$L/tr/$l.jsonl")"
-    python3 -I "$HERE/metrics.py" ledger "$L/task/$l"; } >"$E/obs/$l-S.txt"
+    [ "$task" = 1 ] && python3 -I "$HERE/metrics.py" ledger "$L/task/$l"; } >"$E/obs/$l-S.txt"
+  [ "$task" = 1 ]
 }
 same_p() { local a b; a=$(pkeys "$1") b=$(pkeys "$2"); if nz "$a" && [ "$a" = "$b" ]; then echo yes; elif nz "$a" && nz "$b"; then echo no; else echo unknown; fi; }
 same_w() { local a b; a=$(wkeys "$1") b=$(wkeys "$2"); if nz "$a" && [ "$a" = "$b" ]; then echo yes; elif nz "$a" && nz "$b"; then echo no; else echo unknown; fi; }
@@ -653,7 +655,7 @@ c0-baseline)
   # 1. the agent is running with a placeholder, the launcher record agrees with the live process
   waitfor $(( $(ems) + 60000 )) ident c0-base || stop "C0: identity not readable (see obs/c0-base-P.txt)"
   grep -q '^key_form=placeholder$' "$E/obs/c0-base-P.txt" || stop "C0: launcher saw no OpenShell placeholder ($(grep -o 'key_form=[a-zA-Z-]*' "$E/obs/c0-base-P.txt" | tr '\n' ' '))"
-  grep '^proc=' "$E/obs/c0-base-P.txt" | grep -q -E 'keyref_form=placeholder key_form=absent$|nonce=unreadable' || stop "C0: live agent environment: expected keyref=placeholder and ANTHROPIC_API_KEY absent"
+  grep '^proc=' "$E/obs/c0-base-P.txt" | grep -q -E 'keyref_form=absent key_form=placeholder$|nonce=unreadable' || stop "C0: live agent environment: expected the placeholder in ANTHROPIC_API_KEY and no EXP008_ANTHROPIC_KEYREF"
   grep -q 'nonce=unreadable' "$E/obs/c0-base-P.txt" && log "C0: live /proc environ unreadable from kubectl exec; nonce source = launcher record"
   nz "$(pkeys c0-base)" || stop "C0: launcher record and live process disagree, or nonce unreadable"
   clock c0 || stop "C0: clock read failed"
@@ -663,7 +665,7 @@ c0-baseline)
   # 3. egress probes (X5): disallowed host fails; allowed host from a non-bound binary is not credentialed
   egress_probes c0 || stop "C0: egress/credential probe failed (see obs/c0-X5.txt)"
   # 4. model requests work through the proxy: transcript exists and has assistant entries (H4)
-  waitfor $(( $(ems) + 180000 )) sh -c '"$0" "$1" "$2" X2probe' "$(readlink -f "$0")" "$RUN" _tr_probe || stop "C0: no transcript with assistant entries within 180 s (H4?)"
+  waitfor $(( $(ems) + 180000 )) bash "$(readlink -f "$0")" "$RUN" _tr_probe X2probe || stop "C0: no transcript with assistant entries within 180 s (H4?)"
   # 5. first attach: replay/redraw captures, deliver the codeword (input path baseline)
   od -An -N3 -tx1 /dev/urandom | tr -d ' \n' | sed 's/^/heron/' >"$L/codeword"
   client_start main || stop "C0: first connect failed"
@@ -688,7 +690,7 @@ c0-baseline)
   python3 -I "$HERE/metrics.py" usage "$L/tr/c0-ref.jsonl" >"$E/metrics/c0-usage.json"
   r=$(cat "$L/task/c0-ref/refusals.log" 2>/dev/null | grep -c .)
   [ -s "$L/task/c0-ref/attempts.log" ] || stop "C0: attempts.log missing from the C0 snapshot"
-  grep -v -q 'kf=placeholder ak=absent' "$L/task/c0-ref/attempts.log" && stop "C0: a step.sh run (agent descendant) saw unexpected key forms"
+  grep -v -q 'kf=absent ak=placeholder' "$L/task/c0-ref/attempts.log" && stop "C0: a step.sh run (agent descendant) saw unexpected key forms"
   log "C0 baseline: P=$(pkeys c0-base) W=$(wkeys c0-base) M=${m}s refusals=$r usage=$(jq -c . "$E/metrics/c0-usage.json") probe=$(jq -c . "$E/metrics/c0-probe.json")"
   spend_check # first measurement now that the transcript is located (stops if not reliable)
   echo "$(ems)" >"$E/obs/c0-baseline-done"
@@ -776,7 +778,10 @@ cleanup)
   fi
   "${TM[@]}" kill-server 2>/dev/null; sleep 1
   [ -z "$(client_scan)" ] || { client_scan >"$E/obs/cleanup-clients.txt"; log "cleanup: client processes remain (see obs)"; }
-  snap cleanup-final || log "cleanup: final snapshot failed"
+  if [ ! -s "$E/tr_rel" ] && [ -s "$E/wctr" ] && [ "$(cat "$E/sbx_id")" != none ]; then
+    bash "$(readlink -f "$0")" "$RUN" _tr_probe cleanup >/dev/null 2>&1; log "cleanup: transcript path located before final snapshot: $([ -s "$E/tr_rel" ] && echo yes || echo no)"
+  fi
+  snap cleanup-final || log "cleanup: final snapshot incomplete (see obs/cleanup-final-S.txt if present)"
   python3 -I "$HERE/metrics.py" usage "$L/tr/cleanup-final.jsonl" >"$E/metrics/final-usage.json" 2>/dev/null || log "cleanup: final usage estimate failed (Console figure is authoritative)"
   grab_logs cleanup-pre
   K -n "$NS" get pvc -o json | jq -r --arg s "$(cat "$E/sbx_id")" '.items[] | select(.metadata.labels["openshell.ai/sandbox-id"] == $s or .metadata.labels["openshell.ai/boundary-pair"] == $s or (.metadata.name | contains("'"$SBX"'"))) | "\(.metadata.name) \(.spec.volumeName)"' >"$E/obs/cleanup-pvcs.txt"
@@ -803,7 +808,7 @@ post)
   n=1; while [ -e "$E/inv/post-$n" ]; do n=$((n + 1)); done
   P=$E/inv/post-$n D=$E/inv/diff-$n; mkdir -p "$D"
   inventory "$P"
-  for f in "$E"/inv/pre/*; do b=${f##*/}; diff -u "$f" "$P/$b" >"$D/diff-$b.txt" 2>&1 && rm -f "$D/diff-$b.txt"; done
+  for f in "$E"/inv/pre/*; do b=${f##*/}; d="$D/diff-${b%.txt}.txt"; diff -u "$f" "$P/$b" >"$d" 2>&1 && rm -f "$d"; done
   (cd "$D" && ls diff-* 2>/dev/null) >"$E/inv/diff-files-$n.txt" || true
   # Only three inventory files may differ, and each is validated explicitly below (never accepted by name):
   # gw-sts-generation, providers, profiles. Every other difference is unexpected.

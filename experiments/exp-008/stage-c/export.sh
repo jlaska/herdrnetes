@@ -76,6 +76,9 @@ nodes=$( { cat "$E"/obs/*-C-pods.json "$E"/samples/*.jsonl 2>/dev/null | grep -o
   cat "$E"/obs/*-G-gwpod.txt 2>/dev/null | awk 'NF >= 2 {print $2}'; } | { grep -E '^[A-Za-z0-9.-]{2,}$' || true; } | sort -u) || true
 i=0; for n in $nodes; do lbl=node-$(printf "\\x$(printf %x $((97 + i)))"); { grep -r -l -F "$n" "$DEST" || true; } | xargs -r sed -i "s/$n/$lbl/g"; i=$((i + 1)); done
 { grep -r -l -E '"(podIP|hostIP)"' "$DEST" || true; } | xargs -r sed -i -E 's/"(podIP|hostIP)": ?"[^"]*"/"\1": "<redacted>"/g'
+# any remaining private IPv4 address (event messages: readiness-probe targets, CNI "Add eth0 [...]"; run 1125-2153) -> <private-ip>
+PRIV=${SCAN_PAT[3]}
+{ grep -r -l -a -E "$PRIV" "$DEST" || true; } | xargs -r sed -i -E "s/$PRIV/<private-ip>/g"
 site_literals | sort -u | while read -r s; do
   { grep -r -l -F "$s" "$DEST" || true; } | xargs -r sed -i "s|$(printf %s "$s" | sed 's/[|&\\]/\\&/g')|<redacted>|g"
 done

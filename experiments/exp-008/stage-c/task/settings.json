@@ -1,8 +1,18 @@
 {
-  "apiKeyHelper": "printf %s \"$EXP008_ANTHROPIC_KEYREF\"",
   "permissions": {
     "defaultMode": "dontAsk",
-    "allow": ["Bash(./step.sh *)"],
-    "deny": ["Read(./.state/**)", "Read(/sandbox/c/claude/**)", "Read(/sandbox/c/launch/**)", "Read(/run/**)", "Bash(env *)", "Bash(printenv *)", "Bash(cat *)"]
+    "allow": [
+      "Bash(./step.sh *)"
+    ],
+    "deny": [
+      "Read(./.state/**)",
+      "Read(/sandbox/c/claude/**)",
+      "Read(/sandbox/c/home/**)",
+      "Read(/sandbox/c/launch/**)",
+      "Read(/run/**)",
+      "Bash(env *)",
+      "Bash(printenv *)",
+      "Bash(cat *)"
+    ]
   }
 }
