@@ -298,7 +298,7 @@ def c4b(b: dict) -> dict:
         ents = after(pt, len(rt))
         uuids = {e.get("uuid") for e in parse_lines(rt) if e.get("uuid")}
         stepn = find_step_tool_use(parse_lines(rt), n)
-        cont, types_ok, extra_ok = True, True, True
+        cont, types_ok, extra_ok, tool_ok = True, True, True, True
         for pos, e in enumerate(ents, start=1):
             if e.get("_bad"):
                 # a torn final line is allowed among entries 1-3 only: at positions 4-5 its type cannot be
@@ -308,17 +308,22 @@ def c4b(b: dict) -> dict:
                     extra_ok = extra_ok and pos <= TAIL_BASE_ENTRIES
                 continue
             # also allowed among entries 1-3: the step-N tool result itself (in-flight-completed)
-            own_result = e.get("type") == "user" and stepn and any(bl.get("type") == "tool_result" and bl.get("tool_use_id") == stepn["id"] for bl in m0.blocks(e))
+            # (exactly one block: step N's tool_result and nothing else)
+            bl = m0.blocks(e)
+            own_result = e.get("type") == "user" and stepn and len(bl) == 1 and bl[0].get("type") == "tool_result" and bl[0].get("tool_use_id") == stepn["id"]
             if pos > TAIL_BASE_ENTRIES:
                 if e.get("type") not in TAIL_META_TYPES:
                     extra_ok = False
             elif e.get("type") not in TAIL_TYPES and not own_result:
                 types_ok = False
+            # no additional tool activity after R: the step-N call is already in R, so a tail tool_use is new work
+            if tool_use_blocks(e):
+                tool_ok = False
             if e.get("parentUuid") and e["parentUuid"] not in uuids:
                 cont = False
             if e.get("uuid"):
                 uuids.add(e["uuid"])
-        tail |= {"tail_bytes": len(pt) - len(rt), "tail_entries": len(ents), "tail_extra_metadata_ok": extra_ok,
+        tail |= {"tail_bytes": len(pt) - len(rt), "tail_entries": len(ents), "tail_extra_metadata_ok": extra_ok, "tail_no_tool_use": tool_ok,
                  "tail_partial_final": bool(ents and ents[-1].get("_partial")), "tail_types_ok": types_ok, "parent_continuity": cont}
         if tail["tail_bytes"] > TAIL_MAX_BYTES:
             reasons.append("tail-too-large")
@@ -328,6 +333,8 @@ def c4b(b: dict) -> dict:
             reasons.append("tail-unexpected-entry")
         if not extra_ok:
             reasons.append("tail-entry-4-5-not-metadata")
+        if not tool_ok:
+            reasons.append("tail-tool-activity")
         if not cont:
             reasons.append("tail-parent-discontinuity")
     allowance = []
@@ -399,7 +406,8 @@ def c4c(b: dict) -> dict:
     # carries that same id (a second id inside the same file would be an ambiguous identity)
     pre_sids = {e.get("sessionId") for e in parse_lines(pre) if e.get("sessionId")}
     post_sids = {e.get("sessionId") for e in post if e.get("sessionId")}
-    sid_consistent = len(pre_sids) == 1 and bool(post_sids) and post_sids <= pre_sids
+    stem = (rname or "").removesuffix(".jsonl")
+    sid_consistent = len(pre_sids) == 1 and bool(post_sids) and post_sids <= pre_sids and pre_sids == {stem}
     v["attributes"]["session_ids_consistent"] = sid_consistent
     # ---- Process axis
     proc = b.get("process") or "not-started"

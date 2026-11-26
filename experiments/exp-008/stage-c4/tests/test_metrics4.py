@@ -328,6 +328,12 @@ class C4b(unittest.TestCase):
         bad(self.tail([tres(1)]), "tail-unexpected-entry")                                # another call's result at 1
         bad(self.tail(three + [b'{"type":"cost-st']), "tail-entry-4-5-not-metadata")       # torn line at 4: type unrecognizable
         ok(self.tail([meta("api-request", 1), b'{"type":"cost-st']))                       # torn final line at 2: allowed
+        tool_asst = {"type": "assistant", "uuid": "t1", "message": {"id": "y", "model": "claude-haiku-5-5", "usage": {"input_tokens": 1, "output_tokens": 1},
+                     "content": [{"type": "tool_use", "id": "toolu_new", "name": "Bash", "input": {"command": "./step.sh 9 x"}}]}}
+        bad(self.tail([tool_asst]), "tail-tool-activity")                                 # a requested tool call at 1-3 is new work
+        bad(self.tail([meta("api-request", 1), tool_asst]), "tail-tool-activity")
+        own_plus = {"type": "user", "uuid": "o1", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_s8", "content": "x"}, {"type": "text", "text": "extra"}]}}
+        bad(self.tail([own_plus]), "tail-unexpected-entry")                               # own result with an extra block
         bad(self.tail(three + [{"type": "cost-state", "uuid": "m4", "parentUuid": "nope"}]), "tail-parent-discontinuity")
         bad(self.tail(three + [{"type": "cost-state", "uuid": "m4", "pad": "x" * 66000}]), "tail-too-large")
         t = tempfile.TemporaryDirectory(); s = State(t.name)                              # broken byte prefix
@@ -710,6 +716,9 @@ class C4c(unittest.TestCase):
         v = classify(r); self.assertEqual(v["decision_path"], "session-id-ambiguous"); self.assertFalse(v["primary_pass"])
         r = perfect(); v = classify(r, transcripts_after=[name, name])
         self.assertEqual(v["decision_path"], "session-duplicated-file")
+        other = "55555555-0000-4000-8000-000000000001.jsonl"                                       # file name != the session id inside it
+        v = classify(perfect(), transcripts_after=[other], R_transcript_name=other)
+        self.assertFalse(v["attributes"]["session_ids_consistent"]); self.assertFalse(v["primary_pass"])
 
     def test_primary_pass_requires_every_condition(self):
         """Over random runs: primary_pass implies every documented condition."""
