@@ -1,4 +1,4 @@
-# EXP-008 Stage C4: workload loss, durable state and native Claude Code resume (PROPOSAL; design only; not approved; no cluster, sandbox or credential used)
+# EXP-008 Stage C4: workload loss, durable state and native Claude Code resume (PROPOSAL; Phase 1 approved for implementation and offline testing only; no C4 execution authorized; nothing run)
 
 Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · [EXP-008](../../docs/experiments/08-openshell-execution.md) · Stage C record [`stage-c/results/1126-1017.md`](stage-c/results/1126-1017.md) (PR #47) · REQ-003, REQ-006, REQ-009, REQ-011 · ADR-0001 unchanged
 
