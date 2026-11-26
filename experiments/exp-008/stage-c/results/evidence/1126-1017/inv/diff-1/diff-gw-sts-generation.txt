@@ -1,0 +1,5 @@
+--- ~/.cache/hxc/run/1126-1017/e/inv/pre/gw-sts-generation.txt	2026-11-26 10:17:26.750977424 -0500
++++ ~/.cache/hxc/run/1126-1017/e/inv/post-1/gw-sts-generation.txt	2026-11-26 10:28:12.262128971 -0500
+@@ -1 +1 @@
+-gen=12
++gen=14

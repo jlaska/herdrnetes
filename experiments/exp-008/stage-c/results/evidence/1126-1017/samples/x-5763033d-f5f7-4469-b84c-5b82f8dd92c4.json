@@ -1,0 +1,18 @@
+{
+  "name": "os-supervisor-4f1475fa-1049-4efe-8bf7-4d2223df4602",
+  "uid": "5763033d-f5f7-4469-b84c-5b82f8dd92c4",
+  "phase": "Running",
+  "del": "2026-11-26T15:27:18Z",
+  "st": [
+    {
+      "name": "supervisor",
+      "state": {
+        "running": {
+          "startedAt": "2026-11-26T15:17:54Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    }
+  ]
+}

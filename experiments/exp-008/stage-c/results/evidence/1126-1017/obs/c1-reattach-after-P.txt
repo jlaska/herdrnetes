@@ -1,0 +1,14 @@
+pid=71
+start=63180131
+nonce=1c91e56e804a45d4
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+utc=2026-11-26T15:18:10.178Z
+uid=10001
+sid=4c4dffa4-2736-4ac4-ab24-48c629d905af
+key_form=placeholder
+node_extra_ca=readable
+claude_sha256=604d29a6869409106b6a1110bdadcc8b72e8654a5a865d23258f938a696e348e
+pkg_sha256=3136651da17352ce3a1494d62e080379eab9a124a3934928a654748e28d7c536
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+uid=10001
+proc=71 start=63180131 ppid=1 nonce=1c91e56e804a45d4 keyref_form=absent key_form=placeholder

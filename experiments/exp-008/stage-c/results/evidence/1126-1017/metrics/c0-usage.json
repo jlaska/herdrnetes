@@ -1,0 +1,1 @@
+{"basis": "transcript-estimate", "cache_creation_input_tokens": 1984, "cache_read_input_tokens": 7555, "cache_write_ttl_assumed_1h_messages": 0, "est_usd": 0.00063565, "input_tokens": 16, "long_context_messages": 0, "max_prompt_tokens": 1986, "messages": 6, "output_tokens": 621, "reliable": true, "synthetic_messages": 0, "unreliable_reasons": []}

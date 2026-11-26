@@ -1,0 +1,40 @@
+{
+  "name": "default--exp008c-1126-1017",
+  "uid": "2a5fd508-04df-40ad-af7d-ed8d9809c318",
+  "generation": 2,
+  "labels": {
+    "openshell.ai/gateway-id": "openshell",
+    "openshell.ai/managed-by": "openshell",
+    "openshell.ai/sandbox-id": "4f1475fa-1049-4efe-8bf7-4d2223df4602",
+    "openshell.ai/sandbox-name": "exp008c-1126-1017",
+    "openshell.ai/sandbox-workspace": "default"
+  },
+  "deletionTimestamp": null,
+  "operatingMode": "Running",
+  "conditions": [
+    {
+      "lastTransitionTime": "2026-11-26T15:17:53Z",
+      "message": "Sandbox is not suspended",
+      "observedGeneration": 2,
+      "reason": "NotSuspended",
+      "status": "False",
+      "type": "Suspended"
+    },
+    {
+      "lastTransitionTime": "2026-11-26T15:18:09Z",
+      "message": "Pod is Ready",
+      "observedGeneration": 2,
+      "reason": "DependenciesReady",
+      "status": "True",
+      "type": "Ready"
+    },
+    {
+      "lastTransitionTime": "2026-11-26T15:17:56Z",
+      "message": "",
+      "observedGeneration": 2,
+      "reason": "PodScheduled",
+      "status": "True",
+      "type": "PodScheduled"
+    }
+  ]
+}

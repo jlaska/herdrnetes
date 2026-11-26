@@ -1,0 +1,14 @@
+pid=71
+start=63180131
+nonce=1c91e56e804a45d4
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+utc=2026-11-26T15:18:10.178Z
+uid=10001
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+uid=10001
+proc=71 start=63180131 ppid=1 nonce=1c91e56e804a45d4 keyref_form=absent key_form=placeholder
+task: attempts=17 last_t=2026-11-26T15:23:43.719Z progress=16 last_t=2026-11-26T15:23:43.143Z refusals=0 last= ledger=16 last_t=2026-11-26T15:23:43.143Z tr=4c4dffa4-2736-4ac4-ab24-48c629d905af.jsonl lines=98 bytes=93008 lock=held 
+pod workload name=default--exp008c-1126-1017 uid=dbc2c9fb-5121-4f83-a562-5ae6b1508d3a phase=Running node=node-b del=- openshell-sandbox-bootstrap:cid=ffe2a65e1685 rc=0 ready=true workspace-init:cid=37814f17b274 rc=0 ready=true agent:cid=8904f7a92234 rc=0 ready=true
+pod supervisor name=os-supervisor-4f1475fa-1049-4efe-8bf7-4d2223df4602 uid=5763033d-f5f7-4469-b84c-5b82f8dd92c4 phase=Running node=node-a del=- supervisor:cid=091484356b59 rc=0 ready=true
+gwpod=c7433f71-86e6-44e4-adc7-e3a9b40503fc node-b ghcr.io/nvidia/openshell/gateway@sha256:1fd9e1e807990e66c9486a28d3ce9d649fd7528df48d0e830d2de2148b52dfe5 ready=true
+G phase=Ready instance=d1b195dc-4ef3-47ae-9847-c69a7ec4f974

@@ -1,0 +1,6 @@
+2026-11-26T15:18:20.256Z step=c0-baseline usage=not-yet-locatable
+2026-11-26T15:20:02.232Z step=c0-baseline est_usd=0.00063565 budget=2 reliable=true msgs=6 long_ctx=0 reasons= (transcript estimate; Console cap is authoritative)
+2026-11-26T15:20:30.147Z step=c1 est_usd=0.00071881 budget=2 reliable=true msgs=7 long_ctx=0 reasons= (transcript estimate; Console cap is authoritative)
+2026-11-26T15:22:51.514Z step=c1-reattach est_usd=0.00133886 budget=2 reliable=true msgs=14 long_ctx=0 reasons= (transcript estimate; Console cap is authoritative)
+2026-11-26T15:23:45.277Z step=c2 est_usd=0.00167739 budget=2 reliable=true msgs=17 long_ctx=0 reasons= (transcript estimate; Console cap is authoritative)
+2026-11-26T15:26:08.494Z step=c2-reattach est_usd=0.00239916 budget=2 reliable=true msgs=24 long_ctx=0 reasons= (transcript estimate; Console cap is authoritative)
