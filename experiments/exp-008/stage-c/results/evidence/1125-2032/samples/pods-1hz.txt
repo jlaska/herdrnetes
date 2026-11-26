@@ -1,0 +1,202 @@
+## 2026-11-26T01:33:31.410Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:32.488Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:33.573Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:34.632Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:35.691Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:36.766Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:37.855Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:38.953Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:40.045Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:41.149Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:42.204Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:43.264Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:44.336Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:45.439Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:46.510Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:47.594Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:48.654Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:49.749Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:50.820Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:51.922Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:52.982Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:54.079Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:55.132Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:56.217Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:57.279Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:58.371Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:33:59.433Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:00.499Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:01.590Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:02.658Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:03.757Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:04.818Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:05.907Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:06.981Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:08.040Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:09.101Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:10.162Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:11.255Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:12.314Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:13.400Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:14.459Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:15.523Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:16.593Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:17.681Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:18.744Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:19.843Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:20.902Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:22.003Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:23.071Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:24.137Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:25.197Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:26.297Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:27.353Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:28.414Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:29.467Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:30.550Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:31.611Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:32.710Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:33.803Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:34.891Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:35.991Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:37.056Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:38.147Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:39.241Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:40.327Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:41.389Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:42.466Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:43.567Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:44.665Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:45.757Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:46.820Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:47.924Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:48.987Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:50.072Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:51.142Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:52.257Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:53.318Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:54.384Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:55.444Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:56.498Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:57.587Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:58.694Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:34:59.759Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:00.860Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:01.960Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:03.026Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:04.118Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:05.188Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:06.282Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:07.354Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:08.457Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:09.545Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:10.742Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:11.950Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:13.178Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:14.401Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:15.584Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:16.764Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:17.958Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:19.190Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 
+## 2026-11-26T01:35:20.384Z
+openshell-0 c7433f71-86e6-44e4-adc7-e3a9b40503fc Running del= openshell-gateway:true:0:containerd://9948a1ef8b171715a626ec9e458f1c6948a3a9c375957ef9b2c25cf7b96afd3a 

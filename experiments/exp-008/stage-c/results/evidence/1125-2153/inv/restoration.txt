@@ -1,0 +1,5 @@
+restoration=NOT-CLEAN inventory:diff-argo.txt.txt,diff-profiles.txt.txt,diff-providers.txt.txt providers:UNEXPECTED_added=1_removed=1 profiles:UNEXPECTED_added=2_removed=3
+post_run=2
+gw_sts_generation=explained pre=12 post=12 scale_ops=0
+providers=UNEXPECTED added=1 removed=1
+profiles=UNEXPECTED added=2 removed=3

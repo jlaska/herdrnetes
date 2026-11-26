@@ -1,0 +1,8 @@
+probe_key_form=placeholder
+disallowed_host=blocked:PermissionError:13
+anthropic_from_python=blocked:PermissionError:13
+rc=0
+probe_key_form=absent
+disallowed_host=blocked:gaierror:-3
+anthropic_from_python=blocked:gaierror:-3
+rc=0

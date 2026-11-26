@@ -1,0 +1,7 @@
+--- ~/.cache/hxc/run/1125-2032/e/inv/pre/argo.txt	2026-11-25 20:33:22.043226313 -0500
++++ ~/.cache/hxc/run/1125-2032/e/inv/post-2/argo.txt	2026-11-26 08:15:21.722818773 -0500
+@@ -1,2 +1,2 @@
+-<redacted>-openshell Synced Healthy 05fed443631dd6cc9d102ffa6ce64f0d0c193001
+-<redacted>-agent-sandbox Synced Healthy 05fed443631dd6cc9d102ffa6ce64f0d0c193001
++<redacted>-openshell Synced Healthy 16878c0bca54e084fdf3a81bc8b283e27827bb81
++<redacted>-agent-sandbox Synced Healthy 16878c0bca54e084fdf3a81bc8b283e27827bb81

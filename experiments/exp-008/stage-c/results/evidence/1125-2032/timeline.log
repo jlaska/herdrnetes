@@ -1,0 +1,11 @@
+2026-11-26T01:33:22.489Z [pre] pre OK: Argo Synced/Healthy; digests match Stage B; gateway Ready replicas=1; no Sandbox CRs; provider exp008c-anthropic present; providers=1 gitops=05fed443631dd6cc9d102ffa6ce64f0d0c193001
+2026-11-26T01:33:39.329Z [sampler-start] STOP: sampler not producing data 8 s after start (Stage B attempt-1 defect check)
+2026-11-26T01:35:09.336Z [cleanup] cleanup after STOP: 2026-11-26T01:33:39.334Z sampler-start: sampler not producing data 8 s after start (Stage B attempt-1 defect check)
+2026-11-26T01:35:09.535Z [cleanup] cleanup: no sandbox id recorded or resolvable; checking residue by name only
+2026-11-26T01:35:10.574Z [cleanup] cleanup: final snapshot failed
+2026-11-26T01:35:10.673Z [cleanup] cleanup: final usage estimate failed (Console figure is authoritative)
+2026-11-26T01:35:10.969Z [cleanup] cleanup: c0-create never ran; no delete issued
+2026-11-26T01:35:11.558Z [cleanup] experiment objects gone (pods,pvc,secret,service,networkpolicy,configmap,serviceaccount,role,rolebinding by labels and names, Sandbox CRs, PVs by recorded PVC and by claim, Cilium policies); gateway replicas=1
+2026-11-26T01:35:21.432Z [post] post run 1: restoration=INCOMPLETE pending-owner-delete=providers,profiles; post_run=1 gw_sts_generation=explained pre=12 post=12 scale_ops=0 providers=present-owner-delete-pending profiles=present-owner-delete-pending 
+2026-11-26T01:35:24.517Z [sampler-stop] sampler stop requested
+2026-11-26T13:15:21.995Z [post] post run 2: restoration=NOT-CLEAN inventory:diff-argo.txt.txt,diff-profiles.txt.txt,diff-providers.txt.txt providers:UNEXPECTED_added=1_removed=1 profiles:UNEXPECTED_added=2_removed=3; post_run=2 gw_sts_generation=explained pre=12 post=12 scale_ops=0 providers=UNEXPECTED added=1 removed=1 profiles=UNEXPECTED added=2 removed=3 

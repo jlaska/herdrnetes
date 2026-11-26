@@ -1,0 +1,8 @@
+attempts=0 last=
+progress=0 last=
+refusals=0 last=
+ledger=0 last=
+locks=0 last=
+transcripts=1
+tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=16 bytes=12696
+lock=free

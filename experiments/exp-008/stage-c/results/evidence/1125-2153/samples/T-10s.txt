@@ -1,0 +1,30 @@
+2026-11-26T02:54:39.547Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=15 bytes=11480 lock=free 
+2026-11-26T02:54:52.412Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=17 bytes=13912 lock=free 
+2026-11-26T02:55:05.275Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=17 bytes=13912 lock=free 
+2026-11-26T02:55:18.113Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=18 bytes=15128 lock=free 
+2026-11-26T02:55:31.077Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=18 bytes=15128 lock=free 
+2026-11-26T02:55:43.924Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=18 bytes=15128 lock=free 
+2026-11-26T02:55:56.942Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=19 bytes=16344 lock=free 
+2026-11-26T02:56:09.707Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=19 bytes=16344 lock=free 
+2026-11-26T02:56:22.640Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=20 bytes=17560 lock=free 
+2026-11-26T02:56:35.568Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=20 bytes=17560 lock=free 
+2026-11-26T02:56:48.495Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=20 bytes=17560 lock=free 
+2026-11-26T02:57:01.386Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=21 bytes=18776 lock=free 
+2026-11-26T02:57:14.362Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=21 bytes=18776 lock=free 
+2026-11-26T02:57:27.452Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=21 bytes=18776 lock=free 
+2026-11-26T02:57:40.302Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=22 bytes=19992 lock=free 
+2026-11-26T02:57:53.237Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=22 bytes=19992 lock=free 
+2026-11-26T02:58:06.176Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=22 bytes=19992 lock=free 
+2026-11-26T02:58:19.155Z attempts=0 last= progress=0 last= refusals=0 last= tr=ddf15419-5381-4ef0-81be-6733761cff1a.jsonl lines=23 bytes=21208 lock=free 
+2026-11-26T02:58:34.000Z ERR workload pod labels do not match this sandbox 
+2026-11-26T02:58:46.313Z ERR workload pod labels do not match this sandbox 
+2026-11-26T02:58:58.603Z ERR workload pod labels do not match this sandbox 
+2026-11-26T02:59:10.895Z ERR workload pod labels do not match this sandbox 
+2026-11-26T02:59:23.024Z ERR workload pod labels do not match this sandbox 
+2026-11-26T02:59:35.345Z ERR workload pod labels do not match this sandbox 
+2026-11-26T02:59:47.565Z ERR workload pod labels do not match this sandbox 
+2026-11-26T02:59:59.971Z ERR workload pod labels do not match this sandbox 
+2026-11-26T03:00:12.207Z ERR workload pod labels do not match this sandbox 
+2026-11-26T03:00:24.554Z ERR workload pod labels do not match this sandbox 
+2026-11-26T03:00:36.774Z ERR workload pod labels do not match this sandbox 
+## trimmed for the public record: samples after 2026-11-26T03:00:41.571Z (cleanup done + 120 s) omitted; the sampler ran until 2026-11-26T13:16:26.885Z (stopped by sampler-stop); full file kept local

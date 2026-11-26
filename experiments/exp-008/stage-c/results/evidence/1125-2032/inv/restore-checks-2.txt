@@ -1,0 +1,4 @@
+post_run=2
+gw_sts_generation=explained pre=12 post=12 scale_ops=0
+providers=UNEXPECTED added=1 removed=1
+profiles=UNEXPECTED added=2 removed=3

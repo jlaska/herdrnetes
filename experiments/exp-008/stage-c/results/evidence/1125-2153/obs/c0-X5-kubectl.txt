@@ -1,0 +1,4 @@
+probe_key_form=absent
+disallowed_host=blocked:gaierror:-3
+anthropic_from_python=blocked:gaierror:-3
+rc=0
