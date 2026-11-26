@@ -1,0 +1,2 @@
+t=1795706627435 rc=0 gen_before=12 gen_after=13 op=scale statefulset/openshell --replicas=0
+t=1795706718214 rc=0 gen_before=13 gen_after=14 op=scale statefulset/openshell --replicas=1

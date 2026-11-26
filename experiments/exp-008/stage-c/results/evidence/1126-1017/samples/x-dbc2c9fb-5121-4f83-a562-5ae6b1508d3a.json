@@ -1,0 +1,46 @@
+{
+  "name": "default--exp008c-1126-1017",
+  "uid": "dbc2c9fb-5121-4f83-a562-5ae6b1508d3a",
+  "phase": "Running",
+  "del": null,
+  "st": [
+    {
+      "name": "openshell-sandbox-bootstrap",
+      "state": {
+        "terminated": {
+          "containerID": "containerd://d0f1e8fbcb1a10bdade9ae78d172b7ccbe47d4d49ecf1ba04a59ffe2a65e1685",
+          "exitCode": 0,
+          "finishedAt": "2026-11-26T15:18:08Z",
+          "reason": "Completed",
+          "startedAt": "2026-11-26T15:18:08Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    },
+    {
+      "name": "workspace-init",
+      "state": {
+        "terminated": {
+          "containerID": "containerd://1c58c8ff6192e0ed360b1b1e3742e519475588f0e1626c64f67e37814f17b274",
+          "exitCode": 0,
+          "finishedAt": "2026-11-26T15:18:08Z",
+          "reason": "Completed",
+          "startedAt": "2026-11-26T15:18:08Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    },
+    {
+      "name": "agent",
+      "state": {
+        "running": {
+          "startedAt": "2026-11-26T15:18:09Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    }
+  ]
+}

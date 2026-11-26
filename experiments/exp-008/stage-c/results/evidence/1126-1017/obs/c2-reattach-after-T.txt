@@ -1,0 +1,8 @@
+attempts=25 last=attempt n=25 t=2026-11-26T15:26:28.404Z prior_attempts=0 pid=5544 ppid=5543 pstart=63229958 pcmd=2c6355266b92 kf=absent ak=placeholder
+progress=24 last=done n=24 t=2026-11-26T15:26:27.724Z pid=5317 ppid=5316 pstart=63227890 pcmd=593e1b149f3d kf=absent ak=placeholder
+refusals=0 last=
+ledger=24 last=n=24 t=2026-11-26T15:26:27.724Z tokhash=f81b4d23ffb981e5 prev=64d65c656828b4db
+locks=0 last=
+transcripts=1
+tr=4c4dffa4-2736-4ac4-ab24-48c629d905af.jsonl lines=139 bytes=130797
+lock=held

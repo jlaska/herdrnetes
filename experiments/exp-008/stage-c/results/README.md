@@ -1,5 +1,7 @@
 # EXP-008 Stage C results: two stopped runs (2026-11-25), C0–C3 not reached
 
+> **Update (2026-11-26, agent-generated):** the corrected C0–C3 rerun `1126-1017` (harness `main` `1643acd`) passed C0, C1, C3a, C2 and C3b, and cleanup gave `restoration=matches-pre`. See [`1126-1017.md`](1126-1017.md), with *proposed* FIND-095 to FIND-097. The record below covers the two earlier runs and is left as written. Its C4 recommendation is superseded by the one in `1126-1017.md`.
+
 **Agent-generated record for owner review.** Nothing here is accepted. The findings below are *proposed*. Stage C, run under the owner's conditional C0–C3 authorization of 2026-11-25, **did not reach C1, C2 or C3**:
 
 | Run | Harness commit | Stopped at | Distinct failure | Model calls |

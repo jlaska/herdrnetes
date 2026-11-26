@@ -1,0 +1,7 @@
+step=c2 process=survived work_gwdown=progressed work_full=progressed P_same=yes W_same=yes prefix_preserved=yes
+old_gw_uid=c7433f71-86e6-44e4-adc7-e3a9b40503fc
+gw_gone_ms=1250
+scale_up_ms=90779
+gw_ready_ms=105713 new_gw_uid=7d12222c-6ed6-496b-b5a8-d405e36d2e54
+sbx_ready_ms=121230
+{"M_s":20.584,"api_requests_in_window":5,"assistant_entries_in_window":5,"attempts_in_window":5,"batched_tool_uses":0,"counted_steps":[18,19,20,21,22],"done_in_window":5,"excluded":{},"frozen":false,"margin_ms":1086,"max_activity_gap_s":20.027,"refusals_total":0,"shared_shell":false,"skew_ms":80,"steps_within_3M_after":[23],"turn_ended_by_close":false,"window_ms":105713,"work":"progressed"}

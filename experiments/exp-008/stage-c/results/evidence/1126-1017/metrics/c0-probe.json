@@ -1,0 +1,1 @@
+{"probe_entry_kinds": ["api-request-blob", "attachment:queued_command", "queue-operation:enqueue", "queue-operation:remove"], "probe_in_transcript": true, "probe_queued_only": false, "reply": true, "reply_codeword": null, "reply_latency_ms": 11452, "reply_mentions_last_done": false, "session_ids": ["4c4dffa4-2736-4ac4-ab24-48c629d905af"], "tool_use_before_reply": 1}

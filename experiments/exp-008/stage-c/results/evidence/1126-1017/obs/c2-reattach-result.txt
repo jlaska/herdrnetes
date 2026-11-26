@@ -1,0 +1,7 @@
+step=c2-reattach P_same=yes W_same=yes prefix_preserved=yes
+reattachment=same-process-writer terminal=coherent-on-replay probe_in_transcript=true reply=true
+conversation_same_session=true codeword=false tool_use_before_reply=1
+first_output_ms_upper_bound=1966 raw_bytes_at_settle=250246
+read_only_notice=no
+fell_behind=no
+input_enabled_notice=no
