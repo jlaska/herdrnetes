@@ -518,6 +518,9 @@ reattach() { # reattach <step> <client-name> <previous-client-name>
 kwatch() { while [ ! -e "$E/sampler.stop" ]; do echo "## watch (re)start $(now)" >>"$1.err"; "${KC[@]}" -n "$NS" get "${@:2}" --watch --output-watch-events -o json 2>>"$1.err" | jq -c --unbuffered '{type, k: .object.kind, name: .object.metadata.name, uid: .object.metadata.uid, rv: .object.metadata.resourceVersion, del: .object.metadata.deletionTimestamp, phase: .object.status.phase, cs: [.object.status.initContainerStatuses[]?, .object.status.containerStatuses[]? | {name, containerID, ready, restartCount, state, lastState}], cond: .object.status.conditions, reason: .object.reason, msg: .object.message, ts: (.object.lastTimestamp // .object.eventTime)}' >>"$1"; sleep 1; done; }
 # sampler_gate: within 20 s, the 1 Hz sample lists the gateway pod (not just an error text) and the pod watch
 # holds a parsed event for it.
+# sampler_done: true once cleanup finished more than 120 s ago; the sampler then stops itself (run 1125-2153 kept
+# polling a deleted sandbox for ~10 h while the close-out waited for the owner). sampler-stop stays valid afterwards.
+sampler_done() { [ -e "$E/obs/cleanup-done" ] && [ $(( $(ems) - $(cat "$E/obs/cleanup-done") )) -gt 120000 ]; }
 sampler_gate() { local i; for i in $(seq 20); do grep -q "^$GW_POD " "$E/samples/pods-1hz.txt" 2>/dev/null && jq -e --arg p "$GW_POD" 'select(.name == $p)' "$E/samples/pods-watch.jsonl" >/dev/null 2>&1 && return 0; sleep 1; done; return 1; }
 sampler() {
   local s=$E/samples n=0 t
@@ -553,6 +556,7 @@ sampler() {
         echo "$t captured termination state of $nm ($u)" >>"$s/x-captured.txt"
       done
     fi
+    if sampler_done; then echo "## $(now) sampler stopped itself: cleanup finished > 120 s ago" >>"$s/pods-1hz.txt"; touch "$E/sampler.stop"; fi
     n=$((n + 1)); sleep 1
   done
 }
@@ -800,6 +804,7 @@ cleanup)
   [ "$(K -n "$NS" get statefulset "$GW_STS" -o jsonpath='{.spec.replicas}')" = "$(ref gw_replicas)" ] || stop "cleanup: gateway replicas differ from pre"
   { K -n "$NS" get ciliumnetworkpolicies -o name 2>/dev/null | grep -F -e "$SBX" $([ "$id" != none ] && printf -- '-e %s' "$id") || true; } >"$E/obs/cleanup-cilium-residue.txt"
   [ -s "$E/obs/cleanup-cilium-residue.txt" ] && stop "cleanup: Cilium policy residue (see obs/cleanup-cilium-residue.txt)"
+  echo "$(ems)" >"$E/obs/cleanup-done"
   log "experiment objects gone ($KINDS by labels and names, Sandbox CRs, PVs by recorded PVC and by claim, Cilium policies); gateway replicas=$(ref gw_replicas)"
   ;;
 post)

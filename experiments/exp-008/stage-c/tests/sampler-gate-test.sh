@@ -8,7 +8,7 @@ H=$(cd "$(dirname "$0")/.." && pwd)/stagec.sh
 T=$(mktemp -d); trap 'kill $(jobs -p) 2>/dev/null; for p in $(cat "$T"/pg-* 2>/dev/null); do kill -TERM -- "-$p" 2>/dev/null; done; rm -rf "$T"' EXIT
 fails=0; ok() { echo "ok   - $*"; }; no() { echo "FAIL - $*"; fails=$((fails + 1)); }
 fn() { awk -v f="$1" '$0 ~ "^"f"\\(\\) *\\{" {p=1} p {print} p && /^}/ {exit}' "$H"; }
-{ fn now; fn kwatch; fn sampler_gate; } >"$T/lib.sh"
+{ fn now; fn ems; fn kwatch; fn sampler_gate; fn sampler_done; } >"$T/lib.sh"
 grep -q -- '--unbuffered' "$T/lib.sh" && ok "kwatch extracted and uses jq --unbuffered" || no "kwatch missing or buffered"
 grep -q '^sampler_gate()' "$T/lib.sh" && ok "sampler_gate extracted" || no "sampler_gate not extracted"
 # stub kubectl: a watch prints one pretty-printed watch event (as kubectl -o json does), then stays open
@@ -55,6 +55,11 @@ echo '{"type":"ADDED","name":"other-pod"}' >"$T/e/samples/pods-watch.jsonl"
 neg && no "gate passed without an event for the gateway pod" || ok "gate fails without an event for the gateway pod"
 echo 'not json' >"$T/e/samples/pods-watch.jsonl"
 neg && no "gate passed on unparsable watch output" || ok "gate fails on unparsable watch output"
+
+# 4b. sampler_done: false without cleanup, false within 120 s of it, true after
+( . "$T/run.sh"; mkdir -p "$E/obs"; rm -f "$E/obs/cleanup-done"; ! sampler_done ) && ok "sampler_done false before cleanup" || no "sampler_done true before cleanup"
+( . "$T/run.sh"; echo "$(( $(date +%s%3N) - 60000 ))" >"$E/obs/cleanup-done"; ! sampler_done ) && ok "sampler_done false 60 s after cleanup" || no "sampler_done true too early"
+( . "$T/run.sh"; echo "$(( $(date +%s%3N) - 121000 ))" >"$E/obs/cleanup-done"; sampler_done ) && ok "sampler_done true 121 s after cleanup" || no "sampler_done false after 120 s"
 
 # 5. negative control: the same kwatch without --unbuffered reproduces the defect (file stays empty)
 sed 's/ --unbuffered//' "$T/lib.sh" >"$T/lib-buffered.sh"

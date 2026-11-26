@@ -82,6 +82,8 @@ PRIV=${SCAN_PAT[3]}
 site_literals | sort -u | while read -r s; do
   { grep -r -l -F "$s" "$DEST" || true; } | xargs -r sed -i "s|$(printf %s "$s" | sed 's/[|&\\]/\\&/g')|<redacted>|g"
 done
+# local paths in diff headers: $HOME -> ~
+{ grep -r -l -a -F "$HOME/" "$DEST" || true; } | xargs -r sed -i "s|$(printf %s "$HOME/" | sed 's/[|&\\]/\\&/g')|~/|g"
 echo "exported $(find "$DEST" -type f | wc -l) files to $DEST"
 scan "$DEST" || { echo "scan failed (fix the redaction, then export again)" >&2; exit 1; }
 SCANNED=1

@@ -33,7 +33,8 @@ case ${ANTHROPIC_API_KEY:-} in
 sk-ant-*) KF=REAL-KEY-SHAPE ;;
 *) KF=other ;;
 esac
-unset CLAUDE_API_KEY EXP008_ANTHROPIC_KEYREF
+# No Bearer-capable credential source may reach claude (security review 2026-11-26): only the placeholder above.
+unset CLAUDE_API_KEY EXP008_ANTHROPIC_KEYREF ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN
 NONCE=$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')
 SID=$(cat /proc/sys/kernel/random/uuid)
 START=$(sed 's/.*) //' /proc/$$/stat | awk '{print $20}')

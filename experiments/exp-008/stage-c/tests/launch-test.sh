@@ -11,7 +11,7 @@ fails=0; ok() { echo "ok   - $1"; }; no() { echo "FAIL - $1"; fails=$((fails + 1
 cat >"$T/fakeclaude" <<'EOF'
 #!/bin/sh
 f() { case $1 in '') echo absent ;; openshell:resolve:*) echo placeholder ;; *) echo other ;; esac; }
-{ echo "pid=$$"; echo "keyref=$(f "${EXP008_ANTHROPIC_KEYREF:-}")"; echo "ak=$(f "${ANTHROPIC_API_KEY:-}")"
+{ echo "pid=$$"; echo "keyref=$(f "${EXP008_ANTHROPIC_KEYREF:-}")"; echo "ak=$(f "${ANTHROPIC_API_KEY:-}")"; echo "at=$(f "${ANTHROPIC_AUTH_TOKEN:-}")"; echo "ot=$(f "${CLAUDE_CODE_OAUTH_TOKEN:-}")"
   echo "nonce_set=$([ -n "${EXP008_NONCE:-}" ] && echo yes || echo no)"; echo "ccd=$CLAUDE_CONFIG_DIR"; echo "pwd=$(pwd)"
   echo "ca=${NODE_EXTRA_CA_CERTS:-unset}"; for a in "$@"; do echo "arg=$a"; done; } >"$OUTF"
 EOF
@@ -47,10 +47,11 @@ rm -rf "$T/sb/c"
 
 # 3. placeholder present -> kept in ANTHROPIC_API_KEY (sent only as X-Api-Key), no KEYREF variable, approval tail seeded, same PID, CA var kept
 echo pem >"$T/ca.crt"
-env -i PATH=/usr/bin:/bin OUTF="$T/out2" ANTHROPIC_API_KEY=openshell:resolve:env:v1_ANTHROPIC_API_KEY \
+env -i PATH=/usr/bin:/bin OUTF="$T/out2" ANTHROPIC_API_KEY=openshell:resolve:env:v1_ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN=injected CLAUDE_CODE_OAUTH_TOKEN=injected \
   NODE_EXTRA_CA_CERTS="$T/ca.crt" /bin/sh -c "$BOOT_T" "$(base64 -w0 "$T/t.tar")" "$TSHA"
 grep -q '^ak=placeholder$' "$T/out2" && ok "placeholder kept in ANTHROPIC_API_KEY for claude" || no "ANTHROPIC_API_KEY not the placeholder"
 grep -q '^keyref=absent$' "$T/out2" && ok "no EXP008_ANTHROPIC_KEYREF (no apiKeyHelper path)" || no "keyref variable present"
+grep -q '^at=absent$' "$T/out2" && grep -q '^ot=absent$' "$T/out2" && ok "ANTHROPIC_AUTH_TOKEN and CLAUDE_CODE_OAUTH_TOKEN unset (no Bearer source)" || no "a Bearer-capable variable reached claude"
 grep -q "^ca=$T/ca.crt$" "$T/out2" && ok "inherited NODE_EXTRA_CA_CERTS kept" || no "CA variable lost"
 grep -q '^nonce_set=yes$' "$T/out2" && ok "nonce exported" || no "nonce"
 [ "$(sed -n 's/^pid=//p' "$T/out2")" = "$(sed -n 's/^pid=//p' "$T/sb/c/launch/identity")" ] && ok "claude keeps the launcher PID (exec chain)" || no "PID changed across exec"
@@ -59,7 +60,7 @@ grep -q -x "pwd=$T/sb/c/repo" "$T/out2" && ok "cwd is the task repo" || no "cwd"
 for a in --bare --strict-mcp-config --tools Bash --model claude-haiku-5-5 --session-id; do grep -q -x -- "arg=$a" "$T/out2" || no "missing arg $a"; done
 grep -q -x 'arg=--settings' "$T/out2" && ok "claude argv flags present" || no "argv"
 grep -q 'hasTrustDialogAccepted' "$T/sb/c/claude/.claude.json" && cmp -s "$T/sb/c/claude/.claude.json" "$T/sb/c/home/.claude.json" && ok "first-run state seeded in CLAUDE_CONFIG_DIR and HOME" || no "seed"
-python3 -I -c 'import json,sys; s=json.load(open(sys.argv[1])); assert "apiKeyHelper" not in s and s["permissions"]["defaultMode"]=="dontAsk" and "Read(/sandbox/c/home/**)" in s["permissions"]["deny"]' "$T/sb/c/settings.json" && ok "settings.json valid, no apiKeyHelper, home state read-denied" || no "settings.json"
+python3 -I -c 'import json,sys; s=json.load(open(sys.argv[1])); assert "apiKeyHelper" not in s and s["permissions"]["defaultMode"]=="dontAsk" and "Read(/sandbox/c/home/**)" in s["permissions"]["deny"] and "Read(/proc/**)" in s["permissions"]["deny"]' "$T/sb/c/settings.json" && ok "settings.json valid, no apiKeyHelper, home state read-denied" || no "settings.json"
 python3 -I -c 'import json,sys; s=json.load(open(sys.argv[1])); assert s["customApiKeyResponses"] == {"approved": [sys.argv[2][-20:]], "rejected": []}, s' "$T/sb/c/claude/.claude.json" "openshell:resolve:env:v1_ANTHROPIC_API_KEY" \
   && ok "custom-key approval seeded with the placeholder's last 20 characters only" || no "customApiKeyResponses"
 grep -r -q -F 'openshell:resolve' "$T/sb/c" && no "placeholder prefix appears literally in the state tree" || ok "placeholder prefix not literal on disk"

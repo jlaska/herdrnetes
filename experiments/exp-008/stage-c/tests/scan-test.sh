@@ -60,13 +60,14 @@ grep -q "file=$T/dest/timeline.log" <<<"$out" && ok "export names the offending 
 
 # success path: no secrets; a node name and pod IP in an allowlisted pods file are redacted; scan passes
 E2=$HX/run/0202-0202/e; mkdir -p "$E2/obs" "$E2/samples"; rm -f "$RAW/codeword" "$RAW/r1-probe"
-echo "step=c0 ok" >"$E2/timeline.log"
+printf 'step=c0 ok\n--- %s/.cache/hxc/run/0202-0202/e/inv/pre/argo.txt\n' "$T" >"$E2/timeline.log"
 printf '{"items": [{"node": "%s", "podIP": "%s"}]}\n' "$NODE" "$IP" >"$E2/obs/c1-C-pods.json"
 printf '{"type":"ADDED","msg":"Readiness probe failed: dial tcp %s:5501: connect: refused"}\n' "$IP" >"$E2/samples/events-watch.jsonl"
 out=$(HOME=$T bash "$X" 0202-0202 "$T/dest2" 2>&1); rc=$?
 [ "$rc" = 0 ] && grep -q '^scan: clean' <<<"$out" && ok "clean export completes with a passing scan" || no "clean export rc=$rc: $out"
 grep -q '"node": "node-a"' "$T/dest2/obs/c1-C-pods.json" 2>/dev/null && ok "node name mapped to node-a" || no "node name not mapped"
 grep -q '"podIP": "<redacted>"' "$T/dest2/obs/c1-C-pods.json" 2>/dev/null && ok "pod IP redacted" || no "pod IP not redacted"
+grep -q -F -- '--- ~/.cache/hxc/run/0202-0202/e/inv/pre/argo.txt' "$T/dest2/timeline.log" && ok "local HOME path shortened to ~" || no "HOME path not shortened"
 grep -q 'dial tcp <private-ip>:5501' "$T/dest2/samples/events-watch.jsonl" 2>/dev/null && ! grep -q -F "$IP" "$T/dest2/samples/events-watch.jsonl" && ok "private IPv4 in an event message redacted" || no "event-message IP not redacted"
 out=$(HOME=$T bash "$X" 0202-0202 "$T/dest2" 2>&1); rc=$?
 [ "$rc" = 2 ] && [ -s "$T/dest2/timeline.log" ] && ok "existing DEST is never overwritten or removed" || no "existing DEST rc=$rc"

@@ -11,6 +11,7 @@ import http.server
 import json
 import os
 import pty
+import re
 import select
 import signal
 import sys
@@ -90,10 +91,17 @@ for s in (signal.SIGTERM, signal.SIGKILL):
     time.sleep(0.5)
 srv.shutdown()
 text = screen.decode("utf-8", "replace")
+# Ink positions words with cursor movements, not spaces: turn CSI n C (cursor forward) into n spaces, drop every
+# other CSI / OSC sequence, then collapse whitespace before matching (an unvalidated raw match missed the dialog).
+text = re.sub(r"\x1b\[(\d*)C", lambda m: " " * int(m.group(1) or 1), text)
+text = re.sub(r"\x1b\][^\x07\x1b]*(\x07|\x1b\\)", "", text)
+text = re.sub(r"\x1b\[[0-9;?<>=]*[ -/]*[@-~]", " ", text)
+text = re.sub(r"\x1b[@-_]", " ", text)
+text = re.sub(r"\s+", " ", text).lower()
 json.dump({
     "requests": reqs,
     "messages_posts": sum(1 for q in reqs if q["method"] == "POST" and q["path"].endswith("/v1/messages")),
-    "custom_key_dialog_seen": "custom API key" in text or "use this API key" in text,
+    "custom_key_dialog_seen": "custom api key" in text or "use this api key" in text,
     "screen_bytes": len(screen),
     "seconds": round(time.time() - t0, 1),
 }, open(out, "w"), indent=1)

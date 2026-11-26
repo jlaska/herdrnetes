@@ -56,6 +56,17 @@ v=$(verdict "$T/fixed/cap.json"); echo "     fixed launcher: $v"
 [[ $v == *" body=False "* ]] && ok "placeholder in no request body" || no "placeholder in a request body"
 [[ $v == *" dialog=False" ]] && ok "no custom-API-key approval dialog" || no "custom-API-key dialog shown"
 
+# positive control for the dialog detector (security review 2026-11-26): the same launcher with a NON-matching
+# approval entry must either show the custom-key dialog or send no model request. Otherwise "no dialog" above
+# proves nothing (e.g. the prompt is not rendered with a mock ANTHROPIC_BASE_URL, or the detector misses it).
+sed 's/"approved": \["%s"\]/"approved": ["%.0snot-the-placeholder-tail"]/' "$HERE/task/launch.sh" >"$T/unseeded-launch.sh"
+grep -q 'not-the-placeholder-tail' "$T/unseeded-launch.sh" || no "positive control: could not build the unseeded launcher"
+pkg unseeded "$T/unseeded-launch.sh" "$HERE/task/settings.json"
+capture unseeded
+v=$(verdict "$T/unseeded/cap.json" 2>/dev/null); echo "     unseeded launcher: $v"
+[[ $v == posts=0* ]] && ok "positive control: without the approval seed no model request is sent (the seed is what unblocks it)" || no "positive control: requests sent without the approval seed"
+[[ $v == *" dialog=True" ]] && ok "positive control: the dialog detector sees the custom-key dialog" || no "positive control: dialog detector did not see the dialog (detector not validated)"
+
 # negative control: the launcher and settings that ran in 1125-2153 (apiKeyHelper) must be caught
 git -C "$HERE" show bdbbd6f:experiments/exp-008/stage-c/task/launch.sh >"$T/old-launch.sh" 2>/dev/null \
   && git -C "$HERE" show bdbbd6f:experiments/exp-008/stage-c/task/settings.json >"$T/old-settings.json" 2>/dev/null \
