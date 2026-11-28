@@ -1,0 +1,23 @@
+{
+  "name": "os-supervisor-31e536c4-3d59-4a0f-83d6-65de6453c27d",
+  "uid": "98612dde-ed44-4c0d-b39a-ac8b0da95acc",
+  "phase": "Failed",
+  "del": "2026-11-28T02:23:05Z",
+  "st": [
+    {
+      "name": "supervisor",
+      "state": {
+        "terminated": {
+          "containerID": "containerd://c051878e1259af9bda7d2f39afd24afec45a7ca75d307d15f6d43277f79ec397",
+          "exitCode": 143,
+          "finishedAt": "2026-11-28T02:22:43Z",
+          "message": "limits [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:17:24.468Z OCSF EVENT [INFO] ssh relay open (channel_id=c9f97914-80b9-498f-a50c-cd9608f4f477, target=unix:/run/openshell/ssh.sock)\n2026-11-28T02:17:24.468Z OCSF SSH:OPEN [INFO] ALLOWED\n2026-11-28T02:17:36.278Z OCSF CONFIG:PUBLISHED [INFO] Policy DNS mapped api.anthropic.com resolved=160.79.104.10 synthetic=198.18.0.2 ports=443 mapping_id=cc46ed4e-8e04-4eb8-9c8a-4befa5867bf9\n2026-11-28T02:17:36.288Z OCSF NET:OPEN [INFO] ALLOWED /usr/local/bin/claude(0) -> api.anthropic.com:443 [policy:_provider_exp008c_anthropic engine:opa]\n2026-11-28T02:17:36.301Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:19:21.139Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:20:07.946Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:20:53.826Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:21:39.752Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:21:49.678Z OCSF EVENT [INFO] ssh relay closed (channel_id=c9f97914-80b9-498f-a50c-cd9608f4f477, target=unix:/run/openshell/ssh.sock)\n2026-11-28T02:22:25.607Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:22:43.923Z WARN openshell_supervisor: Isolation boundary did not stop in time; finishing shutdown\n",
+          "reason": "Error",
+          "startedAt": "2026-11-28T02:13:28Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    }
+  ]
+}

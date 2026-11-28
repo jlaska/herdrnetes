@@ -1,0 +1,19 @@
+mode=fresh
+launch=1
+pid=71
+start=75708802
+nonce=4b7bcc150b80d1ba
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+utc=2026-11-28T02:06:16.864Z
+uid=10001
+sid=d48f3ecf-3ad4-4f56-b82e-2794223d52ad
+state_id_sha256=16cfc7e569dcd8c7b13f31aa1895fb3cbd4caabb95168c7c22db22bdadf67425
+key_form=placeholder
+node_extra_ca=readable
+claude_sha256=604d29a6869409106b6a1110bdadcc8b72e8654a5a865d23258f938a696e348e
+pkg_sha256=5f524cae872a2c2c457f6f66ed2f401f6a8655e1e08b9f041c1b1e43a481c5d1
+step_sleep=45
+claude_code_env_names=none
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+uid=10001
+proc=71 start=75708802 ppid=1 nonce=4b7bcc150b80d1ba keyref_form=absent key_form=placeholder

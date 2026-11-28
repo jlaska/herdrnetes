@@ -1,0 +1,24 @@
+{
+  "pvc_name": "workspace-default--exp008c4-1127-2105",
+  "pvc_uid": "ccb74a0a-df86-42bc-8577-b8413dc2d6ab",
+  "pvc_deleting": false,
+  "pvc_owner_kinds": [
+    "Sandbox"
+  ],
+  "pvc_finalizers": [
+    "kubernetes.io/pvc-protection"
+  ],
+  "pv": "pvc-ccb74a0a-df86-42bc-8577-b8413dc2d6ab",
+  "pv_uid": "bb6e1a6c-661f-45d1-a169-02263eae17fa",
+  "pv_deleting": false,
+  "reclaim": "Delete",
+  "va": [
+    {
+      "node": "node-a",
+      "attacher": "driver.longhorn.io",
+      "attached": true,
+      "deleting": false
+    }
+  ],
+  "volume_handle_sha256_12": "32b644500a7e"
+}

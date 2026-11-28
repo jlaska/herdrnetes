@@ -1,0 +1,8 @@
+attempts=6 last=attempt n=6 t=2026-11-28T02:10:13.589Z prior_attempts=0 sleep=45 pid=2342 ppid=2341 pstart=75732477 pcmd=82d345caf9c2 kf=absent ak=placeholder
+progress=6 last=done n=6 t=2026-11-28T02:10:58.595Z pid=2342 ppid=2341 pstart=75732477 pcmd=82d345caf9c2 kf=absent ak=placeholder
+refusals=0 last=
+ledger=6 last=n=6 t=2026-11-28T02:10:58.595Z tokhash=cf6a5180e792fd59 prev=f756e94aca9491e0
+locks=0 last=
+transcripts=1
+tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=47 bytes=42953
+lock=free

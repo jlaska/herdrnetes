@@ -1,0 +1,1 @@
+R=c4a-R1 in_flight_step=7 age_at_R_ms=3323 age_at_recheck_ms=5318 attempts_considered=1

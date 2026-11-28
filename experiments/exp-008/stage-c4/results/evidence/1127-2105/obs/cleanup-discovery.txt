@@ -1,0 +1,2 @@
+discovery=present reason=none cli_rc=0 cr_total=1 cr_matching=1
+delete=issued delete_rc=0

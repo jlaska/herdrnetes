@@ -1,0 +1,8 @@
+attempts=11 last=attempt n=10 t=2026-11-28T02:21:40.571Z prior_attempts=0 sleep=45 pid=6260 ppid=6259 pstart=75801175 pcmd=04a15e74e039 kf=absent ak=placeholder
+progress=9 last=done n=9 t=2026-11-28T02:21:39.723Z pid=5746 ppid=5745 pstart=75796590 pcmd=9f8972d9fe5e kf=absent ak=placeholder
+refusals=0 last=
+ledger=9 last=n=9 t=2026-11-28T02:21:39.723Z tokhash=aabf80d338002c6b prev=06e10d087d376019
+locks=1 last=stale-lock-broken n=7 t=2026-11-28T02:19:22.880Z owner=2921 owner_start=75737094 owner_boot=6ee460b6-0c61-4945-a911-21518ab9a858 boot=6ee460b6-0c61-4945-a911-21518ab9a858 pid=4744 ppid=4743 pstart=75787407 pcmd=b4cae4d37784 kf=absent ak=placeholder
+transcripts=1
+tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=83 bytes=77804
+lock=held

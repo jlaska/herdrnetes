@@ -1,0 +1,3 @@
+tr=-sandbox-c-repo/d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=48 bytes=44467 task_logs=copied
+{"prefix_bytes": 44467, "prefix_sha256": "ddfb38b2550c23cba160897036361a96342373ea509b5e6f9c2fc7f64000ac5b"}
+{"bad_lines": [], "chain_ok": true, "last_line_sha256": "9daeeadf34749a404f77859c87cf7da01e743f913eb0f0a6d7549cf04b76b931", "ledger_lines": 6}

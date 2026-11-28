@@ -1,0 +1,81 @@
+2026-11-28T02:06:19.922Z attempts=0 last= progress=0 last= refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=12 bytes=7832 lock=free 
+2026-11-28T02:06:33.064Z attempts=1 last_t=2026-11-28T02:06:20.582Z progress=0 last= refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=14 bytes=9428 lock=held 
+2026-11-28T02:06:46.224Z attempts=1 last_t=2026-11-28T02:06:20.582Z progress=0 last= refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=14 bytes=9428 lock=held 
+2026-11-28T02:06:59.340Z attempts=1 last_t=2026-11-28T02:06:20.582Z progress=0 last= refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=15 bytes=9771 lock=held 
+2026-11-28T02:07:12.985Z attempts=2 last_t=2026-11-28T02:07:08.494Z progress=1 last_t=2026-11-28T02:07:05.589Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=24 bytes=21184 lock=held 
+2026-11-28T02:07:26.533Z attempts=2 last_t=2026-11-28T02:07:08.494Z progress=1 last_t=2026-11-28T02:07:05.589Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=24 bytes=21184 lock=held 
+2026-11-28T02:07:39.644Z attempts=2 last_t=2026-11-28T02:07:08.494Z progress=1 last_t=2026-11-28T02:07:05.589Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=24 bytes=21184 lock=held 
+2026-11-28T02:07:52.680Z attempts=2 last_t=2026-11-28T02:07:08.494Z progress=1 last_t=2026-11-28T02:07:05.589Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=24 bytes=21184 lock=held 
+2026-11-28T02:08:05.829Z attempts=3 last_t=2026-11-28T02:07:54.294Z progress=2 last_t=2026-11-28T02:07:53.501Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=28 bytes=27228 lock=held 
+2026-11-28T02:08:18.864Z attempts=3 last_t=2026-11-28T02:07:54.294Z progress=2 last_t=2026-11-28T02:07:53.501Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=28 bytes=27228 lock=held 
+2026-11-28T02:08:32.235Z attempts=3 last_t=2026-11-28T02:07:54.294Z progress=2 last_t=2026-11-28T02:07:53.501Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=28 bytes=27228 lock=held 
+2026-11-28T02:08:45.216Z attempts=4 last_t=2026-11-28T02:08:41.064Z progress=3 last_t=2026-11-28T02:08:39.314Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=32 bytes=31383 lock=held 
+2026-11-28T02:08:58.264Z attempts=4 last_t=2026-11-28T02:08:41.064Z progress=3 last_t=2026-11-28T02:08:39.314Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=32 bytes=31383 lock=held 
+2026-11-28T02:09:11.498Z attempts=4 last_t=2026-11-28T02:08:41.064Z progress=3 last_t=2026-11-28T02:08:39.314Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=32 bytes=31383 lock=held 
+2026-11-28T02:09:24.575Z attempts=4 last_t=2026-11-28T02:08:41.064Z progress=3 last_t=2026-11-28T02:08:39.314Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=32 bytes=31383 lock=held 
+2026-11-28T02:09:37.701Z attempts=5 last_t=2026-11-28T02:09:27.768Z progress=4 last_t=2026-11-28T02:09:26.071Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=40 bytes=36153 lock=held 
+2026-11-28T02:09:50.816Z attempts=5 last_t=2026-11-28T02:09:27.768Z progress=4 last_t=2026-11-28T02:09:26.071Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=40 bytes=36153 lock=held 
+2026-11-28T02:10:04.078Z attempts=5 last_t=2026-11-28T02:09:27.768Z progress=4 last_t=2026-11-28T02:09:26.071Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=40 bytes=36153 lock=held 
+2026-11-28T02:10:17.290Z attempts=6 last_t=2026-11-28T02:10:13.589Z progress=5 last_t=2026-11-28T02:10:12.775Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=44 bytes=40310 lock=held 
+2026-11-28T02:10:30.360Z attempts=6 last_t=2026-11-28T02:10:13.589Z progress=5 last_t=2026-11-28T02:10:12.775Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=44 bytes=40310 lock=held 
+2026-11-28T02:10:43.678Z attempts=6 last_t=2026-11-28T02:10:13.589Z progress=5 last_t=2026-11-28T02:10:12.775Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=44 bytes=40310 lock=held 
+2026-11-28T02:10:56.970Z attempts=6 last_t=2026-11-28T02:10:13.589Z progress=5 last_t=2026-11-28T02:10:12.775Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=44 bytes=40310 lock=held 
+2026-11-28T02:11:10.096Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:11:24.181Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:11:36.828Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:11:49.550Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:12:02.110Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:12:14.727Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:12:27.333Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:12:39.756Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:12:52.240Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:13:04.804Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:13:17.306Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:13:29.924Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:13:42.651Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:13:55.850Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:14:08.881Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:14:21.904Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:14:35.008Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:14:48.175Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:15:01.282Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:15:14.278Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:15:27.608Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:15:40.957Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:15:54.090Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:16:07.176Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:16:20.962Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:16:33.972Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:16:47.029Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:17:00.231Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:17:13.326Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:17:26.437Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=49 bytes=44557 lock=held 
+2026-11-28T02:17:39.699Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:17:52.723Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:18:05.829Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:18:18.928Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:18:32.004Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:18:45.184Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:18:58.402Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:19:11.973Z attempts=7 last_t=2026-11-28T02:10:59.749Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=61 bytes=55865 lock=held 
+2026-11-28T02:19:25.209Z attempts=8 last_t=2026-11-28T02:19:22.896Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=67 bytes=63018 lock=held 
+2026-11-28T02:19:38.227Z attempts=8 last_t=2026-11-28T02:19:22.896Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=67 bytes=63018 lock=held 
+2026-11-28T02:19:51.377Z attempts=8 last_t=2026-11-28T02:19:22.896Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=67 bytes=63018 lock=held 
+2026-11-28T02:20:04.520Z attempts=8 last_t=2026-11-28T02:19:22.896Z progress=6 last_t=2026-11-28T02:10:58.595Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=67 bytes=63018 lock=held 
+2026-11-28T02:20:17.634Z attempts=9 last_t=2026-11-28T02:20:08.792Z progress=7 last_t=2026-11-28T02:20:07.902Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=71 bytes=69057 lock=held 
+2026-11-28T02:20:30.887Z attempts=9 last_t=2026-11-28T02:20:08.792Z progress=7 last_t=2026-11-28T02:20:07.902Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=71 bytes=69057 lock=held 
+2026-11-28T02:20:44.004Z attempts=9 last_t=2026-11-28T02:20:08.792Z progress=7 last_t=2026-11-28T02:20:07.902Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=71 bytes=69057 lock=held 
+2026-11-28T02:20:57.030Z attempts=10 last_t=2026-11-28T02:20:54.716Z progress=8 last_t=2026-11-28T02:20:53.798Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=75 bytes=73214 lock=held 
+2026-11-28T02:21:10.685Z attempts=10 last_t=2026-11-28T02:20:54.716Z progress=8 last_t=2026-11-28T02:20:53.798Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=75 bytes=73214 lock=held 
+2026-11-28T02:21:24.149Z attempts=10 last_t=2026-11-28T02:20:54.716Z progress=8 last_t=2026-11-28T02:20:53.798Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=75 bytes=73214 lock=held 
+2026-11-28T02:21:37.254Z attempts=10 last_t=2026-11-28T02:20:54.716Z progress=8 last_t=2026-11-28T02:20:53.798Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=75 bytes=73214 lock=held 
+2026-11-28T02:21:50.237Z attempts=11 last_t=2026-11-28T02:21:40.571Z progress=9 last_t=2026-11-28T02:21:39.723Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=83 bytes=77804 lock=held 
+2026-11-28T02:22:03.369Z attempts=11 last_t=2026-11-28T02:21:40.571Z progress=9 last_t=2026-11-28T02:21:39.723Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=83 bytes=77804 lock=held 
+2026-11-28T02:22:17.269Z attempts=11 last_t=2026-11-28T02:21:40.571Z progress=9 last_t=2026-11-28T02:21:39.723Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=83 bytes=77804 lock=held 
+2026-11-28T02:22:30.439Z attempts=12 last_t=2026-11-28T02:22:26.383Z progress=10 last_t=2026-11-28T02:22:25.578Z refusals=0 last= tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=87 bytes=81969 lock=held 
+2026-11-28T02:22:43.829Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:22:58.859Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:23:13.834Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:23:26.170Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:23:38.445Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
+2026-11-28T02:23:51.474Z ERR workload pod labels/UID do not match this sandbox's recorded workload 
