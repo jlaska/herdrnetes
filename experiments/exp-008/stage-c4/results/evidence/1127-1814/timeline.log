@@ -1,0 +1,15 @@
+2026-11-27T23:14:19.447Z [pre] pre OK: Argo Synced/Healthy; digests match Stage B; gateway Ready replicas=1 pod=7d12222c-6ed6-496b-b5a8-d405e36d2e54; no Sandbox CRs; provider exp008c-anthropic present; gitops=19f51e4a15ce91fc6fecabbc0b8ae2398ab444d2
+2026-11-27T23:14:29.016Z [sampler-start] sampler started pid=4025593 and producing data
+2026-11-27T23:14:30.043Z [c0-create] MUTATE openshell sandbox create --name exp008c4-1127-1814
+2026-11-27T23:14:30.118Z [c0-create] create rc=1
+2026-11-27T23:14:30.185Z [c0-create] STOP: C0 create failed rc=1: 2026-11-27T23:14:30.043Z [c0-create] MUTATE openshell sandbox create --name exp008c4-1127-1814 Error:   × code: 'Client specified an invalid argument', message: "spec.command[3]   │ exceeds 32768 byte limit"  
+2026-11-27T23:14:39.730Z [cleanup] cleanup after STOP: 2026-11-27T23:14:30.186Z c0-create: C0 create failed rc=1: 2026-11-27T23:14:30.043Z [c0-create] MUTATE openshell sandbox create --name exp008c4-1127-1814 Error:   × code: 'Client specified an invalid argument', message: "spec.command[3]   │ exceeds 32768 byte limit"  
+2026-11-27T23:14:40.022Z [cleanup] cleanup: no sandbox id recorded or resolvable; checking residue by name only
+2026-11-27T23:14:41.067Z [cleanup] cleanup: final snapshot incomplete (no readable workload is expected after C4a/while Stopped)
+2026-11-27T23:14:41.485Z [cleanup] MUTATE openshell sandbox delete exp008c4-1127-1814
+2026-11-27T23:14:41.594Z [cleanup] sandbox delete rc=0
+2026-11-27T23:14:42.165Z [cleanup] experiment objects gone (pods,pvc,secret,service,networkpolicy,configmap,serviceaccount,role,rolebinding by labels and names, Sandbox CRs, PVs and VolumeAttachments of the recorded PVCs, Cilium policies)
+2026-11-27T23:19:00.218Z [post] post run 1: restoration=matches-pre (gateway generation and pod unchanged; experiment provider and profile removed); post_run=1 gw_sts_generation=explained pre=14 post=14 scale_ops=0 gw_pod_uid=unchanged providers=removed profiles=removed 
+2026-11-27T23:19:03.304Z [sampler-stop] sampler stop requested
+2026-11-27T23:19:03.448Z [logout] MUTATE openshell gateway logout exp008c
+2026-11-27T23:19:03.454Z [logout] gateway logout rc=0

@@ -1,0 +1,1 @@
+2026-11-27T23:14:30.186Z c0-create: C0 create failed rc=1: 2026-11-27T23:14:30.043Z [c0-create] MUTATE openshell sandbox create --name exp008c4-1127-1814 Error:   × code: 'Client specified an invalid argument', message: "spec.command[3]   │ exceeds 32768 byte limit"  

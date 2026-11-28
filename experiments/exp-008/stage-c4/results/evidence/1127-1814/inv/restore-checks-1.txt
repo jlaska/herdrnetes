@@ -1,0 +1,5 @@
+post_run=1
+gw_sts_generation=explained pre=14 post=14 scale_ops=0
+gw_pod_uid=unchanged
+providers=removed
+profiles=removed
