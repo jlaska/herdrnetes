@@ -923,7 +923,7 @@ c4c)
   kx X2 "$E/obs/c4c-final-T.txt" 15
   names=$(sed -n 's/^tr=\([^ ]*\) .*/\1/p' "$E/obs/c4c-final-T.txt" | jq -R . | jq -s -c .)
   jq -n --slurpfile c4b "$E/metrics/c4b.json" --arg rd "$L/task/c4a-R" --arg fd "$L/task/c4c-final" --arg rt "$L/tr/c4a-R.jsonl" \
-    --arg pt "$L/task/c4b-pre/transcript.jsonl" --arg ft "$L/tr/c4c-final.jsonl" --argjson names "${names:-[]}" --arg rn "$(basename "$(cat "$E/tr_rel")")" \
+    --arg pt "$L/task/c4b-pre/transcript.jsonl" --arg ft "$L/tr/c4c-final.jsonl" --argjson names "${names:-[]}" --arg rn "$(basename -- "$(cat "$E/tr_rel")")" \
     --arg proc "$proc" --argjson refused "$(grep -q '^launcher_refusal=none' "$E/obs/c4b-result.txt" && echo false || echo true)" \
     --arg tok "$(cat "$L/c4c-probe" 2>/dev/null)" --arg cw "$(cat "$L/codeword")" --argjson last "[$(( $(jq -r '.in_flight_step // 1' "$E/metrics/c4b.json") - 1 ))]" \
     --argjson ctl "$(jq -r '.pass // false' "$E/metrics/c0-control.json")" --argjson m "$m" --argjson st "$start_t" \

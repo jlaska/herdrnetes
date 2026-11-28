@@ -9,7 +9,7 @@ sh_() { local o s; o=$(bash "$1" </dev/null 2>&1); s=$?
   printf '%-28s ok=%s fail=%s %s\n' "$(basename "$1")" "$(grep -c '^ok' <<<"$o")" "$(grep -c '^FAIL' <<<"$o")" "$( [ $s = 2 ] && echo NOT-RUN || { [ $s = 0 ] && echo PASS || echo FAILED; })"
   [ $s = 0 ] || [ $s = 2 ] || rc=1; [ $s = 2 ] && grep 'NOT RUN' <<<"$o"; }
 echo "== C4 Phase 1 (stage-c4)"; printf '%-28s ' test_metrics4.py; py "$C4"
-for t in launch4 step4 allowlist4 wrapper4 transport4 c0c3-unchanged resume-regression; do sh_ "$C4/$t-test.sh"; done
+for t in launch4 step4 allowlist4 wrapper4 transport4 c4c-bundle c0c3-unchanged resume-regression; do sh_ "$C4/$t-test.sh"; done
 echo "== C0-C3 (stage-c, unchanged)"; printf '%-28s ' test_stagec.py; py "$C0"
 for t in launch allowlist wrapper scan restore sampler-gate header-capture; do sh_ "$C0/$t-test.sh"; done
 echo "== static"; for f in "$R"/experiments/exp-008/stage-c4/{stagec4.sh,launcher4.sh,task/launch.sh,task/step.sh} "$C4"/*.sh; do bash -n "$f" || rc=1; done
