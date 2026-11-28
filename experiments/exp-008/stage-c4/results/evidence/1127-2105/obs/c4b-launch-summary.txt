@@ -1,0 +1,64 @@
+## identity-1
+mode=fresh
+launch=1
+pid=71
+start=75708802
+nonce=4b7bcc150b80d1ba
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+utc=2026-11-28T02:06:16.864Z
+uid=10001
+sid=d48f3ecf-3ad4-4f56-b82e-2794223d52ad
+state_id_sha256=16cfc7e569dcd8c7b13f31aa1895fb3cbd4caabb95168c7c22db22bdadf67425
+key_form=placeholder
+node_extra_ca=readable
+claude_sha256=604d29a6869409106b6a1110bdadcc8b72e8654a5a865d23258f938a696e348e
+pkg_sha256=5f524cae872a2c2c457f6f66ed2f401f6a8655e1e08b9f041c1b1e43a481c5d1
+step_sleep=45
+claude_code_env_names=none
+## identity-2
+mode=resume
+launch=2
+pid=71
+start=75753208
+nonce=dd64312b1638e451
+boot_id=6ee460b6-0c61-4945-a911-21518ab9a858
+utc=2026-11-28T02:13:40.905Z
+uid=10001
+sid=d48f3ecf-3ad4-4f56-b82e-2794223d52ad
+state_id_sha256=16cfc7e569dcd8c7b13f31aa1895fb3cbd4caabb95168c7c22db22bdadf67425
+key_form=placeholder
+node_extra_ca=readable
+claude_sha256=604d29a6869409106b6a1110bdadcc8b72e8654a5a865d23258f938a696e348e
+pkg_sha256=5f524cae872a2c2c457f6f66ed2f401f6a8655e1e08b9f041c1b1e43a481c5d1
+step_sleep=45
+claude_code_env_names=none
+## precheck-2
+mode=resume
+launch=2
+utc=2026-11-28T02:13:41.826Z
+sid=d48f3ecf-3ad4-4f56-b82e-2794223d52ad
+state_id_sha256=16cfc7e569dcd8c7b13f31aa1895fb3cbd4caabb95168c7c22db22bdadf67425
+transcript=-sandbox-c-repo/d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl
+transcript_bytes=44467
+transcript_sha256=ddfb38b2550c23cba160897036361a96342373ea509b5e6f9c2fc7f64000ac5b
+attempts=7 sha256=4bb1d30f7bb9847a22b5958c0739999cb56b64403fa1f96123c634717721c186
+progress=6 sha256=5e549ab6a318d44f0c6153f25faf5ba8ace6d389bbdf89754abd1f814a28752a
+refusals=absent sha256=
+ledger=6 sha256=1dd9fdddfd945fe0b10ff97d9f111e1ec4d3ccf3746adae927de19e712ccd0ff
+locks=absent sha256=
+next_token_hash_file_sha256=734511fc9b222c707921c14aaf4d1f03d6b1e28fddac1a39f451d177ceac4c25
+lock=held owner=2921:75737094:6ee460b6-0c61-4945-a911-21518ab9a858
+ledger_chain=ok
+step_sh_sha256=f740fa7d34a2a3e43fb77b81ba14887ee36f777ca57f120532f36508253f41f8
+settings_sha256=45683e27f5ae36279b5673a68c716a72f5e93f391f0eeccaef721af1592c850c
+claude_code_env_names=none
+claude_json_before=c749bd39ba30ff55465c883934de581945411b24fe38ba725fabf79ab55c2e88,f89be8a04312b88ff0fe015f3dd21a57a3338e13d7e354f19950813521d79ab3
+claude_json_after=c749bd39ba30ff55465c883934de581945411b24fe38ba725fabf79ab55c2e88,f89be8a04312b88ff0fe015f3dd21a57a3338e13d7e354f19950813521d79ab3
+approval_tail=same,same
+## ls
+identity
+identity-1
+identity-2
+pre-2
+precheck-2
+sid

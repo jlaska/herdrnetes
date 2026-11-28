@@ -1,0 +1,193 @@
+{
+  "items": [
+    {
+      "name": "default--exp008c4-1127-2105",
+      "uid": "5f2991bd-d468-4953-ab75-5e0b750ef308",
+      "labels": {
+        "agents.x-k8s.io/sandbox-name-hash": "76489f45",
+        "openshell.ai/boundary-pair": "31e536c4-3d59-4a0f-83d6-65de6453c27d",
+        "openshell.ai/boundary-role": "workload"
+      },
+      "annotations": {},
+      "ownerReferences": [
+        {
+          "kind": "Sandbox",
+          "name": "default--exp008c4-1127-2105",
+          "uid": "ca9ff121-277c-4769-8b42-e49385df689f"
+        }
+      ],
+      "deletionTimestamp": null,
+      "creationTimestamp": "2026-11-28T02:13:27Z",
+      "node": "node-a",
+      "restartPolicy": "Never",
+      "phase": "Running",
+      "conditions": [
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:39Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "PodReadyToStartContainers"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:40Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "Initialized"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:40Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:40Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "ContainersReady"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:27Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "PodScheduled"
+        }
+      ],
+      "containerStatuses": [
+        {
+          "name": "openshell-sandbox-bootstrap",
+          "containerID": "containerd://b4bc53630081dc7241ad7c038235ebbff0775dc1d96ca96b820b2a82a8637c5c",
+          "imageID": "ghcr.io/nvidia/openshell/sandbox@sha256:e57d07cd6cc1fc314b80368d6b51ec6fbf825fb62cd8f081312941180846866f",
+          "restartCount": 0,
+          "ready": true,
+          "started": false,
+          "state": {
+            "terminated": {
+              "containerID": "containerd://b4bc53630081dc7241ad7c038235ebbff0775dc1d96ca96b820b2a82a8637c5c",
+              "exitCode": 0,
+              "finishedAt": "2026-11-28T02:13:39Z",
+              "reason": "Completed",
+              "startedAt": "2026-11-28T02:13:39Z"
+            }
+          },
+          "lastState": {}
+        },
+        {
+          "name": "workspace-init",
+          "containerID": "containerd://7014e66e8de877fbe911baeeceb3fecd0cbaa093728c9a4666aa6bcecf9c9fb3",
+          "imageID": "ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18",
+          "restartCount": 0,
+          "ready": true,
+          "started": false,
+          "state": {
+            "terminated": {
+              "containerID": "containerd://7014e66e8de877fbe911baeeceb3fecd0cbaa093728c9a4666aa6bcecf9c9fb3",
+              "exitCode": 0,
+              "finishedAt": "2026-11-28T02:13:39Z",
+              "reason": "Completed",
+              "startedAt": "2026-11-28T02:13:39Z"
+            }
+          },
+          "lastState": {}
+        },
+        {
+          "name": "agent",
+          "containerID": "containerd://af6cb4b257c5b24866297a0d35e8dac236112a66239171c1a96aa1da559bb6db",
+          "imageID": "ghcr.io/jlaska/herdrnetes-exec@sha256:b70f90a6fc045d45cdef4642e00fa188c167b95a976cfac2f7fea73de9ff4f18",
+          "restartCount": 0,
+          "ready": true,
+          "started": true,
+          "state": {
+            "running": {
+              "startedAt": "2026-11-28T02:13:40Z"
+            }
+          },
+          "lastState": {}
+        }
+      ]
+    },
+    {
+      "name": "os-supervisor-31e536c4-3d59-4a0f-83d6-65de6453c27d",
+      "uid": "98612dde-ed44-4c0d-b39a-ac8b0da95acc",
+      "labels": {
+        "openshell.ai/boundary-pair": "31e536c4-3d59-4a0f-83d6-65de6453c27d",
+        "openshell.ai/boundary-role": "supervisor",
+        "openshell.ai/component": "supervisor",
+        "openshell.ai/gateway-id": "openshell",
+        "openshell.ai/managed-by": "openshell",
+        "openshell.ai/sandbox-id": "31e536c4-3d59-4a0f-83d6-65de6453c27d"
+      },
+      "annotations": {},
+      "ownerReferences": [
+        {
+          "kind": "Sandbox",
+          "name": "default--exp008c4-1127-2105",
+          "uid": "ca9ff121-277c-4769-8b42-e49385df689f"
+        }
+      ],
+      "deletionTimestamp": null,
+      "creationTimestamp": "2026-11-28T02:13:27Z",
+      "node": "node-a",
+      "restartPolicy": "Never",
+      "phase": "Running",
+      "conditions": [
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:28Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "PodReadyToStartContainers"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:27Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "Initialized"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:41Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:41Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "ContainersReady"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-11-28T02:13:27Z",
+          "observedGeneration": 2,
+          "status": "True",
+          "type": "PodScheduled"
+        }
+      ],
+      "containerStatuses": [
+        {
+          "name": "supervisor",
+          "containerID": "containerd://c051878e1259af9bda7d2f39afd24afec45a7ca75d307d15f6d43277f79ec397",
+          "imageID": "ghcr.io/nvidia/openshell/supervisor@sha256:f1ec231b5dbe5b6a40c33acb2ac847995aabb959a56134ef6d7d7aa4f43199d3",
+          "restartCount": 0,
+          "ready": true,
+          "started": true,
+          "state": {
+            "running": {
+              "startedAt": "2026-11-28T02:13:28Z"
+            }
+          },
+          "lastState": {}
+        }
+      ]
+    }
+  ]
+}

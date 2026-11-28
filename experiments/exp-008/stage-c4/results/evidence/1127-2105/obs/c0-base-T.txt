@@ -1,0 +1,8 @@
+attempts=1 last=attempt n=1 t=2026-11-28T02:06:20.582Z prior_attempts=0 sleep=45 pid=234 ppid=233 pstart=75709176 pcmd=41bfe7a36eff kf=absent ak=placeholder
+progress=0 last=
+refusals=0 last=
+ledger=0 last=
+locks=0 last=
+transcripts=1
+tr=d48f3ecf-3ad4-4f56-b82e-2794223d52ad.jsonl lines=14 bytes=9428
+lock=held

@@ -1,0 +1,23 @@
+{
+  "name": "os-supervisor-31e536c4-3d59-4a0f-83d6-65de6453c27d",
+  "uid": "f52e2ecc-9ea1-4578-921d-9f44a681d869",
+  "phase": "Failed",
+  "del": null,
+  "st": [
+    {
+      "name": "supervisor",
+      "state": {
+        "terminated": {
+          "containerID": "containerd://2268447f43f2b9e718769810965034481c2814db3c3670f86fae691eda1b016d",
+          "exitCode": 1,
+          "finishedAt": "2026-11-28T02:11:35Z",
+          "message": "NIED /usr/bin/python3.13(0) -> api.anthropic.com:443 [reason:transparent_tcp_policy_denied]\n2026-11-28T02:06:34.850Z OCSF EVENT [INFO] ssh relay closed (channel_id=dfc1a312-6ca3-497b-9976-5e98a380de2c, target=unix:/run/openshell/ssh.sock)\n2026-11-28T02:06:36.838Z INFO openshell_supervisor: Flushed denial analysis to gateway\n2026-11-28T02:06:45.279Z OCSF EVENT [INFO] ssh relay open (channel_id=472b24a3-f869-421f-82ce-333498291149, target=unix:/run/openshell/ssh.sock)\n2026-11-28T02:06:45.279Z OCSF SSH:OPEN [INFO] ALLOWED\n2026-11-28T02:07:05.625Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:07:53.530Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:08:39.361Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:09:26.095Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:10:12.800Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:10:21.812Z OCSF EVENT [INFO] ssh relay closed (channel_id=472b24a3-f869-421f-82ce-333498291149, target=unix:/run/openshell/ssh.sock)\n2026-11-28T02:10:58.620Z OCSF HTTP:POST [INFO] ALLOWED POST https://api.anthropic.com/v1/messages [policy:_provider_exp008c_anthropic engine:l7] [http_event_kind:decision request_sequence:1]\n2026-11-28T02:11:35.465Z WARN openshell_supervisor_network::policy_dns::runtime: mediated DNS accept failed; retrying\nError:   × boundary terminated: boundary lost during wait: start boundary gRPC\n  │ channel: transport error\n\n",
+          "reason": "Error",
+          "startedAt": "2026-11-28T02:06:00Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    }
+  ]
+}

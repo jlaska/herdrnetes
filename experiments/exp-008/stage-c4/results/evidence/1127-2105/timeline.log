@@ -1,0 +1,30 @@
+2026-11-28T02:05:43.409Z [pre] pre OK: Argo Synced/Healthy; digests match Stage B; gateway Ready replicas=1 pod=7d12222c-6ed6-496b-b5a8-d405e36d2e54; no Sandbox CRs; provider exp008c-anthropic present; gitops=19f51e4a15ce91fc6fecabbc0b8ae2398ab444d2
+2026-11-28T02:05:58.469Z [sampler-start] sampler started pid=334163 and producing data
+2026-11-28T02:05:59.526Z [c0-create] C0 launch check: launch_check=pass argc=5 launch_elem_bytes=7,2,334,10116,64 max_elem_bytes=10116 elem_limit=32768 payload_bytes=10116 payload_budget=24576 decodes_to_pkg_sha256=yes deterministic=yes reasons=none
+2026-11-28T02:05:59.566Z [c0-create] MUTATE openshell sandbox create --name exp008c4-1127-2105
+2026-11-28T02:06:16.850Z [c0-create] create rc=0
+2026-11-28T02:06:17.486Z [c0-create] C0 created id=31e536c4-3d59-4a0f-83d6-65de6453c27d cr=openshell/default--exp008c4-1127-2105 ready_ms=17571 wuid=ba495713-1977-42d3-84d4-93fc55ffa082 pvc=ccb74a0a-df86-42bc-8577-b8413dc2d6ab
+2026-11-28T02:06:34.679Z [c0-baseline] MUTATE openshell sandbox exec exp008c4-1127-2105 --no-tty
+2026-11-28T02:06:44.113Z [c0-baseline] MUTATE openshell sandbox connect exp008c4-1127-2105 (tmux session main)
+2026-11-28T02:06:56.512Z [c0-baseline] MUTATE type into main: control-line chars=191 sha256=1a6507c6cf53
+2026-11-28T02:10:21.482Z [c0-baseline] MUTATE detach main (Ctrl-P Ctrl-Q)
+2026-11-28T02:10:21.862Z [c0-baseline] C0 baseline: P=71 75708802 4b7bcc150b80d1ba 6ee460b6-0c61-4945-a911-21518ab9a858 6ee460b6-0c61-4945-a911-21518ab9a858  W=ba495713-1977-42d3-84d4-93fc55ffa082 openshell-sandbox-bootstrap=containerd://30d3efccd6c6fcbccddca8fed6e70f7dc95ca2ec6ce5f98f62b0d1b630fc1c9a/rc0,workspace-init=containerd://1ec7da8bf511ee6631d1558fe4ca603b8f493eefda13bb7f7c1713978820b1eb/rc0,agent=containerd://e7c0b4fd8c7614a7089158d6236111ae43f7b76d2c30d1cc87b88b2af6c8859d/rc0 M=46.704s control={"delivered":true,"reply":true,"format_ok":true,"codeword_ok":true,"last_ok":true,"tool_use_before_reply":0,"pass":true}
+2026-11-28T02:11:03.136Z [c4a] C4a: step 7 in flight (age 3323 ms); reference snapshot c4a-R1
+2026-11-28T02:11:05.390Z [c4a] MUTATE kubectl -n openshell delete pod default--exp008c4-1127-2105 --grace-period=1 --wait=false (uid ba495713-1977-42d3-84d4-93fc55ffa082)
+2026-11-28T02:13:06.589Z [c4a] C4a done
+2026-11-28T02:13:25.985Z [c4b] MUTATE openshell sandbox stop exp008c4-1127-2105
+2026-11-28T02:13:27.129Z [c4b] MUTATE openshell sandbox start exp008c4-1127-2105
+2026-11-28T02:13:43.443Z [c4b] C4b done
+2026-11-28T02:17:23.283Z [c4c] MUTATE openshell sandbox connect exp008c4-1127-2105 (tmux session r1)
+2026-11-28T02:17:35.643Z [c4c] MUTATE type into r1: probe chars=165 sha256=208faf8d8d7f
+2026-11-28T02:19:20.552Z [c4c] MUTATE type into r1: continue chars=18 sha256=15483b8b9a59
+2026-11-28T02:21:49.354Z [c4c] MUTATE detach r1 (Ctrl-P Ctrl-Q)
+2026-11-28T02:21:50.875Z [c4c] C4c done
+2026-11-28T02:22:34.562Z [cleanup] cleanup: discovery=present reason=none cli_rc=0 cr_total=1 cr_matching=1
+2026-11-28T02:22:35.799Z [cleanup] MUTATE openshell sandbox delete exp008c4-1127-2105
+2026-11-28T02:22:39.206Z [cleanup] sandbox delete rc=0
+2026-11-28T02:22:48.494Z [cleanup] experiment objects gone (pods,pvc,secret,service,networkpolicy,configmap,serviceaccount,role,rolebinding by labels and names, Sandbox CRs, PVs and VolumeAttachments of the recorded PVCs, Cilium policies)
+2026-11-28T02:24:00.863Z [post] post run 1: restoration=matches-pre (gateway generation and pod unchanged; experiment provider and profile removed); post_run=1 gw_sts_generation=explained pre=14 post=14 scale_ops=0 gw_pod_uid=unchanged providers=removed profiles=removed 
+2026-11-28T02:24:03.951Z [sampler-stop] sampler stop requested
+2026-11-28T02:24:04.037Z [logout] MUTATE openshell gateway logout exp008c
+2026-11-28T02:24:04.044Z [logout] gateway logout rc=0

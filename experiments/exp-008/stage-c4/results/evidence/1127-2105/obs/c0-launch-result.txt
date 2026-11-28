@@ -1,0 +1,1 @@
+launch_check=pass argc=5 launch_elem_bytes=7,2,334,10116,64 max_elem_bytes=10116 elem_limit=32768 payload_bytes=10116 payload_budget=24576 decodes_to_pkg_sha256=yes deterministic=yes reasons=none

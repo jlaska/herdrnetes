@@ -1,0 +1,42 @@
+{
+  "name": "default--exp008c4-1127-2105",
+  "uid": "5f2991bd-d468-4953-ab75-5e0b750ef308",
+  "phase": "Pending",
+  "del": null,
+  "st": [
+    {
+      "name": "openshell-sandbox-bootstrap",
+      "state": {
+        "terminated": {
+          "containerID": "containerd://b4bc53630081dc7241ad7c038235ebbff0775dc1d96ca96b820b2a82a8637c5c",
+          "exitCode": 0,
+          "finishedAt": "2026-11-28T02:13:39Z",
+          "reason": "Completed",
+          "startedAt": "2026-11-28T02:13:39Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    },
+    {
+      "name": "workspace-init",
+      "state": {
+        "running": {
+          "startedAt": "2026-11-28T02:13:39Z"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    },
+    {
+      "name": "agent",
+      "state": {
+        "waiting": {
+          "reason": "PodInitializing"
+        }
+      },
+      "lastState": {},
+      "restartCount": 0
+    }
+  ]
+}

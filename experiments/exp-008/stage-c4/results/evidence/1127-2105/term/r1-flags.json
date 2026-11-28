@@ -1,0 +1,6 @@
+{
+  "trust_dialog": false,
+  "custom_key_dialog": false,
+  "resume_summary_dialog": false,
+  "interrupted_notice": true
+}

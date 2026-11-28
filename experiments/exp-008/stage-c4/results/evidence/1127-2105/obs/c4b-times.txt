@@ -1,0 +1,5 @@
+phase_before_stop=Error
+stop_rc=0 stop_cli_ms=165
+stopped_ms=285
+start_rc=0 start_cli_ms=13785
+phase_after_start=Ready settled_ms=13973
