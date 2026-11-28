@@ -30,8 +30,19 @@ cmp -s "$T/x/prompt.txt" "$HERE/../stage-c/task/prompt.txt" && cmp -s "$T/x/sett
   && ok "prompt and settings are the C0-C3 files, byte-identical" || no "prompt/settings differ from C0-C3"
 cmp -s "$T/x/launch.sh" "$HERE/task/launch.sh" && cmp -s "$T/x/step.sh" "$HERE/task/step.sh" && ok "launcher and step.sh are the C4 files" || no "launcher/step.sh not the C4 files"
 B0=$(sed -n "s/^BOOT='\(.*\)'$/\1/p" "$HERE/../stage-c/launcher.sh")
-[ -n "$B0" ] && [ "$BOOT" = "$B0" ] && ok "bootstrap is byte-identical to the C0-C3 bootstrap" || no "bootstrap differs from C0-C3"
+# the C4 bootstrap is the C0-C3 bootstrap with exactly one change: base64 -> gzip -dc -> the original tar (then sha256 as before)
+B0X=${B0/'printf %s "$0" | base64 -d >/sandbox/c/pkg.tar;'/'printf %s "$0" | base64 -d >/sandbox/c/pkg.tar.gz; gzip -dc /sandbox/c/pkg.tar.gz >/sandbox/c/pkg.tar;'}
+[ -n "$B0" ] && [ "$B0X" != "$B0" ] && [ "$BOOT" = "$B0X" ] && ok "bootstrap = C0-C3 bootstrap + only the gzip decode step (sha256 of the original tar, extract, exec unchanged)" || no "bootstrap delta from C0-C3"
 create_args
+[ "${#LAUNCH[@]}" = 5 ] && [ "${LAUNCH[0]}" = /bin/sh ] && [ "${LAUNCH[1]}" = -c ] && [ "${LAUNCH[2]}" = "$BOOT" ] && [ "${LAUNCH[4]}" = "$(sha256sum "$T/pkg.tar" | cut -d' ' -f1)" ] \
+  && ok "LAUNCH = /bin/sh -c BOOT <payload> <sha256 of the original tar>" || no "LAUNCH shape"
+[ "$(printf %s "${LAUNCH[3]}" | base64 -d | gzip -dc | sha256sum | cut -d' ' -f1)" = "${LAUNCH[4]}" ] && ok "the payload decodes and decompresses to the original tar" || no "payload does not decode to the tar"
+cmp -s "$T/pkg.tar" "$T/a.tar" && ok "create_args packs the same deterministic tar as pkg_build" || no "create_args tar differs"
+pkg_gz "$T/a.tar" "$T/a.gz"; pkg_gz "$T/b.tar" "$T/b.gz"; cmp -s "$T/a.gz" "$T/b.gz" && cmp -s "$T/a.gz" "$T/pkg.tar.gz" && ok "gzip -n output is deterministic" || no "gzip output not deterministic"
+[ "$(od -An -tu1 -j4 -N4 "$T/a.gz" | tr -s ' ')" = " 0 0 0 0" ] && [ $(( $(od -An -tu1 -j3 -N1 "$T/a.gz") & 8 )) = 0 ] && ok "gzip header: no mtime, no file name" || no "gzip header carries mtime or name"
+launch_check "$T/lc.txt" && grep -q '^launch_check=pass argc=5 ' "$T/lc.txt" && grep -q ' deterministic=yes ' "$T/lc.txt" && grep -q ' decodes_to_pkg_sha256=yes ' "$T/lc.txt" \
+  && ok "launch_check passes: $(grep -o 'payload_bytes=[0-9]*' "$T/lc.txt") (budget 24576), $(grep -o 'max_elem_bytes=[0-9]*' "$T/lc.txt") (limit 32768)" || no "launch_check: $(cat "$T/lc.txt")"
+grep -q -E '^pkg_sha256=[0-9a-f]{64} pkg_bytes=[0-9]+ gz_sha256=[0-9a-f]{64} gz_bytes=[0-9]+ payload_bytes=[0-9]+$' "$T/obs/c0-pkg.txt" && ok "c0-pkg.txt records sizes and hashes only" || no "c0-pkg.txt: $(cat "$T/obs/c0-pkg.txt")"
 printf '%s\n' "${CREATE[@]}" | grep -q -x -E -- '--no-keep|--keep|--driver-config.*|--upload.*|--workspace.*' && no "CREATE has a forbidden option" || ok "CREATE has no --no-keep/--keep/--driver-config/--upload/--workspace"
 [ "${CREATE[*]}" = "--from x --provider exp008c-test --detach --tty --restart-policy never --no-auto-providers --label exp008.run=0000-0000 --label exp008.stage=c4" ] \
   && ok "CREATE is the reviewed argv (restart-policy never, detach, no auto providers)" || no "CREATE: ${CREATE[*]}"
@@ -40,13 +51,13 @@ printf '%s\n' "${CREATE[@]}" | grep -q -x -E -- '--no-keep|--keep|--driver-confi
 mkdir -p "$T/src" && tar -xf "$T/a.tar" -C "$T/src"
 sed -i -e "s#/sandbox/c#$T/sb/c#g" -e "s#/usr/local/bin/claude#$T/fakeclaude#g" "$T/src/launch.sh"
 mk() { tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -C "$1" -cf "$2" launch.sh prompt.txt settings.json step.sh; }
-mk "$T/src" "$T/t.tar"; TSHA=$(sha256sum "$T/t.tar" | cut -d' ' -f1)
+mk "$T/src" "$T/t.tar"; TSHA=$(sha256sum "$T/t.tar" | cut -d' ' -f1); pkg_gz "$T/t.tar" "$T/t.tar.gz"
 BOOT_T=$(sed -e "s#/sandbox/c#$T/sb/c#g" <<<"$BOOT")
 run() { # run <out> <placeholder|-> [extra env...]: one launch of the canonical command (bootstrap + launcher)
   local out=$1 ph=$2; shift 2
   local envs=(PATH=/usr/bin:/bin OUTF="$out" CLAUDE_CODE_RESUME_INTERRUPTED_TURN=1 CLAUDE_CODE_RESUME_PROMPT=x CLAUDE_CODE_RESUME_INTERRUPTED_TURN_MAX_AGE_MS=1 CLAUDE_CODE_FOO=1 ANTHROPIC_AUTH_TOKEN=injected)
   [ "$ph" = - ] || envs+=(ANTHROPIC_API_KEY="$ph")
-  env -i "${envs[@]}" "$@" /bin/sh -c "$BOOT_T" "$(base64 -w0 "$T/t.tar")" "$TSHA" 2>"$out.err"
+  env -i "${envs[@]}" "$@" /bin/sh -c "$BOOT_T" "$(base64 -w0 "$T/t.tar.gz")" "$TSHA" 2>"$out.err"
 }
 has() { grep -q -x -- "$2" "$1"; }
 S=$T/sb/c

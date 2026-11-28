@@ -28,6 +28,7 @@
 #
 # MUTATION ALLOWLIST (complete; everything else is refused by the wrappers; each is also bound to its step):
 #   M1  openshell sandbox create --name $SBX <exactly CREATE> -- <exactly LAUNCH>                c0-create
+#       (only after launch_check passed: every element <= 32,768 bytes, payload <= 24,576 bytes, shape, decode)
 #   M2  openshell sandbox connect $SBX, run by the harness inside its own local tmux server     c0-baseline, c4c
 #   M3  typing one fixed-form line (+Enter) into that harness-owned tmux pane (c4c: at most 2)   c0-baseline, c4c
 #   M3b Ctrl-L (Claude Code's documented full redraw; keeps input) only if the resize redraw was not coherent
@@ -203,6 +204,9 @@ O() {
   "sandbox exec") [ "$STEP" = c0-baseline ] && [ "$#" -eq 12 ] && [ "$3" = "$SBX" ] && [ "${*:4:7}" = "--no-tty --no-login-shell --timeout 60 -- python3 -I" ] && [ "${11}" = -c ] && [ "${12}" = "$X5PY" ] || { log "REFUSED O sandbox exec"; return 97; } ;;
   "sandbox create")
     [ "$STEP" = c0-create ] && [ "${3:-}" = --name ] && [ "${4:-}" = "$SBX" ] && [ "${*:5}" = "${CREATE[*]} -- ${LAUNCH[*]}" ] || { log "REFUSED O sandbox create (not the exact M1 argv)"; return 97; }
+    grep -q '^launch_check=pass ' "$E/obs/c0-launch-result.txt" 2>/dev/null || { log "REFUSED O sandbox create (launch_check did not pass)"; return 97; }
+    local y; for y in "$@"; do [ "$(printf %s "$y" | LC_ALL=C wc -c)" -le "$ARG_ELEM_MAX" ] || { log "REFUSED O sandbox create (an argument exceeds $ARG_ELEM_MAX bytes)"; return 97; }; done
+    [ "$(printf %s "${LAUNCH[3]:-}" | LC_ALL=C wc -c)" -le "$PAYLOAD_BUDGET" ] || { log "REFUSED O sandbox create (payload over the $PAYLOAD_BUDGET-byte budget)"; return 97; }
     local x; for x in "$@"; do case $x in --no-keep | --keep | --driver-config* | --upload* | --workspace* | --editor* | --forward* | --expose* | --restart-policy=*) log "REFUSED O sandbox create ($x)"; return 97 ;; esac; done ;;
   "sandbox delete") [ "$STEP" = cleanup ] && [ "${3:-}" = "$SBX" ] && [ "$#" -eq 3 ] || { log "REFUSED O $*"; return 97; } ;;
   "sandbox stop") # M10: c4b, once
@@ -221,6 +225,32 @@ gw_registered() { O gateway list 2>/dev/null | grep -q -w "$GWNAME"; }
 sbx_json() { OT=${OT:-20} O sandbox get "$SBX" -o json >"$1" 2>"$1.err"; }
 sbx_phase() { jq -r '[.phase, .status.phase, .sandbox.phase, .sandbox.status.phase] | map(select(. != null)) | .[0] // empty' "$1" 2>/dev/null; }
 phase_now() { OT=10 sbx_json "$E/obs/phase.json" && sbx_phase "$E/obs/phase.json"; }
+sbx_discover() { # read-only, cleanup: does THIS run's sandbox exist? prints present | absent | ambiguous:<why> | mismatch:<why>
+  # done-c0-create means a create request was SENT, not that a sandbox exists. Absence is concluded only from an explicit
+  # CLI not-found AND a readable Sandbox CR list with no CR for $SBX; every other outcome is reported, never assumed.
+  local f=$E/obs/cleanup-sbx.json rc crs mine=0 want r n id lr ls
+  OT=20 O sandbox get "$SBX" -o json >"$f" 2>"$f.err"; rc=$?
+  want=$(cat "$E/sbx_id" 2>/dev/null)
+  if ! crs=$(sandboxes_all 2>/dev/null); then r=ambiguous:sandbox-cr-list-unreadable; crs=""
+  else
+    mine=$(grep -c -F -e "$SBX" <<<"$crs" || true)
+    if [ "$rc" = 0 ]; then
+      if ! jq -e 'type == "object"' "$f" >/dev/null 2>&1; then r=ambiguous:get-output-not-json
+      else
+        n=$(jq -r '.name // empty' "$f") id=$(jq -r '.id // empty' "$f") lr=$(jq -r '.labels["exp008.run"] // empty' "$f") ls=$(jq -r '.labels["exp008.stage"] // empty' "$f")
+        if [ "$n" != "$SBX" ]; then r=mismatch:name
+        elif [ "$lr" != "$RUN" ] || [ "$ls" != c4 ]; then r=mismatch:labels
+        elif [ -z "$id" ]; then r=mismatch:no-id
+        elif [ -n "$want" ] && [ "$want" != none ] && [ "$want" != "$id" ]; then r=mismatch:id-differs-from-recorded
+        else r=present; fi
+      fi
+    elif grep -q 'sandbox not found' "$f.err" 2>/dev/null; then
+      [ "$mine" = 0 ] && r=absent || r=ambiguous:cli-not-found-but-sandbox-cr-present
+    else r=ambiguous:sandbox-get-failed-rc=$rc; fi
+  fi
+  echo "discovery=${r%%:*} reason=$([ "${r#*:}" != "$r" ] && echo "${r#*:}" || echo none) cli_rc=$rc cr_total=$(grep -c . <<<"$crs" || true) cr_matching=$mine" >"$E/obs/cleanup-discovery.txt"
+  echo "$r"
+}
 
 # ---------------------------------------------------------------- guards
 ref() { sed -n "s/^$1=//p" "$E/refs.txt" 2>/dev/null; }
@@ -607,9 +637,15 @@ snap) nz "$ARG" || fail "snap needs a label"; snap "$ARG"; cat "$E/obs/$ARG-S.tx
 vread) nz "$ARG" || fail "vread needs a label"; vread "$ARG"; cat "$E/metrics/$ARG-V.json" 2>/dev/null ;;
 spend) spend_check; cat "$E/metrics/spend-latest.json" 2>/dev/null ;;
 c0-create)
-  guard_full; [ -e "$E/sampler.pid" ] || fail "start the sampler first"; once c0-create
-  put1 "$E/obs/c0-create-t0" "$(ems)"
+  guard_full; [ -e "$E/sampler.pid" ] || fail "start the sampler first"
+  [ ! -e "$E/STOPPED" ] || fail "a previous step stopped: $(cat "$E/STOPPED")"; [ ! -e "$E/done-c0-create" ] || fail "c0-create already ran (single attempt)"
   create_args # defined in launcher4.sh: fills CREATE=(...) and LAUNCH=(...)
+  # local byte budget and shape BEFORE the create marker: an oversized or malformed package never reaches OpenShell,
+  # and done-c0-create then keeps meaning "a create request was sent"
+  launch_check "$E/obs/c0-launch-result.txt" || stop "C0: launch argv failed the local check, no create request sent: $(cat "$E/obs/c0-launch-result.txt")"
+  log "C0 launch check: $(cat "$E/obs/c0-launch-result.txt")"
+  once c0-create
+  put1 "$E/obs/c0-create-t0" "$(ems)"
   OT=420 O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >"$E/obs/c0-create.out" 2>"$E/obs/c0-create.err" </dev/null
   rc=$?; log "create rc=$rc"
   if [ "$rc" != 0 ]; then
@@ -910,14 +946,18 @@ cleanup)
   [ -e "$E/STOPPED" ] && log "cleanup after STOP: $(tail -n 1 "$E/STOPPED")"
   guard_ctx || stop "guard failed before cleanup"
   [ "$(K -n "$NS" get statefulset "$GW_STS" -o jsonpath='{.spec.replicas}')" = "$(ref gw_replicas)" ] || log "cleanup: gateway replicas differ from pre (not changed by C4; recorded for the owner)"
-  if [ ! -s "$E/sbx_id" ]; then
-    if [ -e "$E/done-c0-create" ] && sbx_json "$E/obs/cleanup-sbx.json"; then
-      jq -r '[.id, .sandbox.id, .metadata.id, .sandbox.metadata.id] | map(select(. != null)) | .[0] // empty' "$E/obs/cleanup-sbx.json" >"$E/sbx_id"
-    fi
-    [ -s "$E/sbx_id" ] || { echo none >"$E/sbx_id"; log "cleanup: no sandbox id recorded or resolvable; checking residue by name only"; }
-  fi
   "${TM[@]}" kill-server 2>/dev/null; sleep 1
   [ -z "$(client_scan)" ] || { client_scan >"$E/obs/cleanup-clients.txt"; log "cleanup: client processes remain (see obs)"; }
+  # read-only discovery before any delete (a failed create is never reported as a deletion)
+  disc=no-create
+  if [ -e "$E/done-c0-create" ]; then
+    disc=$(sbx_discover); log "cleanup: $(cat "$E/obs/cleanup-discovery.txt")"
+    case $disc in present | absent) ;; *) stop "cleanup: sandbox discovery $disc; no delete issued and absence not assumed. Cleanup is single-attempt and will not rerun: the owner inspects read-only (sandbox get $SBX, Sandbox CR list) and, only if it is this run's sandbox, deletes exactly $SBX by hand; then post. See obs/cleanup-discovery.txt" ;; esac
+  else echo "discovery=not-run reason=no-create-request cli_rc=none cr_total=none cr_matching=none" >"$E/obs/cleanup-discovery.txt"; fi
+  if [ ! -s "$E/sbx_id" ]; then
+    [ "$disc" = present ] && jq -r '.id // empty' "$E/obs/cleanup-sbx.json" >"$E/sbx_id"
+    [ -s "$E/sbx_id" ] || { echo none >"$E/sbx_id"; log "cleanup: no sandbox id recorded or resolvable; checking residue by name only"; }
+  fi
   if [ ! -s "$E/tr_rel" ] && [ -s "$E/wctr" ] && [ "$(cat "$E/sbx_id")" != none ]; then
     bash "$(readlink -f "$0")" "$RUN" _tr_probe cleanup >/dev/null 2>&1; log "cleanup: transcript path located before final snapshot: $([ -s "$E/tr_rel" ] && echo yes || echo no)"
   fi
@@ -925,7 +965,7 @@ cleanup)
   [ -s "$L/tr/cleanup-final.jsonl" ] && { "${M0[@]}" usage "$L/tr/cleanup-final.jsonl" >"$E/metrics/final-usage.json" 2>/dev/null || log "cleanup: final usage estimate failed (Console figure is authoritative)"; }
   grab_logs cleanup-pre
   # settle: never delete during Stopping/Starting/Provisioning; wait up to SETTLE_MAX for a settled phase
-  if [ -e "$E/done-c0-create" ]; then
+  if [ "$disc" = present ]; then
     ph=$(phase_now); echo "phase_at_cleanup=${ph:-unreadable}" >"$E/obs/cleanup-phase.txt"
     settled() { case $(phase_now) in Stopping | Starting | Provisioning | Suspending) return 1 ;; esac; }
     case $ph in Stopping | Starting | Provisioning | Suspending) waitfor $(( $(ems) + SETTLE_MAX * 1000 )) settled \
@@ -934,8 +974,11 @@ cleanup)
   vread cleanup-pre >/dev/null 2>&1 || true
   { K -n "$NS" get pvc -o json | jq -r --arg s "$(cat "$E/sbx_id")" '.items[] | select(.metadata.labels["openshell.ai/sandbox-id"] == $s or .metadata.labels["openshell.ai/boundary-pair"] == $s or (.metadata.name | contains("'"$SBX"'"))) | "\(.metadata.name) \(.spec.volumeName)"'
     for f in "$L"/c0-V.json "$L"/c4a-R-V.json "$L"/cleanup-pre-V.json; do [ -s "$f" ] && jq -r '"\(.pvc_name) \(.pv)"' "$f"; done; } | sort -u >"$E/obs/cleanup-pvcs.txt"
-  if [ -e "$E/done-c0-create" ]; then OT=180 O sandbox delete "$SBX" >"$E/obs/cleanup-delete.out" 2>"$E/obs/cleanup-delete.err"; rc=$?; log "sandbox delete rc=$rc"
-  else log "cleanup: c0-create never ran; no delete issued"; fi
+  case $disc in
+  present) OT=180 O sandbox delete "$SBX" >"$E/obs/cleanup-delete.out" 2>"$E/obs/cleanup-delete.err"; rc=$?; log "sandbox delete rc=$rc"; echo "delete=issued delete_rc=$rc" >>"$E/obs/cleanup-discovery.txt" ;;
+  absent) log "cleanup: delete=skipped-verified-absent (the create request left no sandbox)"; echo "delete=skipped-verified-absent" >>"$E/obs/cleanup-discovery.txt" ;;
+  *) log "cleanup: c0-create never ran; no delete issued"; echo "delete=not-issued-no-create" >>"$E/obs/cleanup-discovery.txt" ;;
+  esac
   id=$(cat "$E/sbx_id")
   KINDS=pods,pvc,secret,service,networkpolicy,configmap,serviceaccount,role,rolebinding
   objs() { local o o2 o3 c pv pv2 va; o=$(K -n "$NS" get "$KINDS" -l "openshell.ai/sandbox-id=$id" -o name 2>/dev/null) || return 1; o2=$(K -n "$NS" get "$KINDS" -l "openshell.ai/boundary-pair=$id" -o name 2>/dev/null) || return 1

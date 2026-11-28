@@ -16,21 +16,7 @@ for s in c4a c4b cleanup; do { echo "run_${s}() {"; body "$s"; echo "}"; } >"$T/
 grep -q '^kw() {' "$T/lib.sh" && grep -q '^O() {' "$T/lib.sh" && [ -s "$T/step-c4b.sh" ] && ok "functions and step bodies extracted" || { no "extraction"; exit 1; }
 
 # ---------------------------------------------------------------- simulator
-cat >"$T/cli" <<'EOF'
-#!/usr/bin/env bash
-# stub openshell CLI: -g <gw> <args...>; state in $SIM
-shift 2; echo "$*" >>"$SIM/cli-calls"
-case "$1 $2" in
-"sandbox get") n=$(cat "$SIM/gets" 2>/dev/null || echo 0); echo $((n + 1)) >"$SIM/gets"
-  if [ -s "$SIM/phase-after" ] && [ $((n + 1)) -ge "$(cut -d' ' -f1 "$SIM/phase-after")" ]; then cut -d' ' -f2 "$SIM/phase-after" >"$SIM/phase"; : >"$SIM/phase-after"; fi
-  printf '{"id": "sid-1", "phase": "%s"}\n' "$(cat "$SIM/phase")" ;;
-"sandbox stop") [ "$(cat "$SIM/stop-mode")" = ok ] && echo Stopped >"$SIM/phase"; [ "$(cat "$SIM/stop-mode")" = refused-stopped ] && { echo Stopped >"$SIM/phase"; exit 1; }; [ "$(cat "$SIM/stop-mode")" = fail ] && exit 1; exit 0 ;;
-"sandbox start") [ "$(cat "$SIM/start-mode")" = ok ] && echo Ready >"$SIM/phase"; [ "$(cat "$SIM/start-mode")" = refused-ready ] && { echo Ready >"$SIM/phase"; exit 1; }; [ "$(cat "$SIM/start-mode")" = fail ] && exit 1; [ "$(cat "$SIM/start-mode")" = launcher-refuses ] && { echo Error >"$SIM/phase"; exit 1; }; exit 0 ;;
-"sandbox delete") echo deleted >"$SIM/phase"; : >"$SIM/residue"; exit 0 ;;
-"gateway list") echo exp008c ;;
-*) exit 0 ;;
-esac
-EOF
+cp "$D/tests/openshell-stub.sh" "$T/cli" # shared stub CLI (enforces the 32,768-byte per-element create limit)
 chmod +x "$T/cli"
 cat >"$T/kubectl" <<'EOF'
 #!/usr/bin/env bash
@@ -51,7 +37,7 @@ setup() { # setup <name>: a fresh simulated run in its own directory
 common() { # shared definitions + stubs (sourced inside each scenario subshell)
   RUN=0101-0101 SBX=exp008c4-0101-0101 NS=openshell GW_POD=openshell-0 GW_STS=openshell GWNAME=exp008c HX=$T/hx TL=$SIM/tl
   HERE=$D C0=$D/../stage-c M4=(python3 -I "$D/metrics4.py") M0=(python3 -I "$D/../stage-c/metrics.py")
-  SETTLE_MAX=300 INPUT_MAX=2 R_AGE_MIN=3000 R_AGE_MAX=12000 KILL_AGE_MAX=30000 KILL_DEADLINE_AGE=38000 STEP_SLEEP=45 TM=(true)
+  SETTLE_MAX=300 ARG_ELEM_MAX=32768 PAYLOAD_BUDGET=24576 INPUT_MAX=2 R_AGE_MIN=3000 R_AGE_MAX=12000 KILL_AGE_MAX=30000 KILL_DEADLINE_AGE=38000 STEP_SLEEP=45 TM=(true)
   # shellcheck source=/dev/null
   . "$T/lib.sh"
   CLI=$T/cli OENV=(env SIM="$SIM") KC=("$T/kubectl")
@@ -62,6 +48,7 @@ common() { # shared definitions + stubs (sourced inside each scenario subshell)
     case " $* " in
     *" get pod wpod-1 "*) [ "$(cat "$SIM/wpod-state")" = live ] && echo "sid-1 workload $(cat "$SIM/live-uid" 2>/dev/null || echo uid-old)" ;;
     *" get pod openshell-0 "*) echo gwuid ;;
+    *" sandboxes.agents.x-k8s.io "*) [ -e "$SIM/crs-fail" ] && return 1; cat "$SIM/crs" 2>/dev/null; return 0 ;;
     *" logs "*) cat "$SIM/launcher-log" 2>/dev/null ;;
     *" -o name"*) cat "$SIM/residue" ;;
     *" -o json "*) echo '{"items": []}' ;;
@@ -84,7 +71,16 @@ common() { # shared definitions + stubs (sourced inside each scenario subshell)
   STEP=c4b; O sandbox delete "$SBX" >/dev/null 2>&1; [ $? = 97 ] && ok "O: delete refused outside cleanup" || no "O: delete outside cleanup"
   STEP=cleanup; O sandbox delete "$SBX" >/dev/null && ok "O: delete accepted in cleanup" || no "O: delete refused in cleanup"
   STEP=c0-create; CREATE=(--from x --provider p --detach --tty --restart-policy never --no-auto-providers) LAUNCH=(/bin/sh -c boot pkg sha)
+  O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >/dev/null 2>&1; [ $? = 97 ] && ok "O: create refused without a passing launch_check record" || no "O: create accepted without launch_check"
+  echo "launch_check=fail argc=5" >"$E/obs/c0-launch-result.txt"
+  O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >/dev/null 2>&1; [ $? = 97 ] && ok "O: create refused with a failed launch_check record" || no "O: create accepted with launch_check=fail"
+  echo "launch_check=pass argc=5" >"$E/obs/c0-launch-result.txt"
   O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >/dev/null && ok "O: the exact M1 argv accepted" || no "O: exact create refused"
+  LAUNCH=(/bin/sh -c boot "$(head -c 24576 /dev/zero | tr '\0' A)" sha); O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >/dev/null && ok "O: a 24,576-byte payload (at the budget) accepted" || no "O: payload at the budget refused"
+  LAUNCH=(/bin/sh -c boot "$(head -c 24577 /dev/zero | tr '\0' A)" sha); O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >/dev/null 2>&1; [ $? = 97 ] && ok "O: a 24,577-byte payload refused (budget 24,576)" || no "O: payload over budget accepted"
+  LAUNCH=(/bin/sh -c "$(head -c 32769 /dev/zero | tr '\0' A)" pkg sha); O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >/dev/null 2>&1; [ $? = 97 ] && ok "O: a 32,769-byte element refused" || no "O: element over the limit accepted"
+  [ "$(grep -c '^sandbox create ' "$SIM/cli-calls")" = 2 ] && ok "O: only the in-budget creates reached the CLI" || no "O: create calls: $(grep -c '^sandbox create ' "$SIM/cli-calls")"
+  LAUNCH=(/bin/sh -c boot pkg sha)
   O sandbox create --name "$SBX" "${CREATE[@]}" --no-keep -- "${LAUNCH[@]}" >/dev/null 2>&1; [ $? = 97 ] && ok "O: create with --no-keep refused" || no "O: --no-keep accepted"
   O sandbox create --name "$SBX" "${CREATE[@]}" --driver-config-json '{}' -- "${LAUNCH[@]}" >/dev/null 2>&1; [ $? = 97 ] && ok "O: create with driver config refused" || no "O: driver config accepted"
   CREATE+=(--no-keep); O sandbox create --name "$SBX" "${CREATE[@]}" -- "${LAUNCH[@]}" >/dev/null 2>&1; [ $? = 97 ] && ok "O: --no-keep refused even inside CREATE" || no "O: CREATE with --no-keep accepted"
@@ -282,6 +278,36 @@ grep -q 'experiment objects remain' "$s/stops" && grep -q 'pod/default--exp008c4
   && ok "cleanup with residue: STOP, residue listed, not marked done (owner decides)" || no "cleanup residue: $(cat "$s/stops" 2>/dev/null)"
 s=$(cl_case nocreate 'rm -f "$E/done-c0-create"')
 ! grep -q '^sandbox delete ' "$s/cli-calls" && ok "cleanup when create never ran: no delete issued" || no "cleanup nocreate deleted"
+# cleanup after a failed or partial create (Correction C): done-c0-create means "a create request was sent"
+dl() { grep -c '^sandbox delete ' "$1/cli-calls"; }
+disc() { cat "$1/e/obs/cleanup-discovery.txt" 2>/dev/null | tr '\n' ' '; }
+s=$(cl_case rejected 'echo absent >"$SIM/phase"; rm -f "$E/sbx_id"')
+[ "$(dl "$s")" = 0 ] && grep -q '^discovery=absent reason=none cli_rc=1 cr_total=0 cr_matching=0' "$s/e/obs/cleanup-discovery.txt" && grep -q '^delete=skipped-verified-absent$' "$s/e/obs/cleanup-discovery.txt" && [ -e "$s/e/obs/cleanup-done" ] && [ "$(cat "$s/e/sbx_id")" = none ] \
+  && ok "cleanup, create rejected before admission (run 1127-1814): no delete, delete=skipped-verified-absent, residue checked, done" || no "cleanup rejected: $(disc "$s") deletes=$(dl "$s")"
+grep -q 'sandbox delete rc=' "$s/tl" && no "cleanup rejected: a deletion was logged" || ok "cleanup, create rejected: no deletion is reported"
+s=$(cl_case absent 'echo absent >"$SIM/phase"')
+[ "$(dl "$s")" = 0 ] && grep -q '^delete=skipped-verified-absent$' "$s/e/obs/cleanup-discovery.txt" && [ -e "$s/e/obs/cleanup-done" ] && ok "cleanup, sandbox recorded but verified absent: no delete, skipped-verified-absent" || no "cleanup absent: $(disc "$s")"
+s=$(cl_case partial 'echo Provisioning >"$SIM/phase"; echo "4 Error" >"$SIM/phase-after"; echo "openshell/default--exp008c4-0101-0101" >"$SIM/crs"')
+[ "$(dl "$s")" = 1 ] && grep -q '^discovery=present ' "$s/e/obs/cleanup-discovery.txt" && grep -q '^delete=issued delete_rc=0$' "$s/e/obs/cleanup-discovery.txt" && [ -e "$s/e/obs/cleanup-done" ] \
+  && ok "cleanup, create partially succeeded before the CLI failed: discovered present, one guarded delete" || no "cleanup partial: $(disc "$s") deletes=$(dl "$s")"
+s=$(cl_case present-noid 'echo Error >"$SIM/phase"; rm -f "$E/sbx_id"; echo "openshell/default--exp008c4-0101-0101" >"$SIM/crs"')
+[ "$(dl "$s")" = 1 ] && [ "$(cat "$s/e/sbx_id")" = sid-1 ] && [ -e "$s/e/obs/cleanup-done" ] && ok "cleanup, sandbox present with no recorded id: id taken from discovery, one delete" || no "cleanup present-noid: $(disc "$s")"
+s=$(cl_case getfail 'touch "$SIM/get-fail"')
+[ "$(dl "$s")" = 0 ] && grep -q 'discovery ambiguous:sandbox-get-failed-rc=1' "$s/stops" && [ ! -e "$s/e/obs/cleanup-done" ] && ok "cleanup, lookup failure: STOP, no delete, absence not assumed" || no "cleanup getfail: $(cat "$s/stops" 2>/dev/null)"
+s=$(cl_case crfail 'echo absent >"$SIM/phase"; touch "$SIM/crs-fail"')
+[ "$(dl "$s")" = 0 ] && grep -q 'discovery ambiguous:sandbox-cr-list-unreadable' "$s/stops" && [ ! -e "$s/e/obs/cleanup-done" ] && ok "cleanup, Sandbox CR list unreadable: STOP, no delete" || no "cleanup crfail: $(cat "$s/stops" 2>/dev/null)"
+s=$(cl_case notfound-cr 'echo absent >"$SIM/phase"; echo "openshell/default--exp008c4-0101-0101" >"$SIM/crs"')
+[ "$(dl "$s")" = 0 ] && grep -q 'discovery ambiguous:cli-not-found-but-sandbox-cr-present' "$s/stops" && ok "cleanup, CLI not-found but a Sandbox CR for the run exists: STOP, no delete" || no "cleanup notfound-cr: $(cat "$s/stops" 2>/dev/null)"
+s=$(cl_case badjson 'echo "not json" >"$SIM/sbx-json"')
+[ "$(dl "$s")" = 0 ] && grep -q 'discovery ambiguous:get-output-not-json' "$s/stops" && ok "cleanup, unparseable sandbox get: STOP, no delete" || no "cleanup badjson: $(cat "$s/stops" 2>/dev/null)"
+s=$(cl_case idmismatch 'echo "{\"id\": \"sid-9\", \"name\": \"exp008c4-0101-0101\", \"labels\": {\"exp008.run\": \"0101-0101\", \"exp008.stage\": \"c4\"}, \"phase\": \"Error\"}" >"$SIM/sbx-json"')
+[ "$(dl "$s")" = 0 ] && grep -q 'discovery mismatch:id-differs-from-recorded' "$s/stops" && ok "cleanup, sandbox id differs from the recorded one: STOP, no delete" || no "cleanup idmismatch: $(cat "$s/stops" 2>/dev/null)"
+s=$(cl_case labelmismatch 'echo "{\"id\": \"sid-1\", \"name\": \"exp008c4-0101-0101\", \"labels\": {\"exp008.run\": \"0202-0202\", \"exp008.stage\": \"c4\"}, \"phase\": \"Error\"}" >"$SIM/sbx-json"')
+[ "$(dl "$s")" = 0 ] && grep -q 'discovery mismatch:labels' "$s/stops" && ok "cleanup, run label mismatch: STOP, no delete" || no "cleanup labelmismatch: $(cat "$s/stops" 2>/dev/null)"
+s=$(cl_case namemismatch 'echo "{\"id\": \"sid-1\", \"name\": \"other\", \"labels\": {\"exp008.run\": \"0101-0101\", \"exp008.stage\": \"c4\"}, \"phase\": \"Error\"}" >"$SIM/sbx-json"')
+[ "$(dl "$s")" = 0 ] && grep -q 'discovery mismatch:name' "$s/stops" && ok "cleanup, name mismatch: STOP, no delete" || no "cleanup namemismatch: $(cat "$s/stops" 2>/dev/null)"
+s=$(cl_case nocreate2 'rm -f "$E/done-c0-create"')
+grep -q '^discovery=not-run reason=no-create-request' "$s/e/obs/cleanup-discovery.txt" && grep -q '^delete=not-issued-no-create$' "$s/e/obs/cleanup-discovery.txt" && ! grep -q '^sandbox get ' "$s/cli-calls" && ok "cleanup, no create request: no discovery call, delete=not-issued-no-create" || no "cleanup nocreate2: $(disc "$s")"
 ( setup cl-twice; common; touch "$E/done-cleanup"; . "$T/step-cleanup.sh"; STEP=cleanup; run_cleanup ) >/dev/null 2>&1; [ $? = 4 ] && ok "cleanup is single-attempt" || no "cleanup ran twice"
 
 # ---------------------------------------------------------------- spend_check after M9 (review blocker B1): the real function
