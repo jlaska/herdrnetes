@@ -6,6 +6,12 @@ Issue [#39](https://github.com/jlaska/herdrnetes/issues/39) · design: [STAGE-C4
 - This directory holds that implementation and its offline tests.
 - Nothing here has touched a cluster. No sandbox, provider, profile, PVC, gateway setting or GitOps commit was created or changed, and no API key or model was used.
 - **No C4 run is authorized.** Section 12 is the readiness checklist for a later, separate owner authorization.
+- **Corrective packaging PR (2026-11-27, offline only).** The one authorized run, `1127-1814` (record in PR #50), stopped at `sandbox create`. OpenShell v0.1.9 refused the 40,960-byte inline package element (`spec.command[3] exceeds 32768 byte limit`), so no C4 behaviour was tested. The owner approved one corrective change:
+  - **A.** A gzip-compressed package transport with a local byte budget (section 4, item 18).
+  - **B.** A stub CLI that enforces the limit.
+  - **C.** A cleanup that deletes only a sandbox it has discovered (item 19).
+
+  Nothing in C4a, C4b, C4c, the ledger, the probe, the tail rule, the classifiers, the credential flow or C0–C3 changed. The corrected harness has not run against a cluster.
 - FIND-095 to FIND-097 stay **proposed**. A clarification for the owner's review is in [`../stage-c/results/1126-1017-ADDENDUM.md`](../stage-c/results/1126-1017-ADDENDUM.md); the owner recommends accepting them at those narrowed scopes, and the decision is recorded on issue #39 by the owner.
 - REQ-009, REQ-011 and REQ-013 stay Future.
 
@@ -47,11 +53,11 @@ Every mutation goes through one wrapper. It is bound to its step and refused any
 
 | # | Mutation | Wrapper | Step | Guards and single attempt |
 |---|---|---|---|---|
-| M1 | `sandbox create --name $SBX` with the exact `CREATE -- LAUNCH` argv | `O` | `c0-create` | Exact argv only; refuses `--no-keep`, `--keep`, `--driver-config*`, `--upload*`, `--workspace*`, `--editor`, `--forward`, `--expose`; after create, STOP if the sandbox is `retention=ephemeral`; `once` |
+| M1 | `sandbox create --name $SBX` with the exact `CREATE -- LAUNCH` argv | `O` | `c0-create` | Only after `launch_check` passed: every element at most 32,768 bytes, the encoded payload at most 24,576 bytes, argv shape and count, the payload decoding to the original tar, a deterministic rebuild. `O` re-checks the record and the sizes, and the check runs before the `done-c0-create` marker. Exact argv only; refuses `--no-keep`, `--keep`, `--driver-config*`, `--upload*`, `--workspace*`, `--editor`, `--forward`, `--expose`; after create, STOP if the sandbox is `retention=ephemeral`; `once` |
 | M2 | `sandbox connect $SBX` in a harness-owned tmux server | `client_start` | `c0-baseline`, `c4c` | Refused in any other step; no pre-existing client |
 | M3, M3b | One fixed-form line plus Enter; Ctrl-L | `type_line`, `ctrl_l` | `c0-baseline`, `c4c` | Characters `[A-Za-z0-9 .,:=<>-]`, at most 240, so no control byte can be sent; logs length and hash only; **c4c: at most 2 lines** |
 | M4b | Ctrl-P Ctrl-Q, with SIGKILL of the harness's own client tree as fallback | `client_detach`, `client_kill` | `c0-baseline`, `c4c` | Zero surviving clients required |
-| M6 | `sandbox delete $SBX` | `O` | `cleanup` | Cleanup has its own once-only marker. It runs after a STOP, never stops or starts the sandbox, and waits up to 300 s for a settled phase |
+| M6 | `sandbox delete $SBX` | `O` | `cleanup` | Issued only when read-only discovery (`sbx_discover`) finds this run's sandbox (name, `exp008.run`, `exp008.stage=c4`, recorded id). If the sandbox is verified absent, the result is `delete=skipped-verified-absent`. Any other outcome STOPs without a delete. Cleanup has its own once-only marker. It runs after a STOP, never stops or starts the sandbox, and waits up to 300 s for a settled phase |
 | M7 | `gateway logout exp008c` | `O` | `logout` | — |
 | M8 | `sandbox exec … python3 -I -c <X5PY>` (TCP egress probes) | `O` | `c0-baseline` | Exact argv (as C0–C3) |
 | **M9** | `kubectl -n openshell delete pod <recorded workload> --grace-period=1 --wait=false` | `kw` | `c4a` | Requires: step `c4a`; `obs/c4a-armed`, written only after a complete reference snapshot R; the M9 once-marker; the pod's labels **and UID** equal the recorded workload; the cluster identity guard. Refuses `--force`, grace 0, the default grace, other pods, `scale` and PVC deletes |
@@ -135,6 +141,17 @@ These are choices the proposal left open, stated so they can be reviewed. None c
     - a zero exit from `stop`;
     - V after `start` compared with R.
 17. **The tail allowance also admits step N's own tool result**, so `in-flight-completed` is reachable. A tool result for any other call is still `corrupt`.
+18. **Package transport (corrective, after run `1127-1814`).**
+    - **Package.** The deterministic tar (unchanged) is compressed with `gzip -9 -n` (no name, no mtime) and then base64-encoded. The bootstrap differs from C0–C3 in one step only: it decodes to `pkg.tar.gz`, runs `gzip -dc` to `pkg.tar`, then does exactly what C0–C3 did (sha256 of the original tar, `pkg.sha256`, extract, exec the launcher). Every failure exits under `set -eu` before the launcher runs.
+    - **Sizes.** At this commit the tar is 30,720 bytes (sha256 `5f524cae…`, the run's), the gzip is 7,586 bytes, and the payload element is **10,116 bytes**. The elements are `7,2,334,10116,64`, against a 24,576-byte budget and a 32,768-byte limit.
+    - **`launch_check`.** It records sizes, hashes and pass/fail only, in `obs/c0-launch-result.txt`. It runs before `done-c0-create`, so a failure STOPs with no create request and no marker.
+    - **Pinned image (static layer inspection only).** `/bin/sh` is dash 0.5.12, gzip 1.13, GNU tar 1.35, and coreutils 9.7 for `base64` and `sha256sum`, with no later-layer whiteout. Running the bootstrap inside the pinned image is **not yet verified** (U); the offline tests ran it under bash and `bash --posix`.
+19. **Cleanup after a failed create.** `done-c0-create` means a create request was sent, not that a sandbox exists. Before any delete, `sbx_discover` reads `sandbox get` and the Sandbox CR list.
+    - `present`: the name, `exp008.run`, `exp008.stage=c4` and the recorded id (when one exists) all match. The existing guarded delete then runs once (`delete=issued`).
+    - `absent`: the CLI says `sandbox not found` **and** a readable CR list has no CR for `$SBX`. The delete is skipped (`delete=skipped-verified-absent`).
+    - Anything else: a failed or unparseable lookup, an unreadable CR list, not-found with a CR present, or a name, label or id mismatch. Cleanup STOPs with no delete and leaves the decision to the owner.
+
+    The full residue checks are unchanged and run in every non-STOP case. The result is in `obs/cleanup-discovery.txt`.
 
 ## 5. Procedure (for a future authorized run; not to be run now)
 
@@ -199,17 +216,18 @@ A `not-restartable`, `lost`, `corrupt` or any C4c value is a recorded result, no
 | No provider/credential administration; no GitOps, gateway or external PVC change | Wrapper allowlists | allowlist4 §5, §7 |
 | No sampler after successful cleanup; failed cleanup reports residue | `sampler_done`; `cleanup-residue.txt` and STOP | wrapper4 cleanup, sampler |
 
-## 8. Offline verification (2026-11-26)
+## 8. Offline verification (2026-11-26; counts updated 2026-11-27 for the corrective PR)
 
 `bash experiments/exp-008/stage-c4/tests/run-all.sh` runs the C4 suite and the unchanged C0–C3 suite. No cluster, no network, no credential; the two pinned-binary tests run in loopback-only namespaces.
 
 | Suite | Checks | Covers |
 |---|---|---|
 | `test_metrics4.py` | 61 unit tests | Predicate negatives; byte offsets and torn lines; strict probe (pass, tool before the reply, wrong codeword/LAST/format, synthetic reply ignored, queued-only, not delivered); C4b (intact, tail allowance, the three partial states, impossible orders, unexpected changes, rewritten log, prefix, broken chain, lost, refusal mapping); C4c fixture per value and axis; interrupted-turn values; precedence where rules overlap; a correct reply alone is not a pass; the D-1 five-entry tail (3, 4, 5 accepted; 6 rejected; an assistant, tool result, unknown type or torn line at position 4/5 rejected; prefix, continuity and byte limit; the allowance never hides corruption); the strict one-line probe (19 format cases); no ambiguous session can pass (duplicated file, new id, no listing, unavailable, fresh, unreadable or original process, a mixed session id); primary-pass implications over 120 random runs; totality over 300 random runs (one value each, and the primary pass is exactly the documented conjunction); no secret in output |
-| `launch4-test.sh` | 54 | Deterministic package; byte-identical bootstrap, prompt and settings; CREATE argv; Fresh argv; Resume argv (no `--session-id`, no prompt); unset auto-continue variables; env names only; frozen copy; approval tail same and added in both copies; 11 refusal cases with no fallback; precheck before a credential refusal |
+| `launch4-test.sh` | 61 | Deterministic package; byte-identical bootstrap, prompt and settings; CREATE argv; Fresh argv; Resume argv (no `--session-id`, no prompt); unset auto-continue variables; env names only; frozen copy; approval tail same and added in both copies; 11 refusal cases with no fallback; precheck before a credential refusal |
 | `step4-test.sh` | 19 | Token chain and refusals; recorded sleep; SIGTERM during the sleep ends the step without `done`; stale-lock cases (live, empty start, other boot, dead pid, reused pid); lock break from a new PID namespace with `prior_attempts=1` |
-| `allowlist4-test.sh` | 51 | Wrapper confinement, the exact allowlist, step binding, once-only, no C1–C3/Phase 2/gateway/credential path; **10 negative controls** (mutated harness copies must fail) |
-| `wrapper4-test.sh` | 91 | Real `O`, `kw`, `kx`, `type_line` and the real c4a/c4b/cleanup step bodies against a stub CLI, kubectl and clock. c4a: complete R, a late, finished or old step, snapshot, identity or UID failure, R taken once, and the survived, deleting, not-captured, ran, fenced and none outcomes. c4b: normal; not from Error; stop hang, refused, or refused-but-Stopped; start hang or refused; CR not suspended; pods remaining; attachment not released; PVC changed or deleting; C4a not ended. Cleanup: from Stopped, Error, Ready, Starting and Stopping; a phase that never settles; residue; no create; twice. Sampler self-stop |
+| `allowlist4-test.sh` | 58 | Wrapper confinement, the exact allowlist, step binding, once-only, no C1–C3/Phase 2/gateway/credential path; **10 negative controls** (mutated harness copies must fail) |
+| `wrapper4-test.sh` | 110 | Real `O`, `kw`, `kx`, `type_line` and the real c4a/c4b/cleanup step bodies against a stub CLI, kubectl and clock. c4a: complete R, a late, finished or old step, snapshot, identity or UID failure, R taken once, and the survived, deleting, not-captured, ran, fenced and none outcomes. c4b: normal; not from Error; stop hang, refused, or refused-but-Stopped; start hang or refused; CR not suspended; pods remaining; attachment not released; PVC changed or deleting; C4a not ended. Cleanup: from Stopped, Error, Ready, Starting and Stopping; a phase that never settles; residue; no create; twice. Sampler self-stop |
+| `transport4-test.sh` | 45 | Corrective PR. Sizes: the run's 40,960-byte element refused by the stub as OpenShell refused it; 27,308 bytes under the limit but over the budget; the corrected payload within the budget; 32,767, 32,768 and 32,769 bytes; a poorly compressible package. The real bootstrap under `/bin/sh` and `bash --posix`: valid launch and relaunch; corrupted base64, truncation, invalid gzip, a raw tar, a wrong sha256, missing gzip and a sha-valid non-tar each exit nonzero with no launcher run and nothing extracted. The real `c0-create` body: one create request for the corrected package; a local STOP with no request and no marker for the original transport, a poorly compressible package or missing compression |
 | `c0c3-unchanged-test.sh` | 3 | The 21 C0–C3 harness hashes from `1126-1017` |
 | `resume-regression-test.sh` | 24 | Pinned 2.1.323 through the real C4 bootstrap and launcher, a scripted mock model, and a simulated pod loss with step 2 in flight, as SIGKILL and as SIGTERM+1 s (see below) |
 | C0–C3 suite, unchanged | 28 unit + 176 checks | As recorded for `1126-1017` |
@@ -274,6 +292,8 @@ This validates the harness, launcher and classifier path. It says **nothing abou
 ## 12. Execution readiness checklist (for a separate owner authorization)
 
 - [ ] Owner review of this PR. A squash merge to `main`, and the authorization names that harness commit.
+- [ ] **Corrective packaging PR** reviewed and squash-merged. A new authorization names the resulting commit; run `1127-1814` used `cb7899a`.
+- [ ] Bootstrap verified inside the pinned image (`dash`, gzip 1.13), offline and with no network, before `pre`.
 - [ ] The offline suite re-run on that commit immediately before `pre` (`tests/run-all.sh`, under `env -i`), with counts recorded.
 - [ ] **[owner]** Decision on FIND-095 to FIND-097, including the addendum's narrowed wording.
 - [ ] **[owner]** A new API key, the $5 cap and `BUDGET_USD=2`; provider and profile recreated with `owner-provider.sh`; the key never handled by an agent.

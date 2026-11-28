@@ -30,7 +30,7 @@ pkg_build "$T/p0.tar"; tar -xf "$T/p0.tar" -C "$W/src"
 sed -i -e "s#/sandbox/c#$W/sb/c#g" -e "s#/usr/local/bin/claude#$BIN#g" -e 's#^STEP_SLEEP=45$#STEP_SLEEP=4#' "$W/src/launch.sh"
 grep -q '^STEP_SLEEP=4$' "$W/src/launch.sh" || no "could not remap the test pacing"
 tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -C "$W/src" -cf "$W/p.tar" launch.sh prompt.txt settings.json step.sh
-base64 -w0 "$W/p.tar" >"$W/p.b64"; sha256sum "$W/p.tar" | cut -d' ' -f1 >"$W/p.sha"
+pkg_gz "$W/p.tar" "$W/p.tar.gz"; base64 -w0 "$W/p.tar.gz" >"$W/p.b64"; sha256sum "$W/p.tar" | cut -d' ' -f1 >"$W/p.sha" # the C4 transport: gzip, base64; sha256 of the original tar
 sed -e "s#/sandbox/c#$W/sb/c#g" <<<"$BOOT" >"$W/boot.sh"
 unshare -rnmpf --mount-proc sh -c 'ip link set lo up && exec /usr/bin/python3 -I "$0" "$@"' "$HERE/tests/resume_probe.py" \
   "$W" "$W/boot.sh" "$W/p.b64" "$(cat "$W/p.sha")" "$FAKE" "$BIN" >"$T/run.log" 2>&1
@@ -82,7 +82,7 @@ python3 -I "$HERE/metrics4.py" activity "$TR" "$(wc -c <"$W/R.jsonl")" | jq -e '
 W2=$T/w2; mkdir -p "$W2"; cp "$W/p.b64" "$W/p.sha" "$W2/"; sed -e "s#$W/sb/c#$W2/sb/c#g" "$W/boot.sh" >"$W2/boot.sh"
 mkdir -p "$W2/src" && cp "$W/src/"* "$W2/src/" && sed -i "s#$W/sb/c#$W2/sb/c#g" "$W2/src/launch.sh"
 tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -C "$W2/src" -cf "$W2/p.tar" launch.sh prompt.txt settings.json step.sh
-base64 -w0 "$W2/p.tar" >"$W2/p.b64"; sha256sum "$W2/p.tar" | cut -d' ' -f1 >"$W2/p.sha"
+pkg_gz "$W2/p.tar" "$W2/p.tar.gz"; base64 -w0 "$W2/p.tar.gz" >"$W2/p.b64"; sha256sum "$W2/p.tar" | cut -d' ' -f1 >"$W2/p.sha"
 PROBE_KILL=term1 unshare -rnmpf --mount-proc sh -c 'ip link set lo up && exec /usr/bin/python3 -I "$0" "$@"' "$HERE/tests/resume_probe.py" \
   "$W2" "$W2/boot.sh" "$W2/p.b64" "$(cat "$W2/p.sha")" "$FAKE" "$BIN" >"$T/run2.log" 2>&1
 if [ -s "$W2/report.json" ] && [ -s "$W2/sb/c/launch/pre-2/transcript.jsonl" ]; then

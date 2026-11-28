@@ -69,7 +69,12 @@ bad=$(code | grep -E '(^|[[:space:];&(])kill[[:space:]]' | grep -v -E '^(client_
 grep -q 'INPUT_MAX' <<<"$TLB" && ok "type_line enforces the c4c input cap" || no "type_line cap"
 # 9. single attempt: every mutating step once-only; cleanup has its own marker
 grep -q 'done-cleanup" \] || fail "cleanup already ran' "$H" && ok "cleanup has its own single-attempt marker" || no "cleanup marker"
-for st in c0-create c0-baseline c4a c4b c4c; do b=$(stepbody "$st"); grep -q "once $st" <<<"$(sed -n '1,2p' <<<"$b")" && ok "$st is once-only" || no "$st lacks once"; done
+for st in c0-baseline c4a c4b c4c; do b=$(stepbody "$st"); grep -q "once $st" <<<"$(sed -n '1,2p' <<<"$b")" && ok "$st is once-only" || no "$st lacks once"; done
+# c0-create: the local launch check runs first (no marker, no request), then once, then the single create
+S_C0C=$(stepbody c0-create)
+c1=$(grep -n -F 'launch_check "$E/obs/c0-launch-result.txt" || stop' <<<"$S_C0C" | cut -d: -f1) c2=$(grep -n -x '  once c0-create' <<<"$S_C0C" | cut -d: -f1) c3=$(grep -n -F 'O sandbox create --name' <<<"$S_C0C" | cut -d: -f1)
+[ -n "$c1" ] && [ -n "$c2" ] && [ -n "$c3" ] && [ "$c1" -lt "$c2" ] && [ "$c2" -lt "$c3" ] && grep -q -F '[ ! -e "$E/done-c0-create" ] || fail' <<<"$S_C0C" \
+  && ok "c0-create is once-only; the local launch check (STOP, no request) precedes the marker and the create" || no "c0-create order: check=$c1 once=$c2 create=$c3"
 grep -q 'need c0-baseline' <<<"$S_C4A" && grep -q 'need c4a' <<<"$S_C4B" && grep -q 'need c4b' <<<"$S_C4C" && ok "c4a needs c0-baseline; c4b needs c4a; c4c needs c4b" || no "step ordering guards"
 a1=$(grep -n -F 'touch "$E/obs/c4a-armed"' <<<"$S_C4A" | cut -d: -f1) a0=$(grep -n -F 'nz "$armed" || stop' <<<"$S_C4A" | cut -d: -f1) a2=$(grep -n -F 'kw delete pod' <<<"$S_C4A" | cut -d: -f1)
 [ -n "$a1" ] && [ -n "$a0" ] && [ -n "$a2" ] && [ "$a1" -gt "$a0" ] && [ "$a2" -gt "$a1" ] \
@@ -81,6 +86,14 @@ grep -E -- '--resume' "$L" | grep -v '^\s*#' | grep -q -- '--session-id' && no "
 tail -n 2 "$L" | grep -q -E -- '--resume "\$SID"$' && ok "launcher: --resume <sid> is the last argument (no positional prompt)" || no "resume argv tail"
 grep -r -n -E 'CLAUDE_CODE_RESUME_INTERRUPTED_TURN=1|export CLAUDE_CODE_RESUME' "$D" --include='*.sh' | grep -v '/tests/' && no "an auto-continue variable is set" || ok "no auto-continue variable is set by the harness or launcher"
 grep -q '^unset CLAUDE_CODE_RESUME_INTERRUPTED_TURN CLAUDE_CODE_RESUME_PROMPT CLAUDE_CODE_RESUME_INTERRUPTED_TURN_MAX_AGE_MS$' "$L" && ok "launcher unsets the auto-continue variables" || no "launcher unset"
+# 12. M1 byte budget, and the cleanup delete gated on read-only discovery
+grep -q -F "grep -q '^launch_check=pass ' \"\$E/obs/c0-launch-result.txt\"" <<<"$OB" && grep -q -F -- '-le "$ARG_ELEM_MAX" ]' <<<"$OB" && grep -q -F -- '-le "$PAYLOAD_BUDGET" ]' <<<"$OB" \
+  && ok "O refuses create unless launch_check passed, every argument <= ARG_ELEM_MAX and the payload <= PAYLOAD_BUDGET" || no "O create byte guards"
+DB=$(fnbody sbx_discover)
+grep -q -F "elif grep -q 'sandbox not found'" <<<"$DB" && grep -q -F '[ "$mine" = 0 ] && r=absent ||' <<<"$DB" && [ "$(grep -c 'r=absent' <<<"$DB")" = 1 ] \
+  && ok "sbx_discover: absent only on an explicit CLI not-found with no Sandbox CR for this run" || no "sbx_discover absence rule"
+grep -q -F 'present) OT=180 O sandbox delete "$SBX"' <<<"$S_CL" && grep -q -F 'delete=skipped-verified-absent' <<<"$S_CL" && grep -q -F 'case $disc in present | absent) ;; *) stop' <<<"$S_CL" \
+  && ok "cleanup deletes only a discovered, identity-matched sandbox; verified absence skips; anything else STOPs" || no "cleanup delete gating"
 # 11. the C0-C3 harness is untouched by C4 (C0-C3 cannot perform a C4 mutation)
 grep -v '^\s*#' "$D/../stage-c/stagec.sh" | grep -q -E 'sandbox (stop|start)|delete pod' && no "C0-C3 harness gained a C4 mutation" || ok "C0-C3 harness has no stop/start/pod-delete"
 # negative controls (outer run only): each mutated copy of stagec4.sh must be caught
@@ -97,7 +110,11 @@ if [ -z "${STAGEC4_SH:-}" ]; then
   neg O-suspend '  "gateway logout") [' '  "sandbox suspend") ;;
   "gateway logout") ['
   neg O-stop-anystep '[ "$STEP" = c4b ] && [ "$#" -eq 3 ] && [ "$3" = "$SBX" ] && [ ! -e "$E/done-m10" ]' '[ "$#" -eq 3 ] && [ "$3" = "$SBX" ] && [ ! -e "$E/done-m10" ]'
-  neg cleanup-stops '  if [ -e "$E/done-c0-create" ]; then OT=180 O sandbox delete' '  O sandbox stop "$SBX"; if [ -e "$E/done-c0-create" ]; then OT=180 O sandbox delete'
+  neg cleanup-stops '  present) OT=180 O sandbox delete' '  present) O sandbox stop "$SBX"; OT=180 O sandbox delete'
+  neg O-no-launch-check "    grep -q '^launch_check=pass ' " "    grep -q '^launch_check=' "
+  neg c0-create-no-check '  launch_check "$E/obs/c0-launch-result.txt" || stop' '  true || stop'
+  neg discover-assume-absent 'else r=ambiguous:sandbox-get-failed-rc=$rc; fi' 'else r=absent; fi'
+  neg cleanup-delete-when-absent '  absent) log "cleanup: delete=skipped-verified-absent' '  absent) OT=180 O sandbox delete "$SBX"; log "cleanup: delete=skipped-verified-absent'
   neg no-once-c4b '  guard_full; need c4a; once c4b' '  guard_full; need c4a'
   neg raw-kubectl-delete '  ph=$(phase_now); echo "phase_before_stop=$ph"' '  "${KC[@]}" -n "$NS" delete pod x; ph=$(phase_now); echo "phase_before_stop=$ph"'
   neg provider-create '  gw_registered || stop "CLI gateway registration $GWNAME missing"' '  O provider create --name x; gw_registered || stop "CLI gateway registration $GWNAME missing"'
