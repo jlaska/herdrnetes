@@ -10,6 +10,9 @@
 #   3. the original session, all other evidence valid: session=same-id-same-file, primary pass;
 #   4. a missing, malformed or mismatched reference name: no primary pass;
 #   5. a different (or a second) session file after resume: no primary pass.
+# Limits: the block starts after `kx X2`, so the X2 listing is a synthetic `tr=NAME lines= bytes=` line; X2, kx and
+# the line-724 tr_rel writer are not exercised (the tr_rel shape is the run's, evidence obs/c4c-final-S.txt).
+# The fixture overrides TB's single default (sid); fixture-check guards the expected pass shape.
 # No cluster, no network, no credential.
 set -uo pipefail
 D=$(cd "$(dirname "$0")/.." && pwd); H=$D/stagec4.sh

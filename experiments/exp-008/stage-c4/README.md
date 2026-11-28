@@ -216,7 +216,7 @@ A `not-restartable`, `lost`, `corrupt` or any C4c value is a recorded result, no
 | No provider/credential administration; no GitOps, gateway or external PVC change | Wrapper allowlists | allowlist4 §5, §7 |
 | No sampler after successful cleanup; failed cleanup reports residue | `sampler_done`; `cleanup-residue.txt` and STOP | wrapper4 cleanup, sampler |
 
-## 8. Offline verification (2026-11-26; counts updated 2026-11-27 for the corrective PR and 2026-11-28 for FIND-101)
+## 8. Offline verification (2026-11-26; counts updated 2026-11-27 for the corrective PR and 2026-11-27 for FIND-101)
 
 `bash experiments/exp-008/stage-c4/tests/run-all.sh` runs the C4 suite and the unchanged C0–C3 suite. No cluster, no network, no credential; the two pinned-binary tests run in loopback-only namespaces.
 
